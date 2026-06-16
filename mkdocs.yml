@@ -1,8 +1,7 @@
 site_name: product-manuals
 site_description: 产品功能说明书合集 — AI 驱动的产品定义文档
-site_url: https://anomalyco.github.io/product-manuals
-repo_url: https://github.com/anomalyco/product-manuals
-edit_uri: edit/main/docs/
+site_url: https://ng-nest-moon.github.io/product-manuals
+repo_url: https://github.com/ng-nest-moon/product-manuals
 
 docs_dir: site
 site_dir: site_build
