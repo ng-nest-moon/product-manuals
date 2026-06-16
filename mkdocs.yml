@@ -1,0 +1,71 @@
+site_name: product-manuals
+site_description: 产品功能说明书合集 — AI 驱动的产品定义文档
+site_url: https://anomalyco.github.io/product-manuals
+repo_url: https://github.com/anomalyco/product-manuals
+edit_uri: edit/main/docs/
+
+docs_dir: site
+site_dir: site_build
+
+theme:
+  name: material
+  language: zh
+  palette:
+    - scheme: default
+      toggle:
+        icon: material/weather-night
+        name: 切换暗色模式
+    - scheme: slate
+      toggle:
+        icon: material/weather-sunny
+        name: 切换亮色模式
+  features:
+    - navigation.instant
+    - navigation.tracking
+    - navigation.path
+    - navigation.indexes
+    - toc.follow
+    - search.highlight
+    - content.code.copy
+
+plugins:
+  - search
+
+markdown_extensions:
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+  - admonition
+  - pymdownx.details
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/anomalyco/product-manuals
+  generator: false
+
+copyright: Copyright &copy; 2026 product-manuals
+
+nav:
+  - 🏠 首页: index.md
+  - 📋 产品说明书:
+    - 小树洞: manuals/01-小树洞.md
+    - 我来当老师: manuals/02-我来当老师.md
+    - 地震救援: manuals/03-地震救援.md
+    - 如果我是领导: manuals/04-如果我是领导.md
+    - 机会雷达: manuals/05-机会雷达.md
+    - 消费探针: manuals/06-消费探针.md
+    - 有啥吃啥: manuals/07-有啥吃啥.md
+    - 挑刺工坊: manuals/08-挑刺工坊.md
+    - 无人车帝国: manuals/09-无人车帝国.md
+    - 老糊涂: manuals/10-老糊涂.md
+    - 自动打工仔: manuals/11-自动打工仔.md
+    - 程序员生涯: manuals/12-程序员生涯.md
+    - 立马造: manuals/13-立马造.md
+    - 群星帝国: manuals/14-群星帝国.md
+    - 酒话连篇: manuals/15-酒话连篇.md
