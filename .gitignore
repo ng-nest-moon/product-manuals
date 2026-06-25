@@ -1,5 +1,7 @@
-site_build/
-site/manuals/
+node_modules/
+dist/
 .cache/
 __pycache__/
 *.pyc
+site_build/
+dev-*.log

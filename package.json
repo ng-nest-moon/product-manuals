@@ -1,0 +1,18 @@
+{
+  "name": "product-manuals",
+  "version": "2.0.0",
+  "private": true,
+  "description": "产品功能说明书合集 — AI 驱动的产品定义文档",
+  "scripts": {
+    "build": "node scripts/build.js",
+    "dev": "node scripts/dev.js"
+  },
+  "dependencies": {
+    "highlight.js": "^11.10.0",
+    "marked": "^15.0.0",
+    "minisearch": "^7.1.0"
+  },
+  "devDependencies": {
+    "baseline-browser-mapping": "^2.10.38"
+  }
+}

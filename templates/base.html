@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="light">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="pm-base" content="{basePath}" />
+    <title>{title} — Product Manuals</title>
+    <meta name="description" content="{description}" />
+    <link
+      rel="icon"
+      href="https://raw.githubusercontent.com/ng-nest-moon/product-manuals/main/site/favicon.ico"
+    />
+    <link rel="stylesheet" href="{basePath}/css/style.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.10.0/styles/github.min.css"
+      id="hljs-light"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.10.0/styles/github-dark.min.css"
+      id="hljs-dark"
+      disabled
+    />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.10.0/highlight.min.js"></script>
+  </head>
+  <body>
+    <!-- ===== HEADER ===== -->
+    <header class="pm-header">
+      <div class="pm-header-inner">
+        <a href="{basePath}/" class="pm-logo">
+          <span class="pm-logo-icon">PM</span>
+          Product Manuals
+        </a>
+        <nav class="pm-nav">
+          <a href="{basePath}/" class="pm-nav-link {homeActive}">首页</a>
+          <a href="{basePath}/#产品说明书" class="pm-nav-link">产品说明书</a>
+          <a
+            href="https://github.com/ng-nest-moon/product-manuals"
+            class="pm-nav-link"
+            target="_blank"
+            >GitHub</a
+          >
+        </nav>
+        <div class="pm-header-actions">
+          <button
+            class="pm-search-btn"
+            id="pm-search-btn"
+            title="搜索 (Ctrl+K)"
+          >
+            ⌕
+          </button>
+          <button class="pm-theme-toggle" id="pm-theme-toggle" title="切换主题">
+            {themeIcon}
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- ===== CONTENT ===== -->
+    {content}
+
+    <!-- ===== SEARCH OVERLAY ===== -->
+    <div class="pm-search-overlay" id="pm-search-overlay">
+      <div class="pm-search-modal">
+        <div class="pm-search-input-wrap">
+          <span>⌕</span>
+          <input
+            type="text"
+            class="pm-search-input"
+            id="pm-search-input"
+            placeholder="搜索产品说明书..."
+            autocomplete="off"
+          />
+        </div>
+        <div class="pm-search-results" id="pm-search-results">
+          <div class="pm-search-empty">输入关键词搜索...</div>
+        </div>
+        <div class="pm-search-hint">
+          使用 <kbd>↑</kbd> <kbd>↓</kbd> 导航 · <kbd>Enter</kbd> 打开 ·
+          <kbd>Esc</kbd> 关闭
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== FOOTER ===== -->
+    <footer class="pm-footer">
+      <div class="pm-footer-inner">
+        <div class="pm-footer-grid">
+          <div class="pm-footer-brand">
+            <a href="{basePath}/" class="pm-logo">
+              <span class="pm-logo-icon">PM</span>
+              product-manuals
+            </a>
+            <p>
+              AI
+              驱动的产品功能说明书合集——每个文档描述一个产品做什么，而非怎么做。
+            </p>
+          </div>
+          <div class="pm-footer-col">
+            <h4>产品</h4>
+            <a href="{basePath}/">全部产品</a>
+            <a
+              href="https://github.com/ng-nest-moon/product-manuals/tree/main/.github/skills/writing-product-specs"
+              target="_blank"
+              >写作规范</a
+            >
+          </div>
+          <div class="pm-footer-col">
+            <h4>链接</h4>
+            <a
+              href="https://github.com/ng-nest-moon/product-manuals"
+              target="_blank"
+              >GitHub 仓库</a
+            >
+            <a href="https://github.com/ng-nest-moon" target="_blank"
+              >@ng-nest-moon</a
+            >
+          </div>
+        </div>
+        <div class="pm-footer-bottom">
+          <span class="pm-footer-copyright"
+            >Copyright &copy; 2026 product-manuals</span
+          >
+          <div class="pm-footer-links">
+            <a href="https://github.com/ng-nest-moon/product-manuals">GitHub</a>
+          </div>
+        </div>
+      </div>
+    </footer>
+
+    <script src="{basePath}/js/minisearch.js"></script>
+    <script src="{basePath}/js/app.js"></script>
+    <script src="{basePath}/js/search.js"></script>
+    <script src="{basePath}/js/tabbed.js"></script>
+    <script>
+      hljs.highlightAll();
+    </script>
+  </body>
+</html>
