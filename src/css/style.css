@@ -842,7 +842,7 @@ img {
 .pm-sidebar {
   width: 260px;
   flex-shrink: 0;
-  border-right: 1px solid var(--pm-border);
+  border-left: 1px solid var(--pm-border);
   background: var(--pm-sidebar-bg);
   position: sticky;
   top: 64px;
@@ -895,6 +895,11 @@ img {
 }
 
 /* ==================== MANUAL CONTENT TYPOGRAPHY ==================== */
+
+.pm-manual-content h2,
+.pm-manual-content h3 {
+  scroll-margin-top: 80px;
+}
 
 .pm-manual-content h1 {
   font-size: 2.2rem;

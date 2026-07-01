@@ -1,18 +1,4 @@
 <div class="pm-manual-layout">
-  <aside class="pm-sidebar">
-    <div class="pm-sidebar-section">
-      <div class="pm-sidebar-title">全部产品</div>
-      <nav class="pm-sidebar-nav" id="pm-sidebar-nav">
-        {sidebarItems}
-      </nav>
-    </div>
-    <div class="pm-sidebar-section">
-      <div class="pm-sidebar-title">本页目录</div>
-      <nav class="pm-toc-nav" id="pm-toc-nav">
-        {tocItems}
-      </nav>
-    </div>
-  </aside>
   <main class="pm-manual-content">
     <nav class="pm-breadcrumb">
       <a href="{basePath}/">首页</a>
@@ -36,4 +22,12 @@
       {manualContent}
     </div>
   </main>
+  <aside class="pm-sidebar">
+    <div class="pm-sidebar-section">
+      <div class="pm-sidebar-title">本页目录</div>
+      <nav class="pm-toc-nav" id="pm-toc-nav">
+        {tocItems}
+      </nav>
+    </div>
+  </aside>
 </div>

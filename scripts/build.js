@@ -10,6 +10,10 @@ const SRC_JS_DIR = path.join(ROOT, 'src', 'js');
 const TEMPLATES_DIR = path.join(ROOT, 'templates');
 
 const BASE_PATH = '/product-manuals';
+const SITE_URL = 'https://ng-nest-moon.github.io';
+const DEFAULT_OG_IMAGE = 'https://raw.githubusercontent.com/ng-nest-moon/product-manuals/main/site/favicon.ico';
+
+function fullUrl(p) { return SITE_URL + p; }
 
 const CAT_NAMES = { game: '游戏', tool: '工具' };
 const CAT_KEYS = { '游戏': 'game', '工具': 'tool' };
@@ -339,6 +343,10 @@ function getProductUrl(num, name) {
   return `${BASE_PATH}/manuals/${getNumberedName(num, name)}/`;
 }
 
+function stripHtml(str) {
+  return str.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
+}
+
 function truncate(str, len) {
   if (str.length <= len) return str;
   return str.slice(0, len).replace(/\s+\S*$/, '') + '...';
@@ -464,9 +472,30 @@ function buildHomepage() {
 
   const content = heroHtml + statsHtml + `<div class="pm-section" id="产品说明书">\n<h2 class="pm-section-title pm-section-title-underline" style="text-align:center;">产品说明书</h2>\n` + gridHtml + `\n</div>` + featuresHtml + ctaHtml;
 
+  const desc = '产品功能说明书合集 — AI 驱动的产品定义文档';
+  const homeUrl = fullUrl(BASE_PATH + '/');
+
+  const jsonld = JSON.stringify({
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    'name': 'Product Manuals',
+    'url': homeUrl,
+    'description': desc
+  });
+
   const html = baseTemplate
     .replace(/{title}/g, '首页')
-    .replace(/{description}/g, '产品功能说明书合集 — AI 驱动的产品定义文档')
+    .replace(/{description}/g, desc)
+    .replace(/{ogTitle}/g, '首页')
+    .replace(/{ogDescription}/g, desc)
+    .replace(/{ogType}/g, 'website')
+    .replace(/{ogUrl}/g, homeUrl)
+    .replace(/{ogImage}/g, DEFAULT_OG_IMAGE)
+    .replace(/{twitterCard}/g, 'summary')
+    .replace(/{twitterTitle}/g, '首页')
+    .replace(/{twitterDescription}/g, desc)
+    .replace(/{canonicalUrl}/g, homeUrl)
+    .replace(/{jsonld}/g, jsonld)
     .replace(/{basePath}/g, BASE_PATH)
     .replace(/{content}/g, content)
     .replace(/{homeActive}/g, 'active')
@@ -519,11 +548,46 @@ function buildManualPages() {
       .replace(/{productDesc}/g, desc)
       .replace(/{manualContent}/g, bodyContent);
 
+    /* Extract better description from first paragraph of content */
+    const pMatch = bodyContent.match(/<p>(.+?)<\/p>/);
+    const pageDesc = pMatch ? truncate(stripHtml(pMatch[1]), 150) : `${name} — 产品功能说明书`;
+
     const title = `${name} — 产品功能说明书`;
+    const pageUrl = fullUrl(getProductUrl(num, name));
+    const homeUrl = fullUrl(BASE_PATH + '/');
+
+    const jsonld = JSON.stringify([
+      {
+        '@context': 'https://schema.org',
+        '@type': 'BreadcrumbList',
+        'itemListElement': [
+          { '@type': 'ListItem', 'position': 1, 'name': '首页', 'item': homeUrl },
+          { '@type': 'ListItem', 'position': 2, 'name': '产品说明书', 'item': homeUrl },
+          { '@type': 'ListItem', 'position': 3, 'name': name }
+        ]
+      },
+      {
+        '@context': 'https://schema.org',
+        '@type': 'Product',
+        'name': name,
+        'description': pageDesc,
+        'category': CAT_NAMES[cat]
+      }
+    ]);
 
     const html = baseTemplate
       .replace(/{title}/g, title)
-      .replace(/{description}/g, `${name} — 产品功能说明书`)
+      .replace(/{description}/g, pageDesc)
+      .replace(/{ogTitle}/g, title)
+      .replace(/{ogDescription}/g, pageDesc)
+      .replace(/{ogType}/g, 'article')
+      .replace(/{ogUrl}/g, pageUrl)
+      .replace(/{ogImage}/g, DEFAULT_OG_IMAGE)
+      .replace(/{twitterCard}/g, 'summary')
+      .replace(/{twitterTitle}/g, title)
+      .replace(/{twitterDescription}/g, pageDesc)
+      .replace(/{canonicalUrl}/g, pageUrl)
+      .replace(/{jsonld}/g, jsonld)
       .replace(/{basePath}/g, BASE_PATH)
       .replace(/{content}/g, manualContentHtml)
       .replace(/{homeActive}/g, '')
@@ -579,6 +643,90 @@ function buildSearchIndex() {
   console.log('  ✓ search-index.json built');
 }
 
+function buildLlmsTxt() {
+  /* llms.txt — lightweight index for LLM crawlers (llmstxt.org spec) */
+  const homeUrl = fullUrl(BASE_PATH + '/');
+
+  const lines = [];
+  lines.push('# Product Manuals');
+  lines.push('> AI 驱动的产品功能说明书合集——每个文档描述一个产品做什么，而非怎么做。');
+  lines.push('');
+  lines.push('## 首页');
+  lines.push(`- [Product Manuals](${homeUrl}) — ${PRODUCTS.length} 份产品说明书合集`);
+  lines.push('');
+  lines.push('## 产品说明书');
+  PRODUCTS.forEach(p => {
+    const [num, name, cat, desc] = p;
+    const url = fullUrl(getProductUrl(num, name));
+    lines.push(`- [${String(num).padStart(2, '0')} — ${name}](${url}) — ${desc}`);
+  });
+  lines.push('');
+  writeFile(path.join(DIST_DIR, 'llms.txt'), lines.join('\n'));
+  console.log('  ✓ llms.txt built');
+
+  /* llms-full.txt — detailed version with full descriptions */
+  const fullLines = [];
+  fullLines.push('# Product Manuals');
+  fullLines.push('> AI 驱动的产品功能说明书合集——每个文档描述一个产品做什么，而非怎么做。');
+  fullLines.push('');
+  fullLines.push(`URL: ${homeUrl}`);
+  fullLines.push(`产品总数: ${PRODUCTS.length}`);
+  fullLines.push('');
+  fullLines.push('## 产品说明书列表');
+  fullLines.push('');
+  PRODUCTS.forEach(p => {
+    const [num, name, cat, desc] = p;
+    const url = fullUrl(getProductUrl(num, name));
+    fullLines.push(`### ${String(num).padStart(2, '0')} — ${name}`);
+    fullLines.push(`- 分类: ${CAT_NAMES[cat]}`);
+    fullLines.push(`- 简介: ${desc}`);
+    fullLines.push(`- 链接: ${url}`);
+    fullLines.push('');
+  });
+  writeFile(path.join(DIST_DIR, 'llms-full.txt'), fullLines.join('\n'));
+  console.log('  ✓ llms-full.txt built');
+}
+
+function buildSitemap() {
+  const now = new Date().toISOString().split('T')[0];
+  const urls = [];
+
+  const homeUrl = fullUrl(BASE_PATH + '/');
+  urls.push(`  <url>
+    <loc>${homeUrl}</loc>
+    <priority>1.0</priority>
+    <changefreq>weekly</changefreq>
+  </url>`);
+
+  PRODUCTS.forEach(p => {
+    const [num, name] = p;
+    const url = fullUrl(getProductUrl(num, name));
+    urls.push(`  <url>
+    <loc>${url}</loc>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+  </url>`);
+  });
+
+  const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+${urls.join('\n')}
+</urlset>`;
+
+  writeFile(path.join(DIST_DIR, 'sitemap.xml'), xml);
+  console.log('  ✓ sitemap.xml built');
+}
+
+function buildRobots() {
+  const sitemapUrl = fullUrl(BASE_PATH + '/sitemap.xml');
+  const content = `User-agent: *
+Allow: /
+Sitemap: ${sitemapUrl}
+`;
+  writeFile(path.join(DIST_DIR, 'robots.txt'), content);
+  console.log('  ✓ robots.txt built');
+}
+
 /* ========== Main ========== */
 
 function main() {
@@ -594,6 +742,9 @@ function main() {
   buildHomepage();
   buildManualPages();
   buildSearchIndex();
+  buildLlmsTxt();
+  buildSitemap();
+  buildRobots();
 
   console.log('\n✓ Build complete! Output in ./dist/');
 }
