@@ -10,26 +10,35 @@
 
   var miniSearch = null;
   var searchData = null;
+  var indexLoaded = false;
+  var debounceTimer = null;
+  var DEBOUNCE_MS = 200;
 
-  /* Initialize MiniSearch */
-  try {
-    if (typeof MiniSearch !== 'undefined') {
-      miniSearch = new MiniSearch({
-        fields: ['title', 'content'],
-        storeFields: ['title', 'url', 'excerpt'],
-        searchOptions: {
-          boost: { title: 2 },
-          fuzzy: 0.2,
-          prefix: true
-        }
-      });
+  /* Lazy-init MiniSearch when needed */
+  function initMiniSearch() {
+    if (miniSearch) return true;
+    try {
+      if (typeof MiniSearch !== 'undefined') {
+        miniSearch = new MiniSearch({
+          fields: ['title', 'content'],
+          storeFields: ['title', 'url', 'excerpt'],
+          searchOptions: {
+            boost: { title: 2 },
+            fuzzy: 0.2,
+            prefix: true
+          }
+        });
+        return true;
+      }
+    } catch (e) {
+      console.warn('MiniSearch init error:', e);
     }
-  } catch (e) {
-    console.warn('MiniSearch init error:', e);
+    return false;
   }
 
   function loadSearchIndex() {
-    if (!miniSearch) return;
+    if (indexLoaded) return;
+    if (!initMiniSearch()) return;
 
     var basePath = document.querySelector('meta[name="pm-base"]')?.getAttribute('content') || '.';
     var indexPath = basePath + '/search-index.json';
@@ -41,6 +50,7 @@
         try {
           searchData = JSON.parse(xhr.responseText);
           miniSearch.addAll(searchData);
+          indexLoaded = true;
         } catch (e) {
           console.error('Search index parse error:', e);
         }
@@ -54,7 +64,7 @@
 
   function doSearch(query) {
     if (!query || query.length < 1 || !searchData) {
-      searchResults.innerHTML = '<div class="pm-search-empty">\u8F93\u5165\u5173\u952E\u8BCD\u641C\u7D22...</div>';
+      searchResults.innerHTML = '<div class="pm-search-empty">输入关键词搜索...</div>';
       return;
     }
 
@@ -67,7 +77,7 @@
       }
     }
 
-    /* Fallback: simple keyword match if minisearch fails */
+    /* Fallback: simple keyword match */
     if (!results || results.length === 0) {
       var q = query.toLowerCase();
       searchData.forEach(function (item) {
@@ -80,7 +90,7 @@
     }
 
     if (!results.length) {
-      searchResults.innerHTML = '<div class="pm-search-empty">\u6CA1\u6709\u627E\u5230\u76F8\u5173\u7ED3\u679C</div>';
+      searchResults.innerHTML = '<div class="pm-search-empty">没有找到相关结果</div>';
       return;
     }
 
@@ -101,8 +111,8 @@
     searchOverlay.classList.add('open');
     setTimeout(function () { searchInput.focus(); }, 100);
     searchInput.value = '';
-    searchResults.innerHTML = '<div class="pm-search-empty">\u8F93\u5165\u5173\u952E\u8BCD\u641C\u7D22...</div>';
-    if (!searchData) loadSearchIndex();
+    searchResults.innerHTML = '<div class="pm-search-empty">输入关键词搜索...</div>';
+    loadSearchIndex();
   }
 
   function closeSearch() {
@@ -125,8 +135,13 @@
     }
   });
 
+  /* Debounced input for better performance */
   searchInput.addEventListener('input', function () {
-    doSearch(this.value);
+    var query = this.value;
+    if (debounceTimer) clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(function () {
+      doSearch(query);
+    }, DEBOUNCE_MS);
   });
 
 })();

@@ -163,7 +163,7 @@ function renderEmoji(text) {
     ':material-cog:': '⚙',
     ':material-home:': '🏠',
     ':material-school:': '🏫',
-    ':material- hospital:': '🏥',
+    ':material-hospital:': '🏥',
     ':material-phone:': '📱',
     ':material-chat:': '💬',
     ':material-flag:': '🚩',
@@ -185,7 +185,7 @@ function renderEmoji(text) {
     ':material-game:': '🎮',
     ':material-palette:': '🎨',
     ':material-camera:': '📷',
-    ':material- printer:': '🖨',
+    ':material-printer:': '🖨',
     ':material-monitor:': '🖥',
     ':material-laptop:': '💻',
     ':material-tablet:': '📱',
@@ -562,8 +562,7 @@ function buildManualPages() {
         '@type': 'BreadcrumbList',
         'itemListElement': [
           { '@type': 'ListItem', 'position': 1, 'name': '首页', 'item': homeUrl },
-          { '@type': 'ListItem', 'position': 2, 'name': '产品说明书', 'item': homeUrl },
-          { '@type': 'ListItem', 'position': 3, 'name': name }
+          { '@type': 'ListItem', 'position': 2, 'name': name }
         ]
       },
       {
@@ -623,8 +622,8 @@ function extractToc(html) {
   }
 
   return items.map(item => {
-    const indent = item.level === 3 ? ' style="padding-left: 1.5em;font-size:0.8em;"' : '';
-    return `<a href="#${item.id}" class="pm-toc-item"${indent}>${item.text}</a>`;
+    const indent = item.level === 3 ? ' pm-toc-item--h3' : ' pm-toc-item--h2';
+    return `<a href="#${item.id}" class="pm-toc-item${indent}">${item.text}</a>`;
   }).join('\n') || '<div class="pm-toc-empty">无目录</div>';
 }
 

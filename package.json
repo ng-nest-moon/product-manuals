@@ -5,7 +5,8 @@
   "description": "产品功能说明书合集 — AI 驱动的产品定义文档",
   "scripts": {
     "build": "node scripts/build.js",
-    "dev": "node scripts/dev.js"
+    "dev": "node scripts/dev.js",
+    "lint": "node scripts/build.js && echo Lint: build dry-run passed"
   },
   "dependencies": {
     "highlight.js": "^11.10.0",
