@@ -1,0 +1,572 @@
+﻿<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>程序员生涯</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;600;800&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <style>
+      *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+      :root {
+        --board: #0a1020; --board-dark: #050a15;
+        --chalk: #c8d8f0; --chalk-dim: rgba(200,216,240,0.55);
+        --chalk-dimmer: rgba(200,216,240,0.18); --chalk-translucent: rgba(200,216,240,0.06);
+        --accent-green: #22c55e; --accent-cyan: #22d3ee; --accent-gold: #fbbf24;
+        --accent-blue: #3b82f6; --accent-red: #ef4444;
+        --scanline: rgba(0,0,0,0.06); --font-display: "Noto Sans SC","PingFang SC", "PingFang SC", "Microsoft YaHei", sans-serif; --font-mono: "IBM Plex Mono","SFMono-Regular", Menlo, Consolas, "SFMono-Regular", Menlo, Consolas, "Courier New", monospace;
+      }
+      html,body{height:100%;background:#050815;font-family:var(--font-mono);color:var(--chalk);overflow-x:hidden}
+      .screen-frame{position:relative;min-height:100vh;padding:28px 20px 20px;background:#111;border-radius:20px;box-shadow:inset 0 0 40px rgba(0,0,0,0.8),0 8px 40px rgba(0,0,0,0.6);max-width:1360px;margin:0 auto}
+      .screen-frame::before{content:"";position:absolute;inset:0;border-radius:20px;background:repeating-linear-gradient(0deg,transparent,transparent 2px,var(--scanline) 2px,var(--scanline) 4px);pointer-events:none;z-index:100}
+      .crt-curve{position:absolute;inset:0;border-radius:20px;background:radial-gradient(ellipse at center,transparent 65%,rgba(0,0,0,0.35) 100%);pointer-events:none;z-index:99}
+      .power-led{position:absolute;top:8px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:8px;font-family:var(--font-display);font-size:10px;font-weight:600;color:var(--chalk-dim);letter-spacing:1.5px;z-index:101}
+      .power-led span{display:inline-block;width:6px;height:6px;border-radius:50%;background:#4ade80;box-shadow:0 0 6px #4ade80;animation:led-pulse 2s ease-in-out infinite}
+      @keyframes led-pulse{0%,100%{opacity:1;box-shadow:0 0 6px #4ade80}50%{opacity:0.5;box-shadow:0 0 2px #4ade80}}
+      .chalkboard{position:relative;background:var(--board);border:3px solid #15203a;border-radius:4px;padding:32px 28px 28px;box-shadow:inset 0 0 60px rgba(0,0,0,0.5),0 4px 0 #0a1428;min-height:calc(100vh - 80px)}
+      .chalkboard::after{content:"";position:absolute;inset:0;background-image:radial-gradient(circle at 20% 30%,rgba(200,216,240,0.02) 0,transparent 60%),radial-gradient(circle at 80% 70%,rgba(200,216,240,0.015) 0,transparent 50%),radial-gradient(circle at 50% 50%,rgba(200,216,240,0.01) 0,transparent 70%);pointer-events:none;border-radius:2px}
+      .header{text-align:center;margin-bottom:24px;position:relative;z-index:1}
+      .header h1{font-family:var(--font-display);font-size:26px;font-weight:800;color:var(--accent-green);text-shadow:0 0 8px rgba(34,197,94,0.3);letter-spacing:2px;margin-bottom:4px;display:flex;align-items:center;justify-content:center;gap:10px}
+      .header .subtitle{font-size:14px;color:var(--chalk-dim);letter-spacing:0.5px}
+      .header .subtitle em{font-style:normal;color:var(--accent-cyan)}
+      .layout-main{display:flex;gap:20px;position:relative;z-index:1}
+      .layers-column{flex:1;min-width:0}
+      .side-column{width:220px;flex-shrink:0;display:flex;flex-direction:column;gap:10px}
+      .svg-connectors{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:0}
+      .layer{position:relative;background:var(--chalk-translucent);border:1.5px solid var(--chalk-dimmer);border-radius:6px;padding:12px 14px 14px;margin-bottom:0;cursor:pointer;transition:border-color 0.3s,background 0.3s;opacity:0;transform:translateY(20px)}
+      .layer:hover{border-color:var(--accent-green);background:rgba(34,197,94,0.06)}
+      .layer-label{font-family:var(--font-display);font-size:12px;font-weight:600;color:var(--chalk-dim);letter-spacing:1px;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+      .layer-label .badge{font-size:10px;font-weight:600;background:var(--chalk-dimmer);color:var(--board);padding:1px 7px;border-radius:3px;letter-spacing:0}
+      .layer-modules{display:flex;flex-wrap:wrap;gap:6px}
+      .module{background:rgba(200,216,240,0.06);border:1px solid var(--chalk-dimmer);border-radius:4px;padding:5px 10px;font-size:12px;line-height:1.5;color:var(--chalk);transition:all 0.25s;white-space:nowrap;cursor:pointer;display:inline-flex;align-items:center;gap:5px}
+      .module:hover{background:rgba(200,216,240,0.12);border-color:var(--chalk);transform:translateY(-1px)}
+      svg.icon,.module svg,.side-module svg,.dot svg{width:16px;height:16px;flex-shrink:0}
+      .module svg{width:15px;height:15px}
+      .dot svg{width:14px;height:14px}
+      .layer-label>svg:first-child{width:18px;height:18px;flex-shrink:0}
+      .header h1 svg{width:28px;height:28px;flex-shrink:0}
+      .module .tag{font-size:10px;font-weight:600;padding:1px 6px;border-radius:3px;margin-left:4px;opacity:0.8}
+      .tag-core{background:var(--accent-green);color:var(--board)}
+      .tag-warn{background:var(--accent-red);color:var(--board)}
+      .tag-ai{background:var(--accent-cyan);color:var(--board)}
+      .tag-data{background:var(--accent-gold);color:var(--board)}
+      .layer[data-layer="scene"]{border-left:3px solid var(--accent-cyan)}
+      .layer[data-layer="life"]{border-left:3px solid var(--accent-green)}
+      .layer[data-layer="attr"]{border-left:3px solid var(--accent-gold)}
+      .layer[data-layer="ending"]{border-left:3px solid var(--accent-blue)}
+      .arrow-down{display:flex;align-items:center;justify-content:center;height:28px;position:relative;opacity:0}
+      .arrow-down svg{width:100%;height:28px}
+      .arrow-label{position:absolute;font-family:var(--font-display);font-size:10px;font-weight:600;color:var(--chalk-dim);letter-spacing:0.5px;background:var(--board);padding:0 8px;text-align:center;white-space:nowrap}
+      .side-module{background:var(--chalk-translucent);border:1.5px solid var(--chalk-dimmer);border-left:3px solid var(--accent-blue);border-radius:6px;padding:10px 12px;cursor:pointer;opacity:0;transform:translateX(15px);transition:border-color 0.3s,background 0.3s}
+      .side-module:hover{border-color:var(--accent-blue);background:rgba(59,130,246,0.08)}
+      .side-module .layer-label{margin-bottom:4px}
+      .side-module .desc{font-size:12px;color:var(--chalk-dim);line-height:1.5}
+      .user-flow{margin-top:22px;padding:14px 16px;background:var(--chalk-translucent);border:1.5px solid var(--chalk-dimmer);border-radius:6px;position:relative;z-index:1;opacity:0}
+      .user-flow-header{font-family:var(--font-display);font-size:12px;font-weight:600;color:var(--accent-green);letter-spacing:0.5px;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+      .user-flow-steps{display:flex;align-items:center;flex-wrap:wrap;gap:0}
+      .flow-step{display:flex;align-items:center;gap:0;opacity:0}
+      .flow-step .dot{width:28px;height:28px;border-radius:50%;border:2px solid var(--chalk-dimmer);background:var(--board);display:flex;align-items:center;justify-content:center;font-size:13px;line-height:1;flex-shrink:0;transition:all 0.3s}
+      .flow-step .dot.active{border-color:var(--accent-green);background:rgba(34,197,94,0.12);box-shadow:0 0 10px rgba(34,197,94,0.2)}
+      .flow-step .label{font-size:12px;color:var(--chalk-dim);white-space:nowrap;margin:0 8px 0 6px;line-height:1}
+      .flow-step .conn{width:24px;height:2px;background:var(--chalk-dimmer);position:relative;flex-shrink:0}
+      .flow-step .conn::after{content:"▸";position:absolute;right:-4px;top:-6px;font-size:10px;color:var(--chalk-dimmer)}
+      .flow-step:last-child .conn{display:none}
+      .detail-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:200;display:none;align-items:center;justify-content:center;backdrop-filter:blur(2px)}
+      .detail-overlay.open{display:flex}
+      .detail-card{background:var(--board-dark);border:2px solid var(--chalk-dimmer);border-radius:8px;padding:24px 28px;max-width:500px;width:90%;max-height:80vh;overflow-y:auto;position:relative;box-shadow:0 8px 40px rgba(0,0,0,0.6);will-change:transform,opacity;backface-visibility:hidden;-webkit-backface-visibility:hidden;transform:translateZ(0);-webkit-transform:translateZ(0)}
+      .detail-card h2{margin-top: 0;font-family:var(--font-display);font-size:18px;font-weight:800;color:var(--accent-green);margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid var(--chalk-dimmer);display:flex;align-items:center;gap:8px}
+      .detail-card h2 svg{width:22px;height:22px;flex-shrink:0}
+      .detail-card h3{font-family:var(--font-display);font-size:13px;font-weight:600;color:var(--chalk-dim);margin:14px 0 6px}
+      .detail-card ul{list-style:none;padding:0}
+      .detail-card li{font-size:13px;color:var(--chalk);padding:5px 0 5px 14px;border-left:2px solid var(--chalk-dimmer);margin-bottom:6px;line-height:1.6}
+      .detail-card li .hl{color:var(--accent-cyan);display:inline-flex;align-items:center;gap:4px}
+      .detail-card li .hl-warn{color:var(--accent-gold)}
+      .detail-card .close-btn{position:absolute;top:14px;right:16px;font-family:var(--font-display);font-size:13px;font-weight:600;color:var(--chalk-dimmer);background:none;border:1px solid var(--chalk-dimmer);border-radius:4px;padding:4px 12px;cursor:pointer;transition:all 0.2s}
+      .detail-card .close-btn:hover{color:var(--accent-red);border-color:var(--accent-red)}
+      @media (max-width:860px){
+        .layout-main{flex-direction:column}
+        .side-column{width:100%;flex-direction:row;flex-wrap:wrap}
+        .side-module{flex:1;min-width:160px}
+        .header h1{font-size:20px}
+        .screen-frame{padding:24px 12px 12px}
+        .chalkboard{padding:20px 14px 16px}
+        .layer-modules{gap:4px}
+        .module{font-size:11px;padding:4px 8px}
+        .flow-step .label{font-size:10px}
+        .flow-step .dot{width:24px;height:24px;font-size:11px}
+      }
+      @media (max-width:480px){
+        .header h1{font-size:16px;letter-spacing:1px}
+        .module{font-size:10px;padding:3px 6px;white-space:normal}
+        .layer{padding:8px 8px 10px}
+        .layer-label{font-size:10px}
+      }
+      .chalk-glow{position:absolute;pointer-events:none;width:4px;height:4px;border-radius:50%;background:rgba(200,216,240,0.15);filter:blur(6px)}
+      ::-webkit-scrollbar{width:4px}
+      ::-webkit-scrollbar-track{background:var(--board-dark)}
+      ::-webkit-scrollbar-thumb{background:var(--chalk-dimmer);border-radius:2px}
+      .arrow-path{stroke-dasharray:200;stroke-dashoffset:200}
+    .layer-label svg{width:16px;height:16px;flex-shrink:0}
+</style>
+  </head>
+  <body>
+    <div class="screen-frame">
+      <div class="crt-curve"></div>
+      <div class="power-led"><span></span> SYSTEM · ONLINE</div>
+      <div class="chalkboard" id="chalkboard">
+        <div class="header" id="header">
+          <h1>
+            <svg class="icon" viewBox="0 0 20 20"><use href="#icon-code" /></svg>
+            程序员生涯
+          </h1>
+          <div class="subtitle">像素风生涯模拟 · <em>写别人的人生，反思自己的选择</em></div>
+        </div>
+        <svg class="svg-connectors" id="connectorSvg" preserveAspectRatio="none">
+          <defs>
+            <marker id="arrowHead" markerWidth="6" markerHeight="5" refX="6" refY="2.5" orient="auto"><polygon points="0 0, 6 2.5, 0 5" fill="var(--chalk-dimmer)" opacity=".6"/></marker>
+            <marker id="arrowHeadFlow" markerWidth="6" markerHeight="5" refX="6" refY="2.5" orient="auto"><polygon points="0 0, 6 2.5, 0 5" fill="var(--accent-green)"/></marker>
+            <filter id="glow"><feGaussianBlur stdDeviation="1.5" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+            <symbol id="icon-code" viewBox="0 0 20 20">
+              <path d="M6 5l-5 5 5 5M14 5l5 5-5 5M8 3l4 14" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </symbol>
+            <symbol id="icon-scene" viewBox="0 0 20 20">
+              <rect x="3" y="4" width="14" height="12" rx="1" stroke="currentColor" fill="none" stroke-width="1.5"/>
+              <path d="M7 4V2M13 4V2M3 8h14" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round"/>
+            </symbol>
+            <symbol id="icon-pixel" viewBox="0 0 20 20">
+              <rect x="4" y="4" width="12" height="12" rx="1" stroke="currentColor" fill="none" stroke-width="1.5"/>
+              <circle cx="8" cy="8" r="1" fill="currentColor"/>
+              <circle cx="12" cy="8" r="1" fill="currentColor"/>
+              <path d="M7 12c1 1 2 1.5 3 1.5s2-.5 3-1.5" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round"/>
+            </symbol>
+            <symbol id="icon-attribute" viewBox="0 0 20 20">
+              <rect x="3" y="3" width="14" height="14" rx="1" stroke="currentColor" fill="none" stroke-width="1.5"/>
+              <rect x="5" y="6" width="10" height="2" rx=".5" fill="var(--accent-cyan)" opacity=".5"/>
+              <rect x="5" y="9" width="7" height="2" rx=".5" fill="var(--accent-gold)" opacity=".5"/>
+              <rect x="5" y="12" width="9" height="2" rx=".5" fill="var(--accent-red)" opacity=".5"/>
+            </symbol>
+            <symbol id="icon-branch" viewBox="0 0 20 20">
+              <circle cx="4" cy="10" r="1.5" stroke="currentColor" fill="none" stroke-width="1.5"/>
+              <path d="M5.5 10h5M14 6v2c0 1-1 2-2 2H8" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round"/>
+              <circle cx="16" cy="6" r="1.5" stroke="currentColor" fill="none" stroke-width="1.5"/>
+              <circle cx="16" cy="14" r="1.5" stroke="currentColor" fill="none" stroke-width="1.5"/>
+              <path d="M10 10v4" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round"/>
+            </symbol>
+            <symbol id="icon-event" viewBox="0 0 20 20">
+              <path d="M10 3c-3 0-4 2.5-4 5L5 11c0 1-1 2-1 3h12c0-1-1-2-1-3l-1-3c0-2.5-1-5-4-5z" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linejoin="round"/>
+              <path d="M8 16c0 1.5 4 1.5 4 0" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round"/>
+            </symbol>
+            <symbol id="icon-hud" viewBox="0 0 20 20">
+              <rect x="2" y="3" width="16" height="5" rx="1" stroke="currentColor" fill="none" stroke-width="1.5"/>
+              <rect x="2" y="10" width="16" height="2" rx=".5" stroke="currentColor" fill="none" stroke-width="1.2"/>
+              <rect x="2" y="14" width="16" height="3" rx="1" stroke="currentColor" fill="none" stroke-width="1.5"/>
+            </symbol>
+            <symbol id="icon-replay" viewBox="0 0 20 20">
+              <circle cx="10" cy="10" r="7" stroke="currentColor" fill="none" stroke-width="1.5"/>
+              <path d="M6 10l2-2 2 2" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M14 10l-2-2-2 2" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </symbol>
+            <symbol id="icon-achievement" viewBox="0 0 20 20">
+              <path d="M6 3h8v2c0 3-2 5-4 6-2-1-4-3-4-6V3z" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linejoin="round"/>
+              <path d="M10 11v3M7 17c1-1 2-1 3-1s2 0 3 1" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round"/>
+              <path d="M4 5h2v2c0 2-1 3-2 3V5zm8 0h2v2c0 2 1 3 2 3V5z" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linejoin="round"/>
+            </symbol>
+            <symbol id="icon-refresh" viewBox="0 0 20 20">
+              <path d="M14.5 6C12.5 4 9.5 3.5 7 5 4.5 6.5 3.5 9.5 3.5 12" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M10.5 9.5l4-4 2 3" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M5.5 14c2 2.5 5.5 3 8 1.5C16 14 17 11 16.5 8" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M9.5 11l-4 4-2-3" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </symbol>
+            <symbol id="icon-npc" viewBox="0 0 20 20">
+              <circle cx="10" cy="6" r="3" stroke="currentColor" fill="none" stroke-width="1.5"/>
+              <path d="M3 18c1-5 3-7 7-7s6 2 7 7" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round"/>
+            </symbol>
+            <symbol id="icon-trophy" viewBox="0 0 20 20">
+              <path d="M6 3h8v2c0 3-2 5-4 6-2-1-4-3-4-6V3z" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linejoin="round"/>
+              <path d="M10 11v3M7 17c1-1 2-1 3-1s2 0 3 1" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round"/>
+            </symbol>
+            <symbol id="icon-book" viewBox="0 0 20 20">
+              <path d="M10 4C8 2 5 3 4 4v12c1-1 4-2 6 0V4zm0 0c2-2 5-1 6 0v12c-1-1-4-2-6 0V4z" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linejoin="round"/>
+            </symbol>
+          </defs>
+        </svg>
+
+        <div class="layout-main">
+          <div class="layers-column" id="layersColumn">
+            <div class="layer" data-layer="scene" id="layer-scene">
+              <div class="layer-label">
+                <svg viewBox="0 0 20 20"><use href="#icon-scene" /></svg>
+                表现层 <span class="badge">UI</span>
+              </div>
+              <div class="layer-modules">
+                <div class="module" data-detail="sc-scene">
+                  <svg viewBox="0 0 20 20"><use href="#icon-scene" /></svg>
+                  像素场景渲染
+                </div>
+                <div class="module" data-detail="sc-sprite">
+                  <svg viewBox="0 0 20 20"><use href="#icon-pixel" /></svg>
+                  角色精灵动画
+                </div>
+                <div class="module" data-detail="sc-dialog">
+                  <svg viewBox="0 0 20 20"><use href="#icon-event" /></svg>
+                  对话气泡
+                </div>
+                <div class="module" data-detail="sc-hud">
+                  <svg viewBox="0 0 20 20"><use href="#icon-hud" /></svg>
+                  HUD 状态栏
+                </div>
+              </div>
+            </div>
+
+            <div class="arrow-down" id="arrow1" data-flow="剧情推进">
+              <svg viewBox="0 0 100 28"><line class="arrow-path" x1="50" y1="0" x2="50" y2="26" stroke="var(--chalk-dimmer)" stroke-width="1.5" marker-end="url(#arrowHead)" opacity=".5"/></svg>
+              <div class="arrow-label">选择 · 演出</div>
+            </div>
+
+            <div class="layer" data-layer="life" id="layer-life">
+              <div class="layer-label">
+                <svg viewBox="0 0 20 20"><use href="#icon-branch" /></svg>
+                生命周期层 <span class="badge">CHAPTERS</span>
+              </div>
+              <div class="layer-modules">
+                <div class="module" data-detail="life-early">
+                  <svg viewBox="0 0 20 20"><use href="#icon-scene" /></svg>
+                  小学→初中→高中 <span class="tag tag-data">启蒙</span>
+                </div>
+                <div class="module" data-detail="life-college">
+                  <svg viewBox="0 0 20 20"><use href="#icon-book" /></svg>
+                  大学×8学期
+                </div>
+                <div class="module" data-detail="life-career">
+                  <svg viewBox="0 0 20 20"><use href="#icon-code" /></svg>
+                  初级→中级→资深 <span class="tag tag-core">35岁</span>
+                </div>
+                <div class="module" data-detail="life-ending">
+                  <svg viewBox="0 0 20 20"><use href="#icon-trophy" /></svg>
+                  终局×12
+                </div>
+              </div>
+            </div>
+
+            <div class="arrow-down" id="arrow2" data-flow="属性驱动">
+              <svg viewBox="0 0 100 28"><line class="arrow-path" x1="50" y1="0" x2="50" y2="26" stroke="var(--chalk-dimmer)" stroke-width="1.5" marker-end="url(#arrowHead)" opacity=".5"/></svg>
+              <div class="arrow-label">8 维 · 0-100</div>
+            </div>
+
+            <div class="layer" data-layer="attr" id="layer-attr">
+              <div class="layer-label">
+                <svg viewBox="0 0 20 20"><use href="#icon-attribute" /></svg>
+                属性系统层 <span class="badge">STATS</span>
+              </div>
+              <div class="layer-modules">
+                <div class="module" data-detail="at-main">
+                  <svg viewBox="0 0 20 20"><use href="#icon-attribute" /></svg>
+                  8 维主属性
+                </div>
+                <div class="module" data-detail="at-hidden">
+                  <svg viewBox="0 0 20 20"><use href="#icon-pixel" /></svg>
+                  隐藏属性
+                </div>
+                <div class="module" data-detail="at-stack">
+                  <svg viewBox="0 0 20 20"><use href="#icon-code" /></svg>
+                  技术栈积累
+                </div>
+              </div>
+            </div>
+
+            <div class="arrow-down" id="arrow3" data-flow="游戏结束">
+              <svg viewBox="0 0 100 28"><line class="arrow-path" x1="50" y1="0" x2="50" y2="26" stroke="var(--chalk-dimmer)" stroke-width="1.5" marker-end="url(#arrowHead)" opacity=".5"/></svg>
+              <div class="arrow-label">回放·成就</div>
+            </div>
+
+            <div class="layer" data-layer="ending" id="layer-ending">
+              <div class="layer-label">
+                <svg viewBox="0 0 20 20"><use href="#icon-trophy" /></svg>
+                结局与重玩层 <span class="badge">AFTER</span>
+              </div>
+              <div class="layer-modules">
+                <div class="module" data-detail="end-12">
+                  <svg viewBox="0 0 20 20"><use href="#icon-trophy" /></svg>
+                  12 种结局
+                </div>
+                <div class="module" data-detail="end-replay">
+                  <svg viewBox="0 0 20 20"><use href="#icon-replay" /></svg>
+                  多周目收集
+                </div>
+                <div class="module" data-detail="end-achieve">
+                  <svg viewBox="0 0 20 20"><use href="#icon-achievement" /></svg>
+                  成就系统
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="side-column" id="sideColumn">
+            <div class="side-module" data-detail="side-random">
+              <div class="layer-label">
+                <svg viewBox="0 0 20 20"><use href="#icon-event" /></svg>
+                随机事件
+              </div>
+              <div class="desc">微信消息 · 邮件 · 猎头电话 · 体检报告 · 限时选择</div>
+            </div>
+            <div class="side-module" data-detail="side-hidden">
+              <div class="layer-label">
+                <svg viewBox="0 0 20 20"><use href="#icon-pixel" /></svg>
+                隐藏要素
+              </div>
+              <div class="desc">隐藏事件 · 彩蛋结局 · 发际线基因 · 游戏品味</div>
+            </div>
+            <div class="side-module" data-detail="side-npc">
+              <div class="layer-label">
+                <svg viewBox="0 0 20 20"><use href="#icon-npc" /></svg>
+                NPC 系统
+              </div>
+              <div class="desc">爸妈 · 老师 · 同学 · 室友 · Leader · HR · 猎头</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="user-flow" id="userFlow">
+          <div class="user-flow-header">
+            <svg viewBox="0 0 20 20" style="width:16px;height:16px;flex-shrink:0"><use href="#icon-refresh"/></svg>
+            用户流程路径
+            <span style="font-size:7px;color:var(--chalk-dim);font-family:var(--font-mono)">[ 动画播放中 ]</span>
+          </div>
+          <div class="user-flow-steps" id="flowSteps">
+            <div class="flow-step" data-step="0">
+              <div class="dot"><svg viewBox="0 0 20 20"><use href="#icon-pixel"/></svg></div>
+              <span class="label">开局天赋</span><div class="conn"></div>
+            </div>
+            <div class="flow-step" data-step="1">
+              <div class="dot"><svg viewBox="0 0 20 20"><use href="#icon-scene"/></svg></div>
+              <span class="label">经历一幕</span><div class="conn"></div>
+            </div>
+            <div class="flow-step" data-step="2">
+              <div class="dot"><svg viewBox="0 0 20 20"><use href="#icon-branch"/></svg></div>
+              <span class="label">关键选择</span><div class="conn"></div>
+            </div>
+            <div class="flow-step" data-step="3">
+              <div class="dot"><svg viewBox="0 0 20 20"><use href="#icon-attribute"/></svg></div>
+              <span class="label">属性变化</span><div class="conn"></div>
+            </div>
+            <div class="flow-step" data-step="4">
+              <div class="dot"><svg viewBox="0 0 20 20"><use href="#icon-trophy"/></svg></div>
+              <span class="label">终局判定</span><div class="conn"></div>
+            </div>
+            <div class="flow-step" data-step="5">
+              <div class="dot"><svg viewBox="0 0 20 20"><use href="#icon-replay"/></svg></div>
+              <span class="label">多周目</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="detail-overlay" id="detailOverlay">
+      <div class="detail-card" id="detailCard">
+        <button class="close-btn" id="closeDetail">✕ CLOSE</button>
+        <div id="detailContent"></div>
+      </div>
+    </div>
+
+    <script>
+      const DETAILS = {
+        "sc-scene": {
+          title: '<svg viewBox="0 0 20 20" class="icon" style="width:22px;height:22px"><use href="#icon-scene"/></svg> 像素场景渲染',
+          items: [
+            '背景层 — 静态像素场景（教室 / 办公室 / ……）',
+            '角色层 — 玩家 + NPC 精灵，可移动做动作',
+            'UI 层 — 对话气泡、选择卡片、HUD',
+            '每幕有独立场景：教室/网吧/宿舍/工位/会议室',
+          ],
+        },
+        "sc-sprite": {
+          title: '<svg viewBox="0 0 20 20" class="icon" style="width:22px;height:22px"><use href="#icon-pixel"/></svg> 角色精灵动画',
+          items: [
+            '像素小人随年龄和状态变化',
+            '发际线后退、黑眼圈加深、衣服从 T 恤到格子衫',
+            '动画：idle / 敲代码 / 思考 / 焦虑 / 开心 / 崩溃 / 睡觉',
+          ],
+        },
+        "sc-dialog": {
+          title: '<svg viewBox="0 0 20 20" class="icon" style="width:22px;height:22px"><use href="#icon-event"/></svg> 对话气泡',
+          items: [
+            'NPC 说话用气泡弹出，带像素头像',
+            '选择以像素卡片弹出在屏幕底部',
+            '选项非文字而是"做"给角色看',
+          ],
+        },
+        "sc-hud": {
+          title: '<svg viewBox="0 0 20 20" class="icon" style="width:22px;height:22px"><use href="#icon-hud"/></svg> HUD 状态栏',
+          items: [
+            '顶部常驻 8 维属性条',
+            '年龄 / 职位 / 经济状况',
+            '编程 ██████░ 72 · 心态 █████░░ 58',
+          ],
+        },
+        "life-early": {
+          title: '<svg viewBox="0 0 20 20" class="icon" style="width:22px;height:22px"><use href="#icon-scene"/></svg> 小学→初中→高中',
+          items: [
+            '小学：电脑启蒙、网吧、小升初、编程种子',
+            '初中：信息课、搜"怎么做网站"、中考分水岭',
+            '高中：文理分科、信息竞赛、高考、选专业',
+            '初中触发编程兴趣则早熟加成',
+          ],
+        },
+        "life-college": {
+          title: '<svg viewBox="0 0 20 20" class="icon" style="width:22px;height:22px"><use href="#icon-book"/></svg> 大学×8学期',
+          items: [
+            '大一：C 语言、社团、期中考试',
+            '大二：数据结构、竞赛、选技术方向',
+            '大三：实习、考研还是工作',
+            '大四：秋招、毕设、毕业旅行',
+          ],
+        },
+        "life-career": {
+          title: '<svg viewBox="0 0 20 20" class="icon" style="width:22px;height:22px"><use href="#icon-code"/></svg> 初级→中级→资深',
+          items: [
+            '初级：入职配环境、CRUD、Code Review、线上事故',
+            '中级：独立负责、带新人、跳槽窗口、副业萌芽',
+            '资深：架构设计、管理岔路、35岁危机、跨部门撕逼',
+          ],
+        },
+        "life-ending": {
+          title: '<svg viewBox="0 0 20 20" class="icon" style="width:22px;height:22px"><use href="#icon-trophy"/></svg> 终局×12',
+          items: [
+            '创业 IPO / 技术大神 / 人生赢家',
+            '中层管理 / 海外润成 / 大厂退休 / 独立开发者 / 躺平养老',
+            'Burnout / 被裁 N+1 / 代码一生 / 彩蛋结局',
+          ],
+        },
+        "at-main": {
+          title: '<svg viewBox="0 0 20 20" class="icon" style="width:22px;height:22px"><use href="#icon-attribute"/></svg> 8 维主属性',
+          items: [
+            '💻 编程能力 — 决定技术天花板',
+            '🗣 沟通协作 — 影响面试、汇报、撕逼',
+            '💪 身体素质 — 低于 20 触发健康危机',
+            '👁 行业视野 — 影响技术判断和风口识别',
+            '💰 经济状况 — 工资 + 存款 + 副业 + 股票',
+            '🤝 人脉资源 — 影响内推、合作、创业',
+            '📚 学习能力 — 影响新技术掌握速度',
+            '❤️ 心态幸福感 — 低于 15 触发 burnout',
+          ],
+        },
+        "at-hidden": {
+          title: '<svg viewBox="0 0 20 20" class="icon" style="width:22px;height:22px"><use href="#icon-pixel"/></svg> 隐藏属性',
+          items: [
+            '🧬 发际线 — 开局随机，压力加速掉发',
+            '🐛 Bug 率 — 编程能力 × 状态',
+            '📛 职场口碑 — 影响跳槽背调',
+            '⏰ 工时累积 — 长期加班触发健康 debuff',
+          ],
+        },
+        "at-stack": {
+          title: '<svg viewBox="0 0 20 20" class="icon" style="width:22px;height:22px"><use href="#icon-code"/></svg> 技术栈积累',
+          items: [
+            '学过的语言/框架变成技能标签',
+            '影响能去哪家公司、接什么项目',
+            '技术栈影响剧情走向和机会',
+          ],
+        },
+        "end-12": {
+          title: '<svg viewBox="0 0 20 20" class="icon" style="width:22px;height:22px"><use href="#icon-trophy"/></svg> 12 种结局',
+          items: [
+            '结局像素动画演出 + "你的一生"走马灯',
+            '最终属性面板 + 成就解锁',
+            '未解锁结局显示剪影（重玩钩子）',
+          ],
+        },
+        "end-replay": {
+          title: '<svg viewBox="0 0 20 20" class="icon" style="width:22px;height:22px"><use href="#icon-replay"/></svg> 多周目收集',
+          items: [
+            '12 种结局收集图鉴',
+            '每局随机变量不同',
+            '二周目解锁开局天赋："科二代""天赋异禀""家里有矿"',
+          ],
+        },
+        "end-achieve": {
+          title: '<svg viewBox="0 0 20 20" class="icon" style="width:22px;height:22px"><use href="#icon-achievement"/></svg> 成就系统',
+          items: [
+            '像素徽章：第一个 PR / 通宵冠军 / 被裁达人',
+            '普通 / 困难两种难度',
+            '隐藏提示：你错过了某个隐藏事件',
+          ],
+        },
+        "side-random": {
+          title: '<svg viewBox="0 0 20 20" class="icon" style="width:22px;height:22px"><use href="#icon-event"/></svg> 随机事件',
+          items: [
+            '微信消息 — 老板"这个需求今晚要"',
+            '邮件通知 — 组织架构调整',
+            '猎头电话 — 机会考虑吗',
+            '体检报告 — 颈椎退行性变',
+            '限时做选择',
+          ],
+        },
+        "side-hidden": {
+          title: '<svg viewBox="0 0 20 20" class="icon" style="width:22px;height:22px"><use href="#icon-pixel"/></svg> 隐藏要素',
+          items: [
+            '特定属性组合触发隐藏剧情',
+            '彩蛋结局：开源封神 / 考公上岸 / 继承家业',
+            '开局天赋：二周目解锁',
+          ],
+        },
+        "side-npc": {
+          title: '<svg viewBox="0 0 20 20" class="icon" style="width:22px;height:22px"><use href="#icon-npc"/></svg> NPC 系统',
+          items: [
+            '每一幕有对应 NPC 出场',
+            '妈妈"作业写完了吗？" / 微机老师 / 同学',
+            'Mentor / 产品经理 / Leader / HR',
+          ],
+        },
+      };
+
+      document.addEventListener("DOMContentLoaded", () => {
+        const layers = document.querySelectorAll(".layer");
+        const arrows = document.querySelectorAll(".arrow-down");
+        const flowSteps = document.querySelectorAll(".flow-step");
+        const sideModules = document.querySelectorAll(".side-module");
+        const userFlow = document.querySelector(".user-flow");
+        const overlays = document.querySelector("#detailOverlay");
+        const detailContent = document.querySelector("#detailContent");
+        const closeBtn = document.querySelector("#closeDetail");
+
+        const mainTimeline = anime.timeline({ easing: "easeOutCubic" });
+        mainTimeline.add({ targets: "#header", opacity: [0, 1], translateY: [-10, 0], duration: 600 });
+        mainTimeline.add({ targets: sideModules, opacity: [0, 1], translateX: [15, 0], duration: 400, delay: anime.stagger(120) }, "-=200");
+        mainTimeline.add({ targets: layers, opacity: [0, 1], translateY: [20, 0], duration: 500, delay: anime.stagger(150) }, "-=100");
+        mainTimeline.add({ targets: arrows, opacity: [0, 1], duration: 400, delay: anime.stagger(200) }, "-=200");
+        setTimeout(() => { document.querySelectorAll(".arrow-path").forEach((p) => { anime({ targets: p, strokeDashoffset: [200, 0], duration: 800, delay: 300, easing: "easeInOutCubic" }); }); }, 1500);
+        mainTimeline.add({ targets: userFlow, opacity: [0, 1], duration: 500 }, "-=100");
+        mainTimeline.add({ targets: flowSteps, opacity: [0, 1], translateX: [-8, 0], duration: 350, delay: anime.stagger(120) }, "-=200");
+
+        let flowIndex = 0;
+        function pulseFlow() { flowSteps.forEach((s) => s.querySelector(".dot").classList.remove("active")); flowSteps[flowIndex].querySelector(".dot").classList.add("active"); flowIndex = (flowIndex + 1) % flowSteps.length; }
+        pulseFlow(); setInterval(pulseFlow, 2500);
+
+        layers.forEach((l) => { l.addEventListener("mouseenter", () => { anime({ targets: l, borderColor: "var(--accent-green)", backgroundColor: "rgba(34,197,94,0.06)", duration: 200 }); }); l.addEventListener("mouseleave", () => { anime({ targets: l, borderColor: "var(--chalk-dimmer)", backgroundColor: "rgba(200,216,240,0.06)", duration: 300 }); }); });
+
+        function openDetail(id) {
+          const data = DETAILS[id]; if (!data) return;
+          detailContent.innerHTML = `<h2>${data.title}</h2><ul>${data.items.map((i) => `<li>${i}</li>`).join("")}</ul>`;
+          overlays.classList.add("open");
+          anime({ targets: "#detailCard", scale: [0.85, 1], opacity: [0, 1], duration: 250, easing: "easeOutCubic" });
+        }
+        function closeDetail() { anime({ targets: "#detailCard", scale: [1, 0.85], opacity: [1, 0], duration: 200, easing: "easeInCubic", complete: () => { overlays.classList.remove("open"); } }); }
+        document.querySelectorAll(".module[data-detail]").forEach((el) => { el.addEventListener("click", () => openDetail(el.dataset.detail)); });
+        document.querySelectorAll(".side-module[data-detail]").forEach((el) => { el.addEventListener("click", () => openDetail(el.dataset.detail)); });
+        closeBtn.addEventListener("click", closeDetail);
+        overlays.addEventListener("click", (e) => { if (e.target === overlays) closeDetail(); });
+
+        const board = document.getElementById("chalkboard");
+        for (let i = 0; i < 20; i++) {
+          const dot = document.createElement("div"); dot.className = "chalk-glow";
+          dot.style.left = Math.random() * 100 + "%"; dot.style.top = Math.random() * 100 + "%";
+          dot.style.width = dot.style.height = 2 + Math.random() * 4 + "px"; dot.style.opacity = 0.05 + Math.random() * 0.1;
+          board.appendChild(dot);
+          anime({ targets: dot, translateX: [0, -10 + Math.random() * 20], translateY: [0, -10 + Math.random() * 20], opacity: [0.05, 0.15, 0.05], duration: 3000 + Math.random() * 4000, direction: "alternate", loop: true, easing: "easeInOutSine" });
+        }
+      });
+    </script>
+  </body>
+</html>

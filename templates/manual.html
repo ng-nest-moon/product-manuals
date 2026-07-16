@@ -1,4 +1,4 @@
-<div class="pm-manual-layout">
+<div class="pm-manual-layout{layoutModifier}">
   <main class="pm-manual-content">
 <nav class="pm-breadcrumb">
   <a href="{basePath}/">首页</a>
@@ -6,26 +6,15 @@
   <span class="pm-breadcrumb-current">{productName}</span>
 </nav>
 
-    <div class="pm-product-header">
-      <div class="pm-product-header-meta">
-        <span class="pm-card-number">{productNum}</span>
-        <span class="pm-category-badge pm-category-badge--{productCat}">{productCatName}</span>
-      </div>
-      <h1>{productName}</h1>
-      <p class="pm-product-desc">{productDesc}</p>
-      <a href="{basePath}/" class="pm-back-link">← 返回全部产品</a>
-    </div>
+    {productHeader}
+
+    {interactiveDiagram}
 
     <div class="pm-manual-body">
       {manualContent}
     </div>
   </main>
   <aside class="pm-sidebar">
-    <div class="pm-sidebar-section">
-      <div class="pm-sidebar-title">本页目录</div>
-      <nav class="pm-toc-nav" id="pm-toc-nav">
-        {tocItems}
-      </nav>
-    </div>
+    {sidebarContent}
   </aside>
 </div>

@@ -1,0 +1,532 @@
+﻿<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>立马造</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;600;800&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <style>
+      *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+      :root {
+        --board: #120e1e; --board-dark: #0a0812;
+        --chalk: #d8d0f0; --chalk-dim: rgba(216,208,240,0.55);
+        --chalk-dimmer: rgba(216,208,240,0.18); --chalk-translucent: rgba(216,208,240,0.06);
+        --accent-purple: #a855f7; --accent-teal: #2dd4bf; --accent-gold: #fbbf24;
+        --accent-pink: #d946ef; --accent-green: #22c55e;
+        --scanline: rgba(0,0,0,0.06); --font-display: "Noto Sans SC","PingFang SC", "PingFang SC", "Microsoft YaHei", sans-serif; --font-mono: "IBM Plex Mono","SFMono-Regular", Menlo, Consolas, "SFMono-Regular", Menlo, Consolas, "Courier New", monospace;
+      }
+      html,body{height:100%;background:#080612;font-family:var(--font-mono);color:var(--chalk);overflow-x:hidden}
+      .screen-frame{position:relative;min-height:100vh;padding:28px 20px 20px;background:#111;border-radius:20px;box-shadow:inset 0 0 40px rgba(0,0,0,0.8),0 8px 40px rgba(0,0,0,0.6);max-width:1360px;margin:0 auto}
+      .screen-frame::before{content:"";position:absolute;inset:0;border-radius:20px;background:repeating-linear-gradient(0deg,transparent,transparent 2px,var(--scanline) 2px,var(--scanline) 4px);pointer-events:none;z-index:100}
+      .crt-curve{position:absolute;inset:0;border-radius:20px;background:radial-gradient(ellipse at center,transparent 65%,rgba(0,0,0,0.35) 100%);pointer-events:none;z-index:99}
+      .power-led{position:absolute;top:8px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:8px;font-family:var(--font-display);font-size:10px;font-weight:600;color:var(--chalk-dim);letter-spacing:1.5px;z-index:101}
+      .power-led span{display:inline-block;width:6px;height:6px;border-radius:50%;background:#4ade80;box-shadow:0 0 6px #4ade80;animation:led-pulse 2s ease-in-out infinite}
+      @keyframes led-pulse{0%,100%{opacity:1;box-shadow:0 0 6px #4ade80}50%{opacity:0.5;box-shadow:0 0 2px #4ade80}}
+      .chalkboard{position:relative;background:var(--board);border:3px solid #24203a;border-radius:4px;padding:32px 28px 28px;box-shadow:inset 0 0 60px rgba(0,0,0,0.5),0 4px 0 #100e1e;min-height:calc(100vh - 80px)}
+      .chalkboard::after{content:"";position:absolute;inset:0;background-image:radial-gradient(circle at 20% 30%,rgba(216,208,240,0.02) 0,transparent 60%),radial-gradient(circle at 80% 70%,rgba(216,208,240,0.015) 0,transparent 50%),radial-gradient(circle at 50% 50%,rgba(216,208,240,0.01) 0,transparent 70%);pointer-events:none;border-radius:2px}
+      .header{text-align:center;margin-bottom:24px;position:relative;z-index:1}
+      .header h1{font-family:var(--font-display);font-size:26px;font-weight:800;color:var(--accent-purple);text-shadow:0 0 8px rgba(168,85,247,0.3);letter-spacing:2px;margin-bottom:4px;display:flex;align-items:center;justify-content:center;gap:10px}
+      .header .subtitle{font-size:14px;color:var(--chalk-dim);letter-spacing:0.5px}
+      .header .subtitle em{font-style:normal;color:var(--accent-teal)}
+      .layout-main{display:flex;gap:20px;position:relative;z-index:1}
+      .layers-column{flex:1;min-width:0}
+      .side-column{width:220px;flex-shrink:0;display:flex;flex-direction:column;gap:10px}
+      .svg-connectors{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:0}
+      .layer{position:relative;background:var(--chalk-translucent);border:1.5px solid var(--chalk-dimmer);border-radius:6px;padding:12px 14px 14px;margin-bottom:0;cursor:pointer;transition:border-color 0.3s,background 0.3s;opacity:0;transform:translateY(20px)}
+      .layer:hover{border-color:var(--accent-purple);background:rgba(168,85,247,0.06)}
+      .layer-label{font-family:var(--font-display);font-size:12px;font-weight:600;color:var(--chalk-dim);letter-spacing:1px;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+      .layer-label .badge{font-size:10px;font-weight:600;background:var(--chalk-dimmer);color:var(--board);padding:1px 7px;border-radius:3px;letter-spacing:0}
+      .layer-modules{display:flex;flex-wrap:wrap;gap:6px}
+      .module{background:rgba(216,208,240,0.06);border:1px solid var(--chalk-dimmer);border-radius:4px;padding:5px 10px;font-size:12px;line-height:1.5;color:var(--chalk);transition:all 0.25s;white-space:nowrap;cursor:pointer;display:inline-flex;align-items:center;gap:5px}
+      .module:hover{background:rgba(216,208,240,0.12);border-color:var(--chalk);transform:translateY(-1px)}
+      svg.icon,.module svg,.side-module svg,.dot svg{width:16px;height:16px;flex-shrink:0}
+      .module svg{width:15px;height:15px}
+      .dot svg{width:14px;height:14px}
+      .layer-label>svg:first-child{width:18px;height:18px;flex-shrink:0}
+      .header h1 svg{width:28px;height:28px;flex-shrink:0}
+      .module .tag{font-size:10px;font-weight:600;padding:1px 6px;border-radius:3px;margin-left:4px;opacity:0.8}
+      .tag-core{background:var(--accent-gold);color:var(--board)}
+      .tag-ai{background:var(--accent-purple);color:var(--board)}
+      .tag-warn{background:var(--accent-pink);color:var(--board)}
+      .tag-data{background:var(--accent-teal);color:var(--board)}
+      .layer[data-layer="user"]{border-left:3px solid var(--accent-teal)}
+      .layer[data-layer="parse"]{border-left:3px solid var(--accent-purple)}
+      .layer[data-layer="build"]{border-left:3px solid var(--accent-gold)}
+      .layer[data-layer="deploy"]{border-left:3px solid var(--accent-pink)}
+      .arrow-down{display:flex;align-items:center;justify-content:center;height:28px;position:relative;opacity:0}
+      .arrow-down svg{width:100%;height:28px}
+      .arrow-label{position:absolute;font-family:var(--font-display);font-size:10px;font-weight:600;color:var(--chalk-dim);letter-spacing:0.5px;background:var(--board);padding:0 8px;text-align:center;white-space:nowrap}
+      .side-module{background:var(--chalk-translucent);border:1.5px solid var(--chalk-dimmer);border-left:3px solid var(--accent-green);border-radius:6px;padding:10px 12px;cursor:pointer;opacity:0;transform:translateX(15px);transition:border-color 0.3s,background 0.3s}
+      .side-module:hover{border-color:var(--accent-green);background:rgba(34,197,94,0.08)}
+      .side-module .layer-label{margin-bottom:4px}
+      .side-module .desc{font-size:12px;color:var(--chalk-dim);line-height:1.5}
+      .user-flow{margin-top:22px;padding:14px 16px;background:var(--chalk-translucent);border:1.5px solid var(--chalk-dimmer);border-radius:6px;position:relative;z-index:1;opacity:0}
+      .user-flow-header{font-family:var(--font-display);font-size:12px;font-weight:600;color:var(--accent-purple);letter-spacing:0.5px;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+      .user-flow-steps{display:flex;align-items:center;flex-wrap:wrap;gap:0}
+      .flow-step{display:flex;align-items:center;gap:0;opacity:0}
+      .flow-step .dot{width:28px;height:28px;border-radius:50%;border:2px solid var(--chalk-dimmer);background:var(--board);display:flex;align-items:center;justify-content:center;font-size:13px;line-height:1;flex-shrink:0;transition:all 0.3s}
+      .flow-step .dot.active{border-color:var(--accent-purple);background:rgba(168,85,247,0.12);box-shadow:0 0 10px rgba(168,85,247,0.2)}
+      .flow-step .label{font-size:12px;color:var(--chalk-dim);white-space:nowrap;margin:0 8px 0 6px;line-height:1}
+      .flow-step .conn{width:24px;height:2px;background:var(--chalk-dimmer);position:relative;flex-shrink:0}
+      .flow-step .conn::after{content:"▸";position:absolute;right:-4px;top:-6px;font-size:10px;color:var(--chalk-dimmer)}
+      .flow-step:last-child .conn{display:none}
+      .detail-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:200;display:none;align-items:center;justify-content:center;backdrop-filter:blur(2px)}
+      .detail-overlay.open{display:flex}
+      .detail-card{background:var(--board-dark);border:2px solid var(--chalk-dimmer);border-radius:8px;padding:24px 28px;max-width:500px;width:90%;max-height:80vh;overflow-y:auto;position:relative;box-shadow:0 8px 40px rgba(0,0,0,0.6);will-change:transform,opacity;backface-visibility:hidden;-webkit-backface-visibility:hidden;transform:translateZ(0);-webkit-transform:translateZ(0)}
+      .detail-card h2{margin-top: 0;font-family:var(--font-display);font-size:18px;font-weight:800;color:var(--accent-purple);margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid var(--chalk-dimmer);display:flex;align-items:center;gap:8px}
+      .detail-card h2 svg{width:22px;height:22px;flex-shrink:0}
+      .detail-card h3{font-family:var(--font-display);font-size:13px;font-weight:600;color:var(--chalk-dim);margin:14px 0 6px}
+      .detail-card ul{list-style:none;padding:0}
+      .detail-card li{font-size:13px;color:var(--chalk);padding:5px 0 5px 14px;border-left:2px solid var(--chalk-dimmer);margin-bottom:6px;line-height:1.6}
+      .detail-card li .hl{color:var(--accent-teal);display:inline-flex;align-items:center;gap:4px}
+      .detail-card li .hl-warn{color:var(--accent-gold)}
+      .detail-card .close-btn{position:absolute;top:14px;right:16px;font-family:var(--font-display);font-size:13px;font-weight:600;color:var(--chalk-dimmer);background:none;border:1px solid var(--chalk-dimmer);border-radius:4px;padding:4px 12px;cursor:pointer;transition:all 0.2s}
+      .detail-card .close-btn:hover{color:var(--accent-pink);border-color:var(--accent-pink)}
+      @media (max-width:860px){
+        .layout-main{flex-direction:column}
+        .side-column{width:100%;flex-direction:row;flex-wrap:wrap}
+        .side-module{flex:1;min-width:160px}
+        .header h1{font-size:20px}
+        .screen-frame{padding:24px 12px 12px}
+        .chalkboard{padding:20px 14px 16px}
+        .layer-modules{gap:4px}
+        .module{font-size:11px;padding:4px 8px}
+        .flow-step .label{font-size:10px}
+        .flow-step .dot{width:24px;height:24px;font-size:11px}
+      }
+      @media (max-width:480px){
+        .header h1{font-size:16px;letter-spacing:1px}
+        .module{font-size:10px;padding:3px 6px;white-space:normal}
+        .layer{padding:8px 8px 10px}
+        .layer-label{font-size:10px}
+      }
+      .chalk-glow{position:absolute;pointer-events:none;width:4px;height:4px;border-radius:50%;background:rgba(216,208,240,0.15);filter:blur(6px)}
+      ::-webkit-scrollbar{width:4px}
+      ::-webkit-scrollbar-track{background:var(--board-dark)}
+      ::-webkit-scrollbar-thumb{background:var(--chalk-dimmer);border-radius:2px}
+      .arrow-path{stroke-dasharray:200;stroke-dashoffset:200}
+    .layer-label svg{width:16px;height:16px;flex-shrink:0}
+</style>
+  </head>
+  <body>
+    <div class="screen-frame">
+      <div class="crt-curve"></div>
+      <div class="power-led"><span></span> SYSTEM · ONLINE</div>
+      <div class="chalkboard" id="chalkboard">
+        <div class="header" id="header">
+          <h1>
+            <svg class="icon" viewBox="0 0 20 20"><use href="#icon-build" /></svg>
+            立马造
+          </h1>
+          <div class="subtitle">上传说明书 → AI 自动生成上线 · <em>把你的想法写成文档，剩下的交给系统</em></div>
+        </div>
+        <svg class="svg-connectors" id="connectorSvg" preserveAspectRatio="none">
+          <defs>
+            <marker id="arrowHead" markerWidth="6" markerHeight="5" refX="6" refY="2.5" orient="auto"><polygon points="0 0, 6 2.5, 0 5" fill="var(--chalk-dimmer)" opacity=".6"/></marker>
+            <marker id="arrowHeadFlow" markerWidth="6" markerHeight="5" refX="6" refY="2.5" orient="auto"><polygon points="0 0, 6 2.5, 0 5" fill="var(--accent-purple)"/></marker>
+            <filter id="glow"><feGaussianBlur stdDeviation="1.5" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+            <symbol id="icon-build" viewBox="0 0 20 20">
+              <rect x="3" y="3" width="14" height="14" rx="1" stroke="currentColor" fill="none" stroke-width="1.5"/>
+              <path d="M7 7l3 3-3 3" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M13 7l-3 3 3 3" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </symbol>
+            <symbol id="icon-upload" viewBox="0 0 20 20">
+              <path d="M10 12V3M6 7l4-4 4 4" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M3 14v3h14v-3" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </symbol>
+            <symbol id="icon-md" viewBox="0 0 20 20">
+              <rect x="3" y="4" width="14" height="12" rx="1" stroke="currentColor" fill="none" stroke-width="1.5"/>
+              <path d="M6 8h2l2 3 2-3h2" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </symbol>
+            <symbol id="icon-plan" viewBox="0 0 20 20">
+              <rect x="3" y="3" width="14" height="14" rx="1" stroke="currentColor" fill="none" stroke-width="1.5"/>
+              <path d="M7 7h6M7 10h6M7 13h4" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round"/>
+            </symbol>
+            <symbol id="icon-check" viewBox="0 0 20 20">
+              <circle cx="10" cy="10" r="7" stroke="currentColor" fill="none" stroke-width="1.5"/>
+              <path d="M7 10l2 2 4-4" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </symbol>
+            <symbol id="icon-rocket" viewBox="0 0 20 20">
+              <path d="M10 2l3 6 5 1-4 4 1 5-5-3-5 3 1-5-4-4 5-1 3-6z" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linejoin="round"/>
+            </symbol>
+            <symbol id="icon-link" viewBox="0 0 20 20">
+              <path d="M8 5H5a3 3 0 000 6h3M12 5h3a3 3 0 010 6h-3M7 10h6" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round"/>
+            </symbol>
+            <symbol id="icon-history" viewBox="0 0 20 20">
+              <circle cx="10" cy="10" r="7" stroke="currentColor" fill="none" stroke-width="1.5"/>
+              <path d="M10 6v4l2 2M6 5l2 2" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </symbol>
+            <symbol id="icon-template" viewBox="0 0 20 20">
+              <rect x="3" y="3" width="14" height="14" rx="1" stroke="currentColor" fill="none" stroke-width="1.5"/>
+              <rect x="5" y="5" width="4" height="4" rx=".5" stroke="currentColor" fill="none" stroke-width="1"/>
+              <rect x="11" y="5" width="4" height="4" rx=".5" stroke="currentColor" fill="none" stroke-width="1"/>
+              <rect x="5" y="11" width="4" height="4" rx=".5" stroke="currentColor" fill="none" stroke-width="1"/>
+              <rect x="11" y="11" width="4" height="4" rx=".5" stroke="currentColor" fill="none" stroke-width="1"/>
+            </symbol>
+            <symbol id="icon-refresh" viewBox="0 0 20 20">
+              <path d="M14.5 6C12.5 4 9.5 3.5 7 5 4.5 6.5 3.5 9.5 3.5 12" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M10.5 9.5l4-4 2 3" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M5.5 14c2 2.5 5.5 3 8 1.5C16 14 17 11 16.5 8" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M9.5 11l-4 4-2-3" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </symbol>
+            <symbol id="icon-share" viewBox="0 0 20 20">
+              <circle cx="6" cy="10" r="2.5" stroke="currentColor" fill="none" stroke-width="1.5"/>
+              <circle cx="14" cy="5" r="2.5" stroke="currentColor" fill="none" stroke-width="1.5"/>
+              <circle cx="14" cy="15" r="2.5" stroke="currentColor" fill="none" stroke-width="1.5"/>
+              <path d="M8.5 11.5l3 2M8.5 8.5l3-2" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round"/>
+            </symbol>
+            <symbol id="icon-mobile" viewBox="0 0 20 20">
+              <rect x="5" y="2" width="10" height="16" rx="1.5" stroke="currentColor" fill="none" stroke-width="1.5"/>
+              <path d="M8 15h4" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round"/>
+            </symbol>
+          </defs>
+        </svg>
+
+        <div class="layout-main">
+          <div class="layers-column" id="layersColumn">
+            <div class="layer" data-layer="user" id="layer-user">
+              <div class="layer-label">
+                <svg viewBox="0 0 20 20"><use href="#icon-upload" /></svg>
+                用户层 <span class="badge">WEB</span>
+              </div>
+              <div class="layer-modules">
+                <div class="module" data-detail="us-upload">
+                  <svg viewBox="0 0 20 20"><use href="#icon-upload" /></svg>
+                  上传说明书
+                </div>
+                <div class="module" data-detail="us-template">
+                  <svg viewBox="0 0 20 20"><use href="#icon-template" /></svg>
+                  模板启动 <span class="tag tag-core">6套</span>
+                </div>
+                <div class="module" data-detail="us-preview">
+                  <svg viewBox="0 0 20 20"><use href="#icon-plan" /></svg>
+                  计划预览
+                </div>
+                <div class="module" data-detail="us-confirm">
+                  <svg viewBox="0 0 20 20"><use href="#icon-check" /></svg>
+                  人工确认
+                </div>
+              </div>
+            </div>
+
+            <div class="arrow-down" id="arrow1" data-flow="解析文档">
+              <svg viewBox="0 0 100 28"><line class="arrow-path" x1="50" y1="0" x2="50" y2="26" stroke="var(--chalk-dimmer)" stroke-width="1.5" marker-end="url(#arrowHead)" opacity=".5"/></svg>
+              <div class="arrow-label">Markdown · 3-10s</div>
+            </div>
+
+            <div class="layer" data-layer="parse" id="layer-parse">
+              <div class="layer-label">
+                <svg viewBox="0 0 20 20"><use href="#icon-md" /></svg>
+                解析规划层 <span class="badge">PARSE</span>
+              </div>
+              <div class="layer-modules">
+                <div class="module" data-detail="pr-parser">
+                  <svg viewBox="0 0 20 20"><use href="#icon-md" /></svg>
+                  说明书解析器
+                </div>
+                <div class="module" data-detail="pr-planner">
+                  <svg viewBox="0 0 20 20"><use href="#icon-plan" /></svg>
+                  规划器
+                </div>
+              </div>
+            </div>
+
+            <div class="arrow-down" id="arrow2" data-flow="生成代码">
+              <svg viewBox="0 0 100 28"><line class="arrow-path" x1="50" y1="0" x2="50" y2="26" stroke="var(--chalk-dimmer)" stroke-width="1.5" marker-end="url(#arrowHead)" opacity=".5"/></svg>
+              <div class="arrow-label">功能 · 页面 · 数据</div>
+            </div>
+
+            <div class="layer" data-layer="build" id="layer-build">
+              <div class="layer-label">
+                <svg viewBox="0 0 20 20"><use href="#icon-rocket" /></svg>
+                生成器层 <span class="badge">GEN</span>
+              </div>
+              <div class="layer-modules">
+                <div class="module" data-detail="gen-code">
+                  <svg viewBox="0 0 20 20"><use href="#icon-build" /></svg>
+                  代码生成
+                </div>
+                <div class="module" data-detail="gen-progress">
+                  <svg viewBox="0 0 20 20"><use href="#icon-refresh" /></svg>
+                  实时进度
+                </div>
+              </div>
+            </div>
+
+            <div class="arrow-down" id="arrow3" data-flow="部署上线">
+              <svg viewBox="0 0 100 28"><line class="arrow-path" x1="50" y1="0" x2="50" y2="26" stroke="var(--chalk-dimmer)" stroke-width="1.5" marker-end="url(#arrowHead)" opacity=".5"/></svg>
+              <div class="arrow-label">30s-3min</div>
+            </div>
+
+            <div class="layer" data-layer="deploy" id="layer-deploy">
+              <div class="layer-label">
+                <svg viewBox="0 0 20 20"><use href="#icon-rocket" /></svg>
+                部署层 <span class="badge">DEPLOY</span>
+              </div>
+              <div class="layer-modules">
+                <div class="module" data-detail="dp-deploy">
+                  <svg viewBox="0 0 20 20"><use href="#icon-rocket" /></svg>
+                  一键部署
+                </div>
+                <div class="module" data-detail="dp-share">
+                  <svg viewBox="0 0 20 20"><use href="#icon-share" /></svg>
+                  分享链接
+                </div>
+                <div class="module" data-detail="dp-history">
+                  <svg viewBox="0 0 20 20"><use href="#icon-history" /></svg>
+                  历史记录
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="side-column" id="sideColumn">
+            <div class="side-module" data-detail="side-product">
+              <div class="layer-label">
+                <svg viewBox="0 0 20 20"><use href="#icon-build" /></svg>
+                产物形态
+              </div>
+              <div class="desc">信息展示 · 工具页 · 表单页 · 内容页 · 管理面板</div>
+            </div>
+            <div class="side-module" data-detail="side-link">
+              <div class="layer-label">
+                <svg viewBox="0 0 20 20"><use href="#icon-link" /></svg>
+                链接特性
+              </div>
+              <div class="desc">无需注册 · 无需登录 · 数据独立 · 手机可用 · 可反复使用</div>
+            </div>
+            <div class="side-module" data-detail="side-boundary">
+              <div class="layer-label">
+                <svg viewBox="0 0 20 20"><use href="#icon-mobile" /></svg>
+                边界声明
+              </div>
+              <div class="desc">无登录 · 无数据库 · 无协作 · 无支付 · 无App · 纯Web</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="user-flow" id="userFlow">
+          <div class="user-flow-header">
+            <svg viewBox="0 0 20 20" style="width:16px;height:16px;flex-shrink:0"><use href="#icon-refresh"/></svg>
+            用户流程路径
+            <span style="font-size:7px;color:var(--chalk-dim);font-family:var(--font-mono)">[ 动画播放中 ]</span>
+          </div>
+          <div class="user-flow-steps" id="flowSteps">
+            <div class="flow-step" data-step="0">
+              <div class="dot"><svg viewBox="0 0 20 20"><use href="#icon-upload"/></svg></div>
+              <span class="label">上传说明书</span><div class="conn"></div>
+            </div>
+            <div class="flow-step" data-step="1">
+              <div class="dot"><svg viewBox="0 0 20 20"><use href="#icon-md"/></svg></div>
+              <span class="label">系统解析</span><div class="conn"></div>
+            </div>
+            <div class="flow-step" data-step="2">
+              <div class="dot"><svg viewBox="0 0 20 20"><use href="#icon-plan"/></svg></div>
+              <span class="label">计划预览</span><div class="conn"></div>
+            </div>
+            <div class="flow-step" data-step="3">
+              <div class="dot"><svg viewBox="0 0 20 20"><use href="#icon-check"/></svg></div>
+              <span class="label">确认执行</span><div class="conn"></div>
+            </div>
+            <div class="flow-step" data-step="4">
+              <div class="dot"><svg viewBox="0 0 20 20"><use href="#icon-build"/></svg></div>
+              <span class="label">生成中</span><div class="conn"></div>
+            </div>
+            <div class="flow-step" data-step="5">
+              <div class="dot"><svg viewBox="0 0 20 20"><use href="#icon-rocket"/></svg></div>
+              <span class="label">部署上线 → 拿链接</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="detail-overlay" id="detailOverlay">
+      <div class="detail-card" id="detailCard">
+        <button class="close-btn" id="closeDetail">✕ CLOSE</button>
+        <div id="detailContent"></div>
+      </div>
+    </div>
+
+    <script>
+      const DETAILS = {
+        "us-upload": {
+          title: '<svg viewBox="0 0 20 20" class="icon" style="width:22px;height:22px"><use href="#icon-upload"/></svg> 上传说明书',
+          items: [
+            '支持粘贴 Markdown 文本或上传 .md 文件',
+            '系统自动识别结构',
+            '不需要懂编程，写清楚功能就行',
+          ],
+        },
+        "us-template": {
+          title: '<svg viewBox="0 0 20 20" class="icon" style="width:22px;height:22px"><use href="#icon-template"/></svg> 模板启动',
+          items: [
+            '6 套内置产品模板',
+            '个人作品集 / 投票工具 / 书单管理 / 记事本 / 数据看板 / 购物清单',
+            '填入 3-5 个关键信息即可生成',
+            '不需要写完整的 Markdown',
+          ],
+        },
+        "us-preview": {
+          title: '<svg viewBox="0 0 20 20" class="icon" style="width:22px;height:22px"><use href="#icon-plan"/></svg> 计划预览',
+          items: [
+            '以清单形式展示将要生成的内容',
+            '包含几个页面、几个功能模块',
+            '数据存储方式展示',
+            '非技术用户也能看懂',
+          ],
+        },
+        "us-confirm": {
+          title: '<svg viewBox="0 0 20 20" class="icon" style="width:22px;height:22px"><use href="#icon-check"/></svg> 人工确认',
+          items: [
+            '执行前可调整计划',
+            '删除或合并某些模块',
+            '确认后开始生成',
+          ],
+        },
+        "pr-parser": {
+          title: '<svg viewBox="0 0 20 20" class="icon" style="width:22px;height:22px"><use href="#icon-md"/></svg> 说明书解析器',
+          items: [
+            '自动识别 Markdown 标题层级',
+            '从列表、表格、段落中提取功能点',
+            '推断需要的页面数量',
+            '提取用户角色和数据实体',
+            '页面关系建模',
+          ],
+        },
+        "pr-planner": {
+          title: '<svg viewBox="0 0 20 20" class="icon" style="width:22px;height:22px"><use href="#icon-plan"/></svg> 规划器',
+          items: [
+            '生成可执行的开发计划',
+            '依赖关系 + 执行顺序',
+            '可勾选清单：页面 / 数据 / 功能',
+          ],
+        },
+        "gen-code": {
+          title: '<svg viewBox="0 0 20 20" class="icon" style="width:22px;height:22px"><use href="#icon-build"/></svg> 代码生成',
+          items: [
+            '按计划依次创建项目文件',
+            '完整的页面交互',
+            '数据可保存（刷新不丢失）',
+            '自动适配手机屏幕',
+          ],
+        },
+        "gen-progress": {
+          title: '<svg viewBox="0 0 20 20" class="icon" style="width:22px;height:22px"><use href="#icon-refresh"/></svg> 实时进度',
+          items: [
+            '用大白话展示当前步骤',
+            '"正在创建首页…… 正在添加数据存储……"',
+            '进度条 + 预计剩余时间',
+            '每一步完成后变绿再进入下一步',
+          ],
+        },
+        "dp-deploy": {
+          title: '<svg viewBox="0 0 20 20" class="icon" style="width:22px;height:22px"><use href="#icon-rocket"/></svg> 一键部署',
+          items: [
+            '生成完成后自动部署',
+            '产出可直接在浏览器打开的链接',
+            '不需要任何配置',
+          ],
+        },
+        "dp-share": {
+          title: '<svg viewBox="0 0 20 20" class="icon" style="width:22px;height:22px"><use href="#icon-share"/></svg> 分享链接',
+          items: [
+            '任何人打开链接即可使用',
+            '无需安装、无需登录',
+            'https://项目名-随机字符.specrun.app',
+          ],
+        },
+        "dp-history": {
+          title: '<svg viewBox="0 0 20 20" class="icon" style="width:22px;height:22px"><use href="#icon-history"/></svg> 历史记录',
+          items: [
+            '记录每个说明书生成的产物链接',
+            '按时间倒序排列',
+            '每个产物可随时打开查看',
+          ],
+        },
+        "side-product": {
+          title: '<svg viewBox="0 0 20 20" class="icon" style="width:22px;height:22px"><use href="#icon-build"/></svg> 产物形态',
+          items: [
+            '信息展示页 — 产品介绍、个人主页',
+            '工具页 — 计算器、打卡器、记账本',
+            '表单页 — 报名表、反馈收集',
+            '内容页 — 博客、笔记、相册',
+            '管理面板 — 数据看板、状态管理',
+          ],
+        },
+        "side-link": {
+          title: '<svg viewBox="0 0 20 20" class="icon" style="width:22px;height:22px"><use href="#icon-link"/></svg> 链接特性',
+          items: [
+            '无需注册 — 任何人打开即可使用',
+            '无需登录 — 不需要账号密码',
+            '数据独立 — 每个链接的数据互不干扰',
+            '手机可用 — 自动适配手机屏幕',
+            '可反复使用 — 数据仍在',
+          ],
+        },
+        "side-boundary": {
+          title: '<svg viewBox="0 0 20 20" class="icon" style="width:22px;height:22px"><use href="#icon-mobile"/></svg> 边界声明',
+          items: [
+            '不做登录注册系统',
+            '不做数据库存储（数据存在浏览器本地）',
+            '不做多人实时协作',
+            '不做自定义域名',
+            '不做支付/计费',
+            '不做移动端 App',
+            '不导出源代码',
+            '不做 AI 对话式生成（坚持说明书驱动）',
+          ],
+        },
+      };
+
+      document.addEventListener("DOMContentLoaded", () => {
+        const layers = document.querySelectorAll(".layer");
+        const arrows = document.querySelectorAll(".arrow-down");
+        const flowSteps = document.querySelectorAll(".flow-step");
+        const sideModules = document.querySelectorAll(".side-module");
+        const userFlow = document.querySelector(".user-flow");
+        const overlays = document.querySelector("#detailOverlay");
+        const detailContent = document.querySelector("#detailContent");
+        const closeBtn = document.querySelector("#closeDetail");
+
+        const mainTimeline = anime.timeline({ easing: "easeOutCubic" });
+        mainTimeline.add({ targets: "#header", opacity: [0, 1], translateY: [-10, 0], duration: 600 });
+        mainTimeline.add({ targets: sideModules, opacity: [0, 1], translateX: [15, 0], duration: 400, delay: anime.stagger(120) }, "-=200");
+        mainTimeline.add({ targets: layers, opacity: [0, 1], translateY: [20, 0], duration: 500, delay: anime.stagger(150) }, "-=100");
+        mainTimeline.add({ targets: arrows, opacity: [0, 1], duration: 400, delay: anime.stagger(200) }, "-=200");
+        setTimeout(() => { document.querySelectorAll(".arrow-path").forEach((p) => { anime({ targets: p, strokeDashoffset: [200, 0], duration: 800, delay: 300, easing: "easeInOutCubic" }); }); }, 1500);
+        mainTimeline.add({ targets: userFlow, opacity: [0, 1], duration: 500 }, "-=100");
+        mainTimeline.add({ targets: flowSteps, opacity: [0, 1], translateX: [-8, 0], duration: 350, delay: anime.stagger(120) }, "-=200");
+
+        let flowIndex = 0;
+        function pulseFlow() { flowSteps.forEach((s) => s.querySelector(".dot").classList.remove("active")); flowSteps[flowIndex].querySelector(".dot").classList.add("active"); flowIndex = (flowIndex + 1) % flowSteps.length; }
+        pulseFlow(); setInterval(pulseFlow, 2500);
+
+        layers.forEach((l) => { l.addEventListener("mouseenter", () => { anime({ targets: l, borderColor: "var(--accent-purple)", backgroundColor: "rgba(168,85,247,0.06)", duration: 200 }); }); l.addEventListener("mouseleave", () => { anime({ targets: l, borderColor: "var(--chalk-dimmer)", backgroundColor: "rgba(216,208,240,0.06)", duration: 300 }); }); });
+
+        function openDetail(id) {
+          const data = DETAILS[id]; if (!data) return;
+          detailContent.innerHTML = `<h2>${data.title}</h2><ul>${data.items.map((i) => `<li>${i}</li>`).join("")}</ul>`;
+          overlays.classList.add("open");
+          anime({ targets: "#detailCard", scale: [0.85, 1], opacity: [0, 1], duration: 250, easing: "easeOutCubic" });
+        }
+        function closeDetail() { anime({ targets: "#detailCard", scale: [1, 0.85], opacity: [1, 0], duration: 200, easing: "easeInCubic", complete: () => { overlays.classList.remove("open"); } }); }
+        document.querySelectorAll(".module[data-detail]").forEach((el) => { el.addEventListener("click", () => openDetail(el.dataset.detail)); });
+        document.querySelectorAll(".side-module[data-detail]").forEach((el) => { el.addEventListener("click", () => openDetail(el.dataset.detail)); });
+        closeBtn.addEventListener("click", closeDetail);
+        overlays.addEventListener("click", (e) => { if (e.target === overlays) closeDetail(); });
+
+        const board = document.getElementById("chalkboard");
+        for (let i = 0; i < 20; i++) {
+          const dot = document.createElement("div"); dot.className = "chalk-glow";
+          dot.style.left = Math.random() * 100 + "%"; dot.style.top = Math.random() * 100 + "%";
+          dot.style.width = dot.style.height = 2 + Math.random() * 4 + "px"; dot.style.opacity = 0.05 + Math.random() * 0.1;
+          board.appendChild(dot);
+          anime({ targets: dot, translateX: [0, -10 + Math.random() * 20], translateY: [0, -10 + Math.random() * 20], opacity: [0.05, 0.15, 0.05], duration: 3000 + Math.random() * 4000, direction: "alternate", loop: true, easing: "easeInOutSine" });
+        }
+      });
+    </script>
+  </body>
+</html>

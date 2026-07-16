@@ -1,0 +1,392 @@
+﻿<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>原初之水</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;500;700;900&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--abyss:#060c14;--abyss-light:#0b1520;--surface:#0f1e2a;--surface-light:#162b3a;--accent:#00e5ff;--accent-dim:rgba(0,229,255,0.2);--accent-deep:#0091ea;--accent-pulse:#ff4081;--accent-gold:#ffd54f;--text-primary:#c8e8f5;--text-dim:rgba(200,232,245,0.55);--text-dimmer:rgba(200,232,245,0.2);--grid:rgba(0,229,255,0.04);--font-display:"Noto Sans SC","PingFang SC", "PingFang SC", "Microsoft YaHei", sans-serif;--font-mono:"JetBrains Mono","SFMono-Regular", Menlo, Consolas, "SFMono-Regular", Menlo, Consolas, "Courier New", monospace}
+html,body{height:100%;background:var(--abyss);font-family:var(--font-display);color:var(--text-primary);overflow-x:hidden}
+.screen-frame{position:relative;min-height:100vh;padding:24px 20px 20px;background:linear-gradient(180deg,var(--abyss) 0%,var(--abyss-light) 100%);border-radius:20px;box-shadow:inset 0 0 80px rgba(0,0,0,0.8),0 8px 40px rgba(0,0,0,0.5);max-width:1440px;margin:0 auto}
+.screen-frame::before{content:"";position:absolute;inset:0;border-radius:20px;background:repeating-linear-gradient(0deg,transparent,transparent 2px,var(--grid) 2px,var(--grid) 4px);pointer-events:none;z-index:100}
+.crt-curve{position:absolute;inset:0;border-radius:20px;background:radial-gradient(ellipse at center,transparent 50%,rgba(0,0,0,0.5) 100%);pointer-events:none;z-index:99}
+.ocean-floor{position:absolute;bottom:0;left:0;right:0;height:120px;background:linear-gradient(0deg,rgba(0,229,255,0.04) 0%,transparent 100%);pointer-events:none;z-index:0}
+.bio-dots{position:absolute;inset:0;pointer-events:none;z-index:1;overflow:hidden}
+.bio-dot{position:absolute;width:3px;height:3px;border-radius:50%;background:var(--accent);opacity:0;box-shadow:0 0 6px var(--accent)}
+.status-bar{position:absolute;top:10px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:12px;font-size:9px;font-weight:500;color:var(--text-dim);letter-spacing:2px;z-index:101;background:rgba(6,12,20,0.8);padding:3px 16px;border-radius:20px;border:1px solid var(--accent-dim);backdrop-filter:blur(4px);text-transform:uppercase;font-family:var(--font-mono)}
+.status-bar .dot{display:inline-block;width:5px;height:5px;border-radius:50%;background:var(--accent);box-shadow:0 0 8px var(--accent);animation:pulse-sym 2.5s ease-in-out infinite}
+@keyframes pulse-sym{0%,100%{opacity:1;box-shadow:0 0 8px var(--accent)}50%{opacity:0.3;box-shadow:0 0 2px var(--accent)}}
+.panel{position:relative;background:var(--surface);border:1.5px solid var(--surface-light);border-radius:8px;padding:24px 24px 20px;box-shadow:inset 0 0 40px rgba(0,0,0,0.4),0 4px 0 #060c14;min-height:calc(100vh - 80px);overflow:hidden;z-index:2}
+.panel::after{content:"";position:absolute;inset:0;background-image:radial-gradient(circle at 70% 30%,rgba(0,229,255,0.03) 0,transparent 60%),radial-gradient(circle at 30% 70%,rgba(0,145,234,0.02) 0,transparent 50%);pointer-events:none}
+.header{text-align:center;margin-bottom:20px;position:relative;z-index:1}
+.header h1{font-family:var(--font-display);font-size:28px;font-weight:900;color:var(--accent);text-shadow:0 0 30px rgba(0,229,255,0.2),0 0 60px rgba(0,229,255,0.1);letter-spacing:4px;margin-bottom:2px;display:flex;align-items:center;justify-content:center;gap:12px}
+.header h1 svg{width:32px;height:32px;flex-shrink:0;filter:drop-shadow(0 0 8px rgba(0,229,255,0.4))}
+.header .subtitle{font-size:13px;font-weight:300;color:var(--text-dim);letter-spacing:0.5px;max-width:700px;margin:0 auto;line-height:1.8}
+.header .subtitle em{font-style:normal;color:var(--accent-pulse);font-weight:500}
+.layout-main{display:flex;gap:16px;position:relative;z-index:1}
+.layers-column{flex:1;min-width:0}
+.side-column{width:210px;flex-shrink:0;display:flex;flex-direction:column;gap:8px}
+.layer{position:relative;background:rgba(22,43,58,0.4);border:1.5px solid var(--surface-light);border-radius:6px;padding:10px 12px 12px;margin-bottom:0;cursor:pointer;transition:border-color 0.3s,background 0.3s;opacity:0;transform:translateY(20px)}
+.layer:hover{border-color:var(--accent);background:rgba(0,229,255,0.05)}
+.layer-label{font-family:var(--font-display);font-size:12px;font-weight:600;color:var(--text-dim);letter-spacing:1px;margin-bottom:6px;display:flex;align-items:center;gap:6px}
+.layer-label .badge{font-size:9px;font-weight:600;background:var(--surface-light);color:var(--text-dim);padding:1px 7px;border-radius:3px;letter-spacing:0}
+.layer-modules{display:flex;flex-wrap:wrap;gap:5px}
+.module{background:rgba(200,232,245,0.04);border:1px solid var(--surface-light);border-radius:4px;padding:4px 10px;font-size:12px;line-height:1.5;color:var(--text-primary);transition:all 0.25s;white-space:nowrap;cursor:pointer;display:inline-flex;align-items:center;gap:5px}
+.module:hover{background:rgba(0,229,255,0.1);border-color:var(--accent);transform:translateY(-1px);box-shadow:0 0 12px rgba(0,229,255,0.1)}
+.module .tag{font-size:9px;font-weight:600;padding:1px 6px;border-radius:3px;margin-left:3px;opacity:0.8}
+.tag-phase{background:var(--accent-dim);color:var(--abyss)}
+.tag-light{background:var(--accent);color:var(--abyss)}
+.tag-deep{background:var(--accent-deep);color:var(--abyss)}
+.tag-fusion{background:var(--accent-pulse);color:var(--abyss)}
+.tag-faction{background:rgba(255,213,79,0.2);color:var(--accent-gold)}
+.layer[data-layer="awake"]{border-left:3px solid var(--accent)}
+.layer[data-layer="crisis"]{border-left:3px solid var(--accent-gold)}
+.layer[data-layer="ability"]{border-left:3px solid var(--accent-deep)}
+.layer[data-layer="user-type"]{border-left:3px solid var(--accent-pulse)}
+svg.icon,.module svg,.side-module svg{width:16px;height:16px;flex-shrink:0}
+.module svg{width:14px;height:14px}
+.layer-label>svg:first-child{width:18px;height:18px;flex-shrink:0}
+.header h1 svg{width:32px;height:32px;flex-shrink:0}
+.arrow-down{display:flex;align-items:center;justify-content:center;height:24px;position:relative;opacity:0}
+.arrow-down svg{width:100%;height:24px}
+.arrow-label{position:absolute;font-family:var(--font-mono);font-size:9px;font-weight:500;color:var(--text-dim);background:var(--surface);padding:0 10px;text-align:center;white-space:nowrap;letter-spacing:0.5px}
+.side-module{background:rgba(22,43,58,0.4);border:1.5px solid var(--surface-light);border-left:3px solid var(--accent-gold);border-radius:6px;padding:8px 10px;cursor:pointer;opacity:0;transform:translateX(15px);transition:border-color 0.3s,background 0.3s}
+.side-module:hover{border-color:var(--accent-gold);background:rgba(255,213,79,0.05)}
+.side-module .layer-label{margin-bottom:3px}
+.side-module .desc{font-size:11px;color:var(--text-dim);line-height:1.5}
+.user-flow{margin-top:18px;padding:12px 14px;background:rgba(22,43,58,0.4);border:1.5px solid var(--surface-light);border-radius:6px;position:relative;z-index:1;opacity:0}
+.user-flow-header{font-family:var(--font-display);font-size:11px;font-weight:600;color:var(--accent-gold);letter-spacing:0.5px;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.user-flow-steps{display:flex;align-items:center;flex-wrap:wrap;gap:0}
+.flow-step{display:flex;align-items:center;gap:0;opacity:0}
+.flow-step .dot{width:26px;height:26px;border-radius:50%;border:2px solid var(--surface-light);background:var(--abyss);display:flex;align-items:center;justify-content:center;font-size:10px;line-height:1;flex-shrink:0;transition:all 0.3s;font-family:var(--font-mono);font-weight:600;color:var(--text-dim)}
+.flow-step .dot.active{border-color:var(--accent-gold);background:rgba(255,213,79,0.1);box-shadow:0 0 12px rgba(255,213,79,0.15);color:var(--accent-gold)}
+.flow-step .label{font-size:10px;color:var(--text-dim);white-space:nowrap;margin:0 6px 0 4px;line-height:1}
+.flow-step .conn{width:22px;height:2px;background:var(--surface-light);position:relative;flex-shrink:0}
+.flow-step .conn::after{content:"▶";position:absolute;right:-4px;top:-7px;font-size:8px;color:var(--surface-light)}
+.flow-step:last-child .conn{display:none}
+.detail-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:200;display:none;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
+.detail-overlay.open{display:flex}
+.detail-card{background:var(--surface);border:2px solid var(--accent-dim);border-radius:8px;padding:22px 24px;max-width:520px;width:90%;max-height:80vh;overflow-y:auto;position:relative;box-shadow:0 8px 50px rgba(0,0,0,0.7),0 0 30px rgba(0,229,255,0.05);will-change:transform,opacity;backface-visibility:hidden;-webkit-backface-visibility:hidden;transform:translateZ(0);-webkit-transform:translateZ(0)}
+.detail-card h2{margin-top:0;font-family:var(--font-display);font-size:17px;font-weight:700;color:var(--accent);margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--surface-light);display:flex;align-items:center;gap:8px}
+.detail-card h2 svg{width:20px;height:20px;flex-shrink:0}
+.detail-card ul{list-style:none;padding:0}
+.detail-card li{font-size:13px;color:var(--text-primary);padding:4px 0 4px 14px;border-left:2px solid var(--surface-light);margin-bottom:5px;line-height:1.6}
+.detail-card li .hl{color:var(--accent);display:inline-flex;align-items:center;gap:4px}
+.detail-card li .hl-warn{color:var(--accent-pulse)}
+.detail-card .close-btn{position:absolute;top:12px;right:14px;font-family:var(--font-mono);font-size:11px;font-weight:600;color:var(--text-dimmer);background:none;border:1px solid var(--surface-light);border-radius:4px;padding:3px 10px;cursor:pointer;transition:all 0.2s}
+.detail-card .close-btn:hover{color:var(--accent-pulse);border-color:var(--accent-pulse)}
+.threat-bar{margin-top:16px;padding:10px 12px;background:rgba(22,43,58,0.4);border:1.5px solid var(--surface-light);border-radius:6px;position:relative;z-index:1;opacity:0}
+.threat-bar-header{font-family:var(--font-display);font-size:11px;font-weight:600;color:var(--text-dim);letter-spacing:0.5px;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.threat-steps{display:flex;align-items:center;gap:0}
+.threat-step{display:flex;align-items:center;opacity:0}
+.threat-step .dot-t{width:22px;height:22px;border-radius:50%;border:2px solid var(--surface-light);background:var(--abyss);display:flex;align-items:center;justify-content:center;font-size:9px;line-height:1;flex-shrink:0;font-family:var(--font-mono);font-weight:700;color:var(--text-dim);transition:all 0.3s}
+.threat-step .dot-t.t1{border-color:var(--accent-dim);color:var(--accent)}
+.threat-step .dot-t.t2{border-color:var(--accent-gold);color:var(--accent-gold)}
+.threat-step .dot-t.t3{border-color:var(--accent-deep);color:var(--accent-deep)}
+.threat-step .dot-t.t4{border-color:var(--accent-pulse);color:var(--accent-pulse)}
+.threat-step .label-t{font-size:10px;color:var(--text-dim);white-space:nowrap;margin:0 5px;line-height:1}
+.threat-step .conn-t{width:18px;height:1.5px;background:var(--surface-light);position:relative;flex-shrink:0}
+.threat-step .conn-t::after{content:"▸";position:absolute;right:-4px;top:-6px;font-size:8px;color:var(--surface-light)}
+.threat-step:last-child .conn-t{display:none}
+@media (max-width:860px){
+.layout-main{flex-direction:column}
+.side-column{width:100%;flex-direction:row;flex-wrap:wrap}
+.side-module{flex:1;min-width:150px}
+.header h1{font-size:22px}
+.header h1 svg{width:24px;height:24px}
+.screen-frame{padding:20px 10px 10px}
+.panel{padding:16px 12px 14px}
+.layer-modules{gap:3px}
+.module{font-size:11px;padding:3px 7px}
+.flow-step .label{font-size:10px}
+.flow-step .dot{width:22px;height:22px;font-size:9px}
+.threat-step .label-t{font-size:9px}
+}
+@media (max-width:480px){
+.header h1{font-size:18px;letter-spacing:1px}
+.module{font-size:10px;padding:2px 5px;white-space:normal}
+.layer{padding:6px 6px 8px}
+.layer-label{font-size:10px}
+}
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:var(--abyss)}
+::-webkit-scrollbar-thumb{background:var(--surface-light);border-radius:2px}
+.arrow-path{stroke-dasharray:200;stroke-dashoffset:200}
+.layer-label svg{width:16px;height:16px;flex-shrink:0}
+.svg-connectors{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:0}
+</style>
+</head>
+<body>
+<div class="screen-frame">
+<div class="crt-curve"></div>
+<div class="ocean-floor"></div>
+<div class="bio-dots" id="bioDots"></div>
+<div class="status-bar"><span class="dot"></span> Primordial Water · Sentinel <span style="opacity:.5">|</span> DEPTH UNKNOWN <span style="opacity:.5">|</span> ONLINE</div>
+<div class="panel" id="panel">
+<div class="header" id="header">
+<h1>
+<svg viewBox="0 0 32 32"><use href="#icon-drop" /></svg>
+原初之水
+</h1>
+<div class="subtitle">远古之水苏醒后以吞噬之力席卷全球<br>极少数能与之共鸣者，在驾驭与反噬之间挣扎 · <em>你是驭水者，还是被水吞噬的人？</em></div>
+</div>
+<svg class="svg-connectors" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:0" preserveAspectRatio="none">
+<defs>
+<marker id="arrowHead" markerWidth="6" markerHeight="5" refX="6" refY="2.5" orient="auto"><polygon points="0 0, 6 2.5, 0 5" fill="var(--surface-light)" opacity=".5"/></marker>
+<marker id="arrowHeadFlow" markerWidth="6" markerHeight="5" refX="6" refY="2.5" orient="auto"><polygon points="0 0, 6 2.5, 0 5" fill="var(--accent-gold)"/></marker>
+<filter id="glow"><feGaussianBlur stdDeviation="2" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+<symbol id="icon-drop" viewBox="0 0 32 32">
+<path d="M16 4C12 12 8 17 8 22a8 8 0 0 0 16 0c0-5-4-10-8-18z" stroke="currentColor" fill="none" stroke-width="2" stroke-linejoin="round"/>
+<path d="M16 14v10M12 18h8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" opacity="0.4"/>
+</symbol>
+<symbol id="icon-ripple" viewBox="0 0 20 20">
+<circle cx="10" cy="10" r="2" stroke="currentColor" fill="none" stroke-width="1.2"/>
+<circle cx="10" cy="10" r="5" stroke="currentColor" fill="none" stroke-width="1" opacity="0.5"/>
+<circle cx="10" cy="10" r="8" stroke="currentColor" fill="none" stroke-width="0.8" opacity="0.25"/>
+</symbol>
+<symbol id="icon-depth" viewBox="0 0 20 20">
+<path d="M2 4h16M4 10h12M6 16h8" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round" opacity="0.6"/>
+<path d="M10 2v16" stroke="currentColor" fill="none" stroke-width="1" stroke-linecap="round" opacity="0.2"/>
+</symbol>
+<symbol id="icon-skull" viewBox="0 0 20 20">
+<circle cx="10" cy="9" r="6" stroke="currentColor" fill="none" stroke-width="1.5"/>
+<circle cx="7" cy="8" r="1.5" fill="currentColor" opacity="0.4"/>
+<circle cx="13" cy="8" r="1.5" fill="currentColor" opacity="0.4"/>
+<path d="M8 14c2 1 2 1 4 0" stroke="currentColor" fill="none" stroke-width="1.2" stroke-linecap="round"/>
+<rect x="9" y="14" width="2" height="2" rx="1" fill="currentColor" opacity="0.3"/>
+</symbol>
+<symbol id="icon-chain" viewBox="0 0 20 20">
+<path d="M4 10l4-4a3 3 0 0 1 4 4l-4 4M16 10l-4 4a3 3 0 0 1-4-4l4-4" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round"/>
+</symbol>
+<symbol id="icon-eye-o" viewBox="0 0 20 20">
+<path d="M10 4c-4 0-7 3-8 6 1 3 4 6 8 6s7-3 8-6c-1-3-4-6-8-6z" stroke="currentColor" fill="none" stroke-width="1.5"/>
+<circle cx="10" cy="10" r="2.5" stroke="currentColor" fill="none" stroke-width="1.2"/>
+</symbol>
+<symbol id="icon-wave" viewBox="0 0 20 20">
+<path d="M2 14c2-3 6-3 8 0s6 3 8 0" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round"/>
+<path d="M2 10c2-3 6-3 8 0s6 3 8 0" stroke="currentColor" fill="none" stroke-width="1" stroke-linecap="round" opacity="0.4"/>
+</symbol>
+<symbol id="icon-shield-w" viewBox="0 0 20 20">
+<path d="M10 2l7 3v5c0 4-3.5 7-7 8-3.5-1-7-4-7-8V5l7-3z" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linejoin="round"/>
+<path d="M7 11l1.5 1.5L13 9" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round" opacity="0.5"/>
+</symbol>
+<symbol id="icon-echo" viewBox="0 0 20 20">
+<path d="M3 10c0-3.5 3-6 7-6s7 2.5 7 6-3 6-7 6" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round"/>
+<circle cx="10" cy="10" r="1.5" fill="currentColor" opacity="0.4"/>
+</symbol>
+<symbol id="icon-merge" viewBox="0 0 20 20">
+<path d="M10 2v16M2 10h16" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round" opacity="0.4"/>
+<circle cx="10" cy="10" r="4" stroke="currentColor" fill="none" stroke-width="1.5" stroke-dasharray="2 2"/>
+</symbol>
+<symbol id="icon-fire" viewBox="0 0 20 20">
+<path d="M10 2c-2 4-4 6-4 9a4 4 0 0 0 8 0c0-3-2-5-4-9z" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linejoin="round"/>
+<path d="M8 13a2 2 0 0 0 4 0" stroke="currentColor" fill="none" stroke-width="1" stroke-linecap="round" opacity="0.5"/>
+</symbol>
+<symbol id="icon-ice" viewBox="0 0 20 20">
+<path d="M10 2v16M4 6l12 8M4 14l12-8" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round" opacity="0.6"/>
+</symbol>
+<symbol id="icon-flow" viewBox="0 0 20 20">
+<path d="M4 16c2-4 6-4 8 0s6 4 8 0" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round"/>
+<path d="M4 12c2-4 6-4 8 0" stroke="currentColor" fill="none" stroke-width="1" stroke-linecap="round" opacity="0.4"/>
+</symbol>
+<symbol id="icon-crown" viewBox="0 0 20 20">
+<path d="M3 16l2-11 5 4 5-4 2 11H3z" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linejoin="round"/>
+<circle cx="10" cy="9" r="1" fill="currentColor" opacity="0.3"/>
+</symbol>
+<symbol id="icon-drown" viewBox="0 0 20 20">
+<path d="M10 2v12M6 10l4 4 4-4" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round"/>
+<path d="M4 16h12" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round" opacity="0.4"/>
+</symbol>
+<symbol id="icon-plague" viewBox="0 0 20 20">
+<circle cx="10" cy="10" r="7" stroke="currentColor" fill="none" stroke-width="1.5" stroke-dasharray="3 2"/>
+<path d="M8 8l4 4M12 8l-4 4" stroke="currentColor" fill="none" stroke-width="1.2" stroke-linecap="round" opacity="0.5"/>
+</symbol>
+<symbol id="icon-cult" viewBox="0 0 20 20">
+<path d="M10 2l2 6 6 1-4.5 4 1.5 6-5-3-5 3 1.5-6L2 9l6-1z" stroke="currentColor" fill="none" stroke-width="1.3" stroke-linejoin="round" opacity="0.7"/>
+</symbol>
+<symbol id="icon-bandit" viewBox="0 0 20 20">
+<path d="M5 16V8a5 5 0 0 1 10 0v8" stroke="currentColor" fill="none" stroke-width="1.5"/>
+<rect x="3" y="14" width="14" height="3" rx="1" stroke="currentColor" fill="none" stroke-width="1.2"/>
+</symbol>
+<symbol id="icon-mind" viewBox="0 0 20 20">
+<path d="M10 3c-3 0-5 2-5 4s1 3 3 3.5c-.5 1-1.5 2-3 2-2 0-3-1.5-3-3.5S2.5 5 4 4" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round"/>
+<path d="M10 3c3 0 5 2 5 4s-1 3-3 3.5c.5 1 1.5 2 3 2 2 0 3-1.5 3-3.5S17.5 5 16 4" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round"/>
+<path d="M10 12v5" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round"/>
+</symbol>
+<symbol id="icon-track" viewBox="0 0 20 20">
+<path d="M2 16l6-8 3 3 7-6" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="6" cy="8" r="1" fill="currentColor" opacity="0.3"/>
+<circle cx="16" cy="5" r="1" fill="currentColor" opacity="0.3"/>
+</symbol>
+<symbol id="icon-field" viewBox="0 0 20 20">
+<circle cx="10" cy="10" r="8" stroke="currentColor" fill="none" stroke-width="1.2" opacity="0.3"/>
+<circle cx="10" cy="10" r="4" stroke="currentColor" fill="none" stroke-width="1.5" stroke-dasharray="2 2"/>
+<circle cx="10" cy="10" r="1.5" fill="currentColor" opacity="0.3"/>
+</symbol>
+</defs>
+</svg>
+<div class="layout-main">
+<div class="layers-column">
+<div class="layer" data-layer="awake">
+<div class="layer-label"><svg viewBox="0 0 20 20"><use href="#icon-drop" /></svg>觉醒与扩张 <span class="badge">AWAKENING</span></div>
+<div class="layer-modules">
+<div class="module" data-detail="origin"><svg viewBox="0 0 20 20"><use href="#icon-ripple" /></svg>远古封印解除</div>
+<div class="module" data-detail="nature"><svg viewBox="0 0 20 20"><use href="#icon-skull" /></svg>吞噬本能</div>
+<div class="module" data-detail="spread"><svg viewBox="0 0 20 20"><use href="#icon-wave" /></svg>接触传染 <span class="tag tag-phase">触即同化</span></div>
+<div class="module" data-detail="resonance"><svg viewBox="0 0 20 20"><use href="#icon-mind" /></svg>精神共鸣 <span class="tag tag-phase">操控方式</span></div>
+</div>
+</div>
+<div class="arrow-down" data-flow="危机四阶段">
+<svg viewBox="0 0 100 24"><line class="arrow-path" x1="50" y1="0" x2="50" y2="22" stroke="var(--surface-light)" stroke-width="1.5" marker-end="url(#arrowHead)" opacity=".5"/></svg>
+<div class="arrow-label">全球同化进程</div>
+</div>
+<div class="layer" data-layer="crisis">
+<div class="layer-label"><svg viewBox="0 0 20 20"><use href="#icon-depth" /></svg>危机四阶段 <span class="badge">CRISIS</span></div>
+<div class="layer-modules">
+<div class="module" data-detail="p1"><svg viewBox="0 0 20 20"><use href="#icon-ripple" /></svg>警戒期 <span class="tag tag-light">局部异变</span></div>
+<div class="module" data-detail="p2"><svg viewBox="0 0 20 20"><use href="#icon-wave" /></svg>失控期 <span class="tag tag-light">大规模沦陷</span></div>
+<div class="module" data-detail="p3"><svg viewBox="0 0 20 20"><use href="#icon-shield-w" /></svg>适应期 <span class="tag tag-light">水墙城市</span></div>
+<div class="module" data-detail="p4"><svg viewBox="0 0 20 20"><use href="#icon-skull" /></svg>终局期 <span class="tag tag-light">存或亡</span></div>
+</div>
+</div>
+<div class="arrow-down" data-flow="能力层级">
+<svg viewBox="0 0 100 24"><line class="arrow-path" x1="50" y1="0" x2="50" y2="22" stroke="var(--surface-light)" stroke-width="1.5" marker-end="url(#arrowHead)" opacity=".5"/></svg>
+<div class="arrow-label">能力递进·代价递增</div>
+</div>
+<div class="layer" data-layer="ability">
+<div class="layer-label"><svg viewBox="0 0 20 20"><use href="#icon-echo" /></svg>能力体系 <span class="badge">ABILITIES</span></div>
+<div class="layer-modules">
+<div class="module" data-detail="basic"><svg viewBox="0 0 20 20"><use href="#icon-ripple" /></svg>基础共鸣 <span class="tag tag-light">安全·有限</span></div>
+<div class="module" data-detail="deep"><svg viewBox="0 0 20 20"><use href="#icon-depth" /></svg>深度共鸣 <span class="tag tag-deep">强大·反噬</span></div>
+<div class="module" data-detail="fusion"><svg viewBox="0 0 20 20"><use href="#icon-merge" /></svg>融合层 <span class="tag tag-fusion">极限·不可逆</span></div>
+</div>
+</div>
+<div class="arrow-down" data-flow="使用者分化">
+<svg viewBox="0 0 100 24"><line class="arrow-path" x1="50" y1="0" x2="50" y2="22" stroke="var(--surface-light)" stroke-width="1.5" marker-end="url(#arrowHead)" opacity=".5"/></svg>
+<div class="arrow-label">共鸣者分化</div>
+</div>
+<div class="layer" data-layer="user-type">
+<div class="layer-label"><svg viewBox="0 0 20 20"><use href="#icon-crown" /></svg>使用者分类 <span class="badge">TYPES</span></div>
+<div class="layer-modules">
+<div class="module" data-detail="drive"><svg viewBox="0 0 20 20"><use href="#icon-shield-w" /></svg>驾驭型 <span class="tag tag-faction">安全·有限</span></div>
+<div class="module" data-detail="indulge"><svg viewBox="0 0 20 20"><use href="#icon-drown" /></svg>沉溺型 <span class="tag tag-fusion">高危·成长快</span></div>
+<div class="module" data-detail="symbio"><svg viewBox="0 0 20 20"><use href="#icon-merge" /></svg>共生理 <span class="tag tag-deep">深共鸣·易迷失</span></div>
+</div>
+</div>
+</div>
+<div class="side-column">
+<div class="side-module" data-detail="cost">
+<div class="layer-label"><svg viewBox="0 0 20 20"><use href="#icon-fire" /></svg>代价体系</div>
+<div class="desc">生理 → 精神 → 存在 · 每一次使用都在支付代价</div>
+</div>
+<div class="side-module" data-detail="threat">
+<div class="layer-label"><svg viewBox="0 0 20 20"><use href="#icon-plague" /></svg>衍生威胁</div>
+<div class="desc">水灵 · 水疫 · 融水教 · 清道夫 · 水源掠夺者</div>
+</div>
+<div class="side-module" data-detail="flow-common">
+<div class="layer-label"><svg viewBox="0 0 20 20"><use href="#icon-eye-o" /></svg>普通人视角</div>
+<div class="desc">从日常饮水到堡垒求生 · 净水成为终极货币</div>
+</div>
+<div class="side-module" data-detail="flow-user">
+<div class="layer-label"><svg viewBox="0 0 20 20"><use href="#icon-mind" /></svg>共鸣者视角</div>
+<div class="desc">第一次接触 → 训练 → 任务 → 抉择</div>
+</div>
+</div>
+</div>
+<div class="user-flow">
+<div class="user-flow-header">
+<svg viewBox="0 0 20 20" style="width:14px;height:14px;flex-shrink:0"><use href="#icon-wave"/></svg>
+危机四阶段演进
+<span style="font-size:7px;color:var(--text-dim);font-family:var(--font-mono)">[ 同化进度 ]</span>
+</div>
+<div class="user-flow-steps" id="flowSteps">
+<div class="flow-step"><div class="dot">1</div><span class="label">警戒期</span><div class="conn"></div></div>
+<div class="flow-step"><div class="dot">2</div><span class="label">失控期</span><div class="conn"></div></div>
+<div class="flow-step"><div class="dot">3</div><span class="label">适应期</span><div class="conn"></div></div>
+<div class="flow-step"><div class="dot">4</div><span class="label">终局期</span></div>
+</div>
+</div>
+<div class="threat-bar">
+<div class="threat-bar-header">
+<svg viewBox="0 0 20 20" style="width:14px;height:14px;flex-shrink:0"><use href="#icon-wave"/></svg>
+危机演进时间轴
+</div>
+<div class="threat-steps" id="threatSteps">
+<div class="threat-step"><div class="dot-t t1">警</div><span class="label-t">局部异变</span><div class="conn-t"></div></div>
+<div class="threat-step"><div class="dot-t t2">失</div><span class="label-t">大规模沦陷</span><div class="conn-t"></div></div>
+<div class="threat-step"><div class="dot-t t3">适</div><span class="label-t">水墙城市</span><div class="conn-t"></div></div>
+<div class="threat-step"><div class="dot-t t4">终</div><span class="label-t">存或亡</span></div>
+</div>
+</div>
+</div>
+</div>
+<div class="detail-overlay">
+<div class="detail-card">
+<button class="close-btn">✕ CLOSE</button>
+<div id="detailContent"></div>
+</div>
+</div>
+<script>
+const DETAILS = {
+"origin":{title:'<svg viewBox="0 0 20 20"><use href="#icon-ripple"/></svg> 远古封印解除',items:['原初之水是地球远古时代就存在的意识之水','被上古文明封印在一座失落遗迹中','封印在当代被意外解除，原初之水重新流入世界','没有明确的善恶——它只有本能：吞噬与同化']},
+"nature":{title:'<svg viewBox="0 0 20 20"><use href="#icon-skull"/></svg> 吞噬本能',items:['原初之水的核心本能是接触并同化所有普通水','它没有恶意，也不存在意识中的"敌我"区分','它会主动追踪、包裹、渗透目标','驭水者必须时刻压制它的吞噬冲动']},
+"spread":{title:'<svg viewBox="0 0 20 20"><use href="#icon-wave"/></svg> 接触传染',items:['接触即同化——只要原初之水碰到普通水，后者立即被转化','扩张方式呈指数级增长','从地下水源开始，沿水系网络蔓延至全球','空气中高浓度水汽区也会缓慢被感染']},
+"resonance":{title:'<svg viewBox="0 0 20 20"><use href="#icon-mind"/></svg> 精神共鸣',items:['特定个体的脑波频率能与原初之水共振','操控者通过情绪和意念下达指令','关系不是主仆，而是骑手与烈马','共鸣越深，力量越大，反噬风险越高']},
+"p1":{title:'<svg viewBox="0 0 20 20"><use href="#icon-ripple"/></svg> 警戒期——局部异变',items:['原初之水从遗迹出口泄露，沿水系缓慢扩散','湖泊河流出现异常脉动和温差变化（局部温差 10℃+）','水中生物集体消失或变异','各国政府试图封锁消息，定性为"不明水质污染"']},
+"p2":{title:'<svg viewBox="0 0 20 20"><use href="#icon-wave"/></svg> 失控期——大规模沦陷',items:['原初之水突破地理限制，进入主要水系网络','沿海城市水源被大面积同化','自来水从水龙头流出具有活性的水','恐慌爆发，瓶装水成为硬通货','部分军事基地淡水系统失效']},
+"p3":{title:'<svg viewBox="0 0 20 20"><use href="#icon-shield-w"/></svg> 适应期——水墙城市',items:['海水淡化厂被淹没，地下水成为最后水源','能共鸣者被各国组建为"驭水者"部队','水墙城市兴起——用物理屏障隔离原初之水','黑市买卖真正的"干净水"，价格超过黄金']},
+"p4":{title:'<svg viewBox="0 0 20 20"><use href="#icon-skull"/></svg> 终局期——存或亡',items:['原初之水几乎覆盖了地球所有水体','人类退守到少数堡垒城市','水源枯竭，最后一滴干净水成为终极资源','驭水者面临终极抉择——站在人类一边，还是融入水中','原初之水的同化速度开始放缓，似乎在等待什么']},
+"basic":{title:'<svg viewBox="0 0 20 20"><use href="#icon-ripple"/></svg> 基础共鸣层',items:['<span class="hl">水形操控</span> —— 精神建立形态模板，水变形为武器或屏障','<span class="hl">水幕防御</span> —— 高速水环流偏转物理攻击','<span class="hl">水中感知</span> —— 意识沉入水中读取环境振动','<span class="hl">水线追踪</span> —— 提取目标水分痕迹自动追踪','特点：低消耗、安全、威力有限。原初之水在"陪着玩"']},
+"deep":{title:'<svg viewBox="0 0 20 20"><use href="#icon-depth"/></svg> 深度共鸣层',items:['<span class="hl">相态爆破</span> —— 目标体内水分瞬间沸腾（热爆）或结晶（冰刺）','<span class="hl">水化身躯</span> —— 身体局部或全部水化，免疫物理攻击','<span class="hl">同化领域</span> —— 展开 10m 半径范围，水分自动攻击目标','<span class="hl">水之记忆</span> —— 读取水中存储的过去画面','<span class="hl-warn">反噬代价：</span> 每次使用都是一次意志对抗']},
+"fusion":{title:'<svg viewBox="0 0 20 20"><use href="#icon-merge"/></svg> 融合层——极限共鸣',items:['<span class="hl">完全水化</span> —— 身体分解为水团，可渗透任何缝隙','<span class="hl">同化传播</span> —— 使用者成为移动同化节点','<span class="hl">意识洪流</span> —— 精神浸入全球原初之水集体意识','<span class="hl-warn">不可逆代价：</span> 身体边界模糊 · 人类身份流失 · 记忆腐蚀','代价：你还是你吗？']},
+"drive":{title:'<svg viewBox="0 0 20 20"><use href="#icon-shield-w"/></svg> 驾驭型',items:['精神特质：理性、控制欲强、边界感清晰','能力倾向：基础层和深度层精通，很少触碰融合层','最安全的共鸣者类型','代价：潜力有限，无法抵达最深的共鸣层']},
+"indulge":{title:'<svg viewBox="0 0 20 20"><use href="#icon-drown"/></svg> 沉溺型',items:['精神特质：感性、自毁倾向、孤独','能力倾向：容易向融合层滑落，力量增长极快','最高危的类型，最容易消失在水中','每一次深度共鸣后都更难把自己"收回"']},
+"symbio":{title:'<svg viewBox="0 0 20 20"><use href="#icon-merge"/></svg> 共生理',items:['精神特质：温和、接纳、有牺牲倾向','能力倾向：与水的配合最流畅，可抵达最深层的共鸣','一旦失去平衡就彻底失去自我','通常是最强的驭水者，也是最先走入大海的人']},
+"cost":{title:'<svg viewBox="0 0 20 20"><use href="#icon-fire"/></svg> 三层代价体系',items:['<span class="hl">生理代价（可恢复）</span> —— 体力透支、体温紊乱、脱水反应、感知错乱','<span class="hl">精神代价（累积）</span> —— 水瘾、噩梦闪回、分离感、情绪钝化','<span class="hl-warn">存在代价（不可逆）</span> —— 身体边界模糊、人类身份流失、记忆腐蚀','归宿感转移：最终自觉不自觉地走向大海']},
+"threat":{title:'<svg viewBox="0 0 20 20"><use href="#icon-plague"/></svg> 衍生威胁',items:['<span class="hl">水灵</span> —— 原初之水高浓度区域自然凝聚的人形流体','<span class="hl">水疫</span> —— 普通人摄入被同化的水后的感染状态','<span class="hl">融水教</span> —— 崇拜原初之水，认为同化是人类进化','<span class="hl">清道夫</span> —— 猎杀共鸣者，认为他们是人类叛徒','<span class="hl">水源掠夺者</span> —— 控制净水的武装军阀']},
+"flow-common":{title:'<svg viewBox="0 0 20 20"><use href="#icon-eye-o"/></svg> 普通人视角',items:['警戒期：生活照常，新闻出现"不明水质污染"报道','失控期：自来水异常，恐慌抢购瓶装水','适应期：搬迁到水墙城市，凭配给证领取每日定量净水','终局期：缩居堡垒城市，每一滴净水都记录在案']},
+"flow-user":{title:'<svg viewBox="0 0 20 20"><use href="#icon-mind"/></svg> 共鸣者视角',items:['第一次共鸣：偶然触发，感受到水的"回应"','被登记：政府或军事组织找上门','训练阶段：学习基础共鸣，感知水的情緒，建立意志屏障','执行任务：同化领域清理 · 水之记忆读取 · 对抗水灵','抉择：收敛退隐，还是彻底融合？']}
+};
+document.addEventListener("DOMContentLoaded",()=>{
+const layers=document.querySelectorAll(".layer");
+const arrows=document.querySelectorAll(".arrow-down");
+const flowSteps=document.querySelectorAll(".flow-step");
+const sideModules=document.querySelectorAll(".side-module");
+const userFlow=document.querySelector(".user-flow");
+const threatBar=document.querySelector(".threat-bar");
+const threatSteps=document.querySelectorAll(".threat-step");
+const overlays=document.querySelector(".detail-overlay");
+const detailContent=document.querySelector("#detailContent");
+const closeBtn=document.querySelector(".close-btn");
+const mainTimeline=anime.timeline({easing:"easeOutCubic"});
+mainTimeline.add({targets:"#header",opacity:[0,1],translateY:[-10,0],duration:600});
+mainTimeline.add({targets:sideModules,opacity:[0,1],translateX:[15,0],duration:400,delay:anime.stagger(100)},"-=200");
+mainTimeline.add({targets:layers,opacity:[0,1],translateY:[20,0],duration:450,delay:anime.stagger(130)},"-=100");
+mainTimeline.add({targets:arrows,opacity:[0,1],duration:350,delay:anime.stagger(180)},"-=200");
+setTimeout(()=>{document.querySelectorAll(".arrow-path").forEach((p)=>{anime({targets:p,strokeDashoffset:[200,0],duration:700,delay:300,easing:"easeInOutCubic"});});},1400);
+mainTimeline.add({targets:userFlow,opacity:[0,1],duration:400},"-=100");
+mainTimeline.add({targets:flowSteps,opacity:[0,1],translateX:[-8,0],duration:300,delay:anime.stagger(100)},"-=200");
+mainTimeline.add({targets:threatBar,opacity:[0,1],duration:400},"-=100");
+mainTimeline.add({targets:threatSteps,opacity:[0,1],translateX:[-6,0],duration:250,delay:anime.stagger(100)},"-=200");
+let flowIndex=0;function pulseFlow(){flowSteps.forEach((s)=>s.querySelector(".dot").classList.remove("active"));flowSteps[flowIndex].querySelector(".dot").classList.add("active");flowIndex=(flowIndex+1)%flowSteps.length;}
+pulseFlow();setInterval(pulseFlow,2500);
+layers.forEach((l)=>{l.addEventListener("mouseenter",()=>{anime({targets:l,borderColor:"var(--accent)",backgroundColor:"rgba(0,229,255,0.05)",duration:200});});l.addEventListener("mouseleave",()=>{anime({targets:l,borderColor:"var(--surface-light)",backgroundColor:"rgba(22,43,58,0.4)",duration:300});});});
+function openDetail(id){const data=DETAILS[id];if(!data)return;detailContent.innerHTML=`<h2>${data.title}</h2><ul>${data.items.map((i)=>`<li>${i}</li>`).join("")}</ul>`;overlays.classList.add("open");anime({targets:".detail-card",scale:[0.85,1],opacity:[0,1],duration:250,easing:"easeOutCubic"});}
+function closeDetail(){anime({targets:".detail-card",scale:[1,0.85],opacity:[1,0],duration:200,easing:"easeInCubic",complete:()=>{overlays.classList.remove("open");}});}
+document.querySelectorAll(".module[data-detail]").forEach((el)=>{el.addEventListener("click",()=>openDetail(el.dataset.detail));});
+document.querySelectorAll(".side-module[data-detail]").forEach((el)=>{el.addEventListener("click",()=>openDetail(el.dataset.detail));});
+closeBtn.addEventListener("click",closeDetail);
+overlays.addEventListener("click",(e)=>{if(e.target===overlays)closeDetail();});
+const board=document.getElementById("panel");
+for(let i=0;i<20;i++){const dot=document.createElement("div");dot.style.cssText=`position:absolute;pointer-events:none;width:${2+Math.random()*3}px;height:${2+Math.random()*3}px;border-radius:50%;background:rgba(0,229,255,0.15);filter:blur(3px);left:${Math.random()*100}%;top:${Math.random()*100}%;opacity:${0.03+Math.random()*0.08}`;board.appendChild(dot);anime({targets:dot,translateX:[0,-6+Math.random()*12],translateY:[0,-6+Math.random()*12],opacity:[0.03,0.1,0.03],duration:5000+Math.random()*6000,direction:"alternate",loop:true,easing:"easeInOutSine"});}
+const bioDots=document.getElementById("bioDots");
+for(let i=0;i<12;i++){const d=document.createElement("div");d.className="bio-dot";d.style.cssText=`left:${Math.random()*98+1}%;top:${Math.random()*98+1}%;animation:biofade ${3+Math.random()*5}s ease-in-out ${Math.random()*5}s infinite`;bioDots.appendChild(d);}
+const style=document.createElement("style");style.textContent=`@keyframes biofade{0%,100%{opacity:0;transform:scale(0.5)}30%{opacity:0.6;transform:scale(1)}60%{opacity:0.2;transform:scale(0.8)}}`;document.head.appendChild(style);
+});
+</script>
+</body>
+</html>

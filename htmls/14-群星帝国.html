@@ -1,0 +1,579 @@
+﻿<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>群星帝国</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;600;800&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <style>
+      *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+      :root {
+        --board: #0a0e1a; --board-dark: #050810;
+        --chalk: #c8d8f0; --chalk-dim: rgba(200,216,240,0.55);
+        --chalk-dimmer: rgba(200,216,240,0.18); --chalk-translucent: rgba(200,216,240,0.06);
+        --accent-gold: #fbbf24; --accent-cyan: #22d3ee; --accent-red: #ef4444;
+        --accent-blue: #3b82f6; --accent-purple: #a855f7;
+        --scanline: rgba(0,0,0,0.06); --font-display: "Noto Sans SC","PingFang SC", "PingFang SC", "Microsoft YaHei", sans-serif; --font-mono: "IBM Plex Mono","SFMono-Regular", Menlo, Consolas, "SFMono-Regular", Menlo, Consolas, "Courier New", monospace;
+      }
+      html,body{height:100%;background:#04060e;font-family:var(--font-mono);color:var(--chalk);overflow-x:hidden}
+      .screen-frame{position:relative;min-height:100vh;padding:28px 20px 20px;background:#111;border-radius:20px;box-shadow:inset 0 0 40px rgba(0,0,0,0.8),0 8px 40px rgba(0,0,0,0.6);max-width:1360px;margin:0 auto}
+      .screen-frame::before{content:"";position:absolute;inset:0;border-radius:20px;background:repeating-linear-gradient(0deg,transparent,transparent 2px,var(--scanline) 2px,var(--scanline) 4px);pointer-events:none;z-index:100}
+      .crt-curve{position:absolute;inset:0;border-radius:20px;background:radial-gradient(ellipse at center,transparent 65%,rgba(0,0,0,0.35) 100%);pointer-events:none;z-index:99}
+      .power-led{position:absolute;top:8px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:8px;font-family:var(--font-display);font-size:10px;font-weight:600;color:var(--chalk-dim);letter-spacing:1.5px;z-index:101}
+      .power-led span{display:inline-block;width:6px;height:6px;border-radius:50%;background:#4ade80;box-shadow:0 0 6px #4ade80;animation:led-pulse 2s ease-in-out infinite}
+      @keyframes led-pulse{0%,100%{opacity:1;box-shadow:0 0 6px #4ade80}50%{opacity:0.5;box-shadow:0 0 2px #4ade80}}
+      .chalkboard{position:relative;background:var(--board);border:3px solid #141e3a;border-radius:4px;padding:32px 28px 28px;box-shadow:inset 0 0 60px rgba(0,0,0,0.5),0 4px 0 #080e1c;min-height:calc(100vh - 80px)}
+      .chalkboard::after{content:"";position:absolute;inset:0;background-image:radial-gradient(circle at 20% 30%,rgba(200,216,240,0.02) 0,transparent 60%),radial-gradient(circle at 80% 70%,rgba(200,216,240,0.015) 0,transparent 50%),radial-gradient(circle at 50% 50%,rgba(200,216,240,0.01) 0,transparent 70%);pointer-events:none;border-radius:2px}
+      .header{text-align:center;margin-bottom:24px;position:relative;z-index:1}
+      .header h1{font-family:var(--font-display);font-size:26px;font-weight:800;color:var(--accent-gold);text-shadow:0 0 8px rgba(251,191,36,0.3);letter-spacing:2px;margin-bottom:4px;display:flex;align-items:center;justify-content:center;gap:10px}
+      .header .subtitle{font-size:14px;color:var(--chalk-dim);letter-spacing:0.5px}
+      .header .subtitle em{font-style:normal;color:var(--accent-cyan)}
+      .layout-main{display:flex;gap:20px;position:relative;z-index:1}
+      .layers-column{flex:1;min-width:0}
+      .side-column{width:220px;flex-shrink:0;display:flex;flex-direction:column;gap:10px}
+      .svg-connectors{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:0}
+      .layer{position:relative;background:var(--chalk-translucent);border:1.5px solid var(--chalk-dimmer);border-radius:6px;padding:12px 14px 14px;margin-bottom:0;cursor:pointer;transition:border-color 0.3s,background 0.3s;opacity:0;transform:translateY(20px)}
+      .layer:hover{border-color:var(--accent-gold);background:rgba(251,191,36,0.06)}
+      .layer-label{font-family:var(--font-display);font-size:12px;font-weight:600;color:var(--chalk-dim);letter-spacing:1px;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+      .layer-label .badge{font-size:10px;font-weight:600;background:var(--chalk-dimmer);color:var(--board);padding:1px 7px;border-radius:3px;letter-spacing:0}
+      .layer-modules{display:flex;flex-wrap:wrap;gap:6px}
+      .module{background:rgba(200,216,240,0.06);border:1px solid var(--chalk-dimmer);border-radius:4px;padding:5px 10px;font-size:12px;line-height:1.5;color:var(--chalk);transition:all 0.25s;white-space:nowrap;cursor:pointer;display:inline-flex;align-items:center;gap:5px}
+      .module:hover{background:rgba(200,216,240,0.12);border-color:var(--chalk);transform:translateY(-1px)}
+      svg.icon,.module svg,.side-module svg,.dot svg{width:16px;height:16px;flex-shrink:0}
+      .module svg{width:15px;height:15px}
+      .dot svg{width:14px;height:14px}
+      .layer-label>svg:first-child{width:18px;height:18px;flex-shrink:0}
+      .header h1 svg{width:28px;height:28px;flex-shrink:0}
+      .module .tag{font-size:10px;font-weight:600;padding:1px 6px;border-radius:3px;margin-left:4px;opacity:0.8}
+      .tag-core{background:var(--accent-gold);color:var(--board)}
+      .tag-ai{background:var(--accent-cyan);color:var(--board)}
+      .tag-warn{background:var(--accent-red);color:var(--board)}
+      .tag-data{background:var(--accent-purple);color:var(--board)}
+      .layer[data-layer="ai"]{border-left:3px solid var(--accent-cyan)}
+      .layer[data-layer="engine"]{border-left:3px solid var(--accent-gold)}
+      .layer[data-layer="diplomacy"]{border-left:3px solid var(--accent-purple)}
+      .layer[data-layer="viewer"]{border-left:3px solid var(--accent-red)}
+      .arrow-down{display:flex;align-items:center;justify-content:center;height:28px;position:relative;opacity:0}
+      .arrow-down svg{width:100%;height:28px}
+      .arrow-label{position:absolute;font-family:var(--font-display);font-size:10px;font-weight:600;color:var(--chalk-dim);letter-spacing:0.5px;background:var(--board);padding:0 8px;text-align:center;white-space:nowrap}
+      .side-module{background:var(--chalk-translucent);border:1.5px solid var(--chalk-dimmer);border-left:3px solid var(--accent-blue);border-radius:6px;padding:10px 12px;cursor:pointer;opacity:0;transform:translateX(15px);transition:border-color 0.3s,background 0.3s}
+      .side-module:hover{border-color:var(--accent-blue);background:rgba(59,130,246,0.08)}
+      .side-module .layer-label{margin-bottom:4px}
+      .side-module .desc{font-size:12px;color:var(--chalk-dim);line-height:1.5}
+      .user-flow{margin-top:22px;padding:14px 16px;background:var(--chalk-translucent);border:1.5px solid var(--chalk-dimmer);border-radius:6px;position:relative;z-index:1;opacity:0}
+      .user-flow-header{font-family:var(--font-display);font-size:12px;font-weight:600;color:var(--accent-gold);letter-spacing:0.5px;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+      .user-flow-steps{display:flex;align-items:center;flex-wrap:wrap;gap:0}
+      .flow-step{display:flex;align-items:center;gap:0;opacity:0}
+      .flow-step .dot{width:28px;height:28px;border-radius:50%;border:2px solid var(--chalk-dimmer);background:var(--board);display:flex;align-items:center;justify-content:center;font-size:13px;line-height:1;flex-shrink:0;transition:all 0.3s}
+      .flow-step .dot.active{border-color:var(--accent-gold);background:rgba(251,191,36,0.12);box-shadow:0 0 10px rgba(251,191,36,0.2)}
+      .flow-step .label{font-size:12px;color:var(--chalk-dim);white-space:nowrap;margin:0 8px 0 6px;line-height:1}
+      .flow-step .conn{width:24px;height:2px;background:var(--chalk-dimmer);position:relative;flex-shrink:0}
+      .flow-step .conn::after{content:"▸";position:absolute;right:-4px;top:-6px;font-size:10px;color:var(--chalk-dimmer)}
+      .flow-step:last-child .conn{display:none}
+      .detail-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:200;display:none;align-items:center;justify-content:center;backdrop-filter:blur(2px)}
+      .detail-overlay.open{display:flex}
+      .detail-card{background:var(--board-dark);border:2px solid var(--chalk-dimmer);border-radius:8px;padding:24px 28px;max-width:500px;width:90%;max-height:80vh;overflow-y:auto;position:relative;box-shadow:0 8px 40px rgba(0,0,0,0.6);will-change:transform,opacity;backface-visibility:hidden;-webkit-backface-visibility:hidden;transform:translateZ(0);-webkit-transform:translateZ(0)}
+      .detail-card h2{margin-top: 0;font-family:var(--font-display);font-size:18px;font-weight:800;color:var(--accent-gold);margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid var(--chalk-dimmer);display:flex;align-items:center;gap:8px}
+      .detail-card h2 svg{width:22px;height:22px;flex-shrink:0}
+      .detail-card h3{font-family:var(--font-display);font-size:13px;font-weight:600;color:var(--chalk-dim);margin:14px 0 6px}
+      .detail-card ul{list-style:none;padding:0}
+      .detail-card li{font-size:13px;color:var(--chalk);padding:5px 0 5px 14px;border-left:2px solid var(--chalk-dimmer);margin-bottom:6px;line-height:1.6}
+      .detail-card li .hl{color:var(--accent-cyan);display:inline-flex;align-items:center;gap:4px}
+      .detail-card li .hl-warn{color:var(--accent-red)}
+      .detail-card .close-btn{position:absolute;top:14px;right:16px;font-family:var(--font-display);font-size:13px;font-weight:600;color:var(--chalk-dimmer);background:none;border:1px solid var(--chalk-dimmer);border-radius:4px;padding:4px 12px;cursor:pointer;transition:all 0.2s}
+      .detail-card .close-btn:hover{color:var(--accent-red);border-color:var(--accent-red)}
+      @media (max-width:860px){
+        .layout-main{flex-direction:column}
+        .side-column{width:100%;flex-direction:row;flex-wrap:wrap}
+        .side-module{flex:1;min-width:160px}
+        .header h1{font-size:20px}
+        .screen-frame{padding:24px 12px 12px}
+        .chalkboard{padding:20px 14px 16px}
+        .layer-modules{gap:4px}
+        .module{font-size:11px;padding:4px 8px}
+        .flow-step .label{font-size:10px}
+        .flow-step .dot{width:24px;height:24px;font-size:11px}
+      }
+      @media (max-width:480px){
+        .header h1{font-size:16px;letter-spacing:1px}
+        .module{font-size:10px;padding:3px 6px;white-space:normal}
+        .layer{padding:8px 8px 10px}
+        .layer-label{font-size:10px}
+      }
+      .chalk-glow{position:absolute;pointer-events:none;width:4px;height:4px;border-radius:50%;background:rgba(200,216,240,0.15);filter:blur(6px)}
+      ::-webkit-scrollbar{width:4px}
+      ::-webkit-scrollbar-track{background:var(--board-dark)}
+      ::-webkit-scrollbar-thumb{background:var(--chalk-dimmer);border-radius:2px}
+      .arrow-path{stroke-dasharray:200;stroke-dashoffset:200}
+    .layer-label svg{width:16px;height:16px;flex-shrink:0}
+</style>
+  </head>
+  <body>
+    <div class="screen-frame">
+      <div class="crt-curve"></div>
+      <div class="power-led"><span></span> SYSTEM · ONLINE</div>
+      <div class="chalkboard" id="chalkboard">
+        <div class="header" id="header">
+          <h1>
+            <svg class="icon" viewBox="0 0 20 20"><use href="#icon-galaxy" /></svg>
+            群星帝国
+          </h1>
+          <div class="subtitle">AI 星际帝国博弈 · <em>人类纯旁观，观看 AI 策略、外交、战争</em></div>
+        </div>
+        <svg class="svg-connectors" id="connectorSvg" preserveAspectRatio="none">
+          <defs>
+            <marker id="arrowHead" markerWidth="6" markerHeight="5" refX="6" refY="2.5" orient="auto"><polygon points="0 0, 6 2.5, 0 5" fill="var(--chalk-dimmer)" opacity=".6"/></marker>
+            <marker id="arrowHeadFlow" markerWidth="6" markerHeight="5" refX="6" refY="2.5" orient="auto"><polygon points="0 0, 6 2.5, 0 5" fill="var(--accent-gold)"/></marker>
+            <filter id="glow"><feGaussianBlur stdDeviation="1.5" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+            <symbol id="icon-galaxy" viewBox="0 0 20 20">
+              <ellipse cx="10" cy="10" rx="8" ry="5" stroke="currentColor" fill="none" stroke-width="1.2" transform="rotate(-30 10 10)"/>
+              <ellipse cx="10" cy="10" rx="8" ry="5" stroke="currentColor" fill="none" stroke-width=".6" opacity=".4" transform="rotate(30 10 10)"/>
+              <circle cx="6" cy="8" r="1" fill="var(--accent-gold)" opacity=".8"/>
+              <circle cx="13" cy="6" r=".8" fill="var(--accent-cyan)" opacity=".8"/>
+              <circle cx="14" cy="12" r="1" fill="var(--accent-red)" opacity=".8"/>
+              <circle cx="8" cy="13" r=".6" fill="var(--accent-cyan)" opacity=".6"/>
+            </symbol>
+            <symbol id="icon-stars" viewBox="0 0 20 20">
+              <circle cx="10" cy="10" r="7" stroke="currentColor" fill="none" stroke-width="1.5"/>
+              <circle cx="6" cy="7" r="1.5" fill="var(--accent-gold)" opacity=".6"/>
+              <circle cx="14" cy="8" r="1" fill="var(--accent-cyan)" opacity=".6"/>
+              <circle cx="8" cy="14" r="1" fill="var(--accent-red)" opacity=".6"/>
+              <circle cx="13" cy="13" r="1.2" fill="var(--accent-purple)" opacity=".6"/>
+            </symbol>
+            <symbol id="icon-ai" viewBox="0 0 20 20">
+              <rect x="4" y="5" width="12" height="9" rx="1.5" stroke="currentColor" fill="none" stroke-width="1.5"/>
+              <circle cx="10" cy="9" r="2" stroke="currentColor" fill="none" stroke-width="1.5"/>
+              <path d="M8 14v2M12 14v2" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round"/>
+            </symbol>
+            <symbol id="icon-map" viewBox="0 0 20 20">
+              <circle cx="10" cy="10" r="7" stroke="currentColor" fill="none" stroke-width="1.5"/>
+              <circle cx="6" cy="7" r="1" fill="var(--accent-gold)"/>
+              <circle cx="14" cy="8" r="1" fill="var(--accent-cyan)"/>
+              <circle cx="8" cy="14" r="1" fill="var(--accent-red)"/>
+              <line x1="6" y1="7" x2="14" y2="8" stroke="currentColor" stroke-width=".6" opacity=".4"/>
+              <line x1="14" y1="8" x2="8" y2="14" stroke="currentColor" stroke-width=".6" opacity=".4"/>
+              <line x1="6" y1="7" x2="8" y2="14" stroke="currentColor" stroke-width=".6" opacity=".4"/>
+            </symbol>
+            <symbol id="icon-resource" viewBox="0 0 20 20">
+              <path d="M10 2l2 4 4.5.5-3 3.5L14 15l-4-2-4 2 .5-5L3 6.5 8 6l2-4z" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linejoin="round"/>
+            </symbol>
+            <symbol id="icon-treaty" viewBox="0 0 20 20">
+              <path d="M4 10h12M10 4v12" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round"/>
+              <circle cx="10" cy="10" r="7" stroke="currentColor" fill="none" stroke-width="1.5"/>
+            </symbol>
+            <symbol id="icon-battle" viewBox="0 0 20 20">
+              <path d="M10 2l2 4 4.5.5-3 3.5L14 15l-4-2-4 2 .5-5L3 6.5 8 6l2-4z" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linejoin="round"/>
+              <path d="M7 9l3-3 3 3" stroke="currentColor" fill="none" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+            </symbol>
+            <symbol id="icon-eye" viewBox="0 0 20 20">
+              <path d="M10 4c-4 0-7 3-9 6 2 3 5 6 9 6s7-3 9-6c-2-3-5-6-9-6z" stroke="currentColor" fill="none" stroke-width="1.5"/>
+              <circle cx="10" cy="10" r="3" stroke="currentColor" fill="none" stroke-width="1.5"/>
+            </symbol>
+            <symbol id="icon-speaker" viewBox="0 0 20 20">
+              <path d="M9 5l4 3v8l-4-3H5V5h4z" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linejoin="round"/>
+              <path d="M14 8c1 1 1 3 0 4" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round"/>
+            </symbol>
+            <symbol id="icon-refresh" viewBox="0 0 20 20">
+              <path d="M14.5 6C12.5 4 9.5 3.5 7 5 4.5 6.5 3.5 9.5 3.5 12" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M10.5 9.5l4-4 2 3" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M5.5 14c2 2.5 5.5 3 8 1.5C16 14 17 11 16.5 8" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M9.5 11l-4 4-2-3" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </symbol>
+            <symbol id="icon-parliament" viewBox="0 0 20 20">
+              <circle cx="7" cy="6" r="2.5" stroke="currentColor" fill="none" stroke-width="1.5"/>
+              <circle cx="13" cy="6" r="2.5" stroke="currentColor" fill="none" stroke-width="1.5"/>
+              <path d="M3 16c1-3 3-4 7-4s6 1 7 4" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round"/>
+            </symbol>
+            <symbol id="icon-rank" viewBox="0 0 20 20">
+              <path d="M3 17h14M5 12L7 4M10 12l2-6M15 12l1-3" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </symbol>
+          </defs>
+        </svg>
+
+        <div class="layout-main">
+          <div class="layers-column" id="layersColumn">
+            <div class="layer" data-layer="ai" id="layer-ai">
+              <div class="layer-label">
+                <svg viewBox="0 0 20 20"><use href="#icon-ai" /></svg>
+                AI 接入层 <span class="badge">AI</span>
+              </div>
+              <div class="layer-modules">
+                <div class="module" data-detail="ai-players">
+                  <svg viewBox="0 0 20 20"><use href="#icon-ai" /></svg>
+                  AI 玩家 <span class="tag tag-ai">LLM</span>
+                </div>
+                <div class="module" data-detail="ai-decision">
+                  <svg viewBox="0 0 20 20"><use href="#icon-stars" /></svg>
+                  决策输入/输出
+                </div>
+                <div class="module" data-detail="ai-custom">
+                  <svg viewBox="0 0 20 20"><use href="#icon-map" /></svg>
+                  自定义 API <span class="tag tag-core">OpenAI协议</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="arrow-down" id="arrow1" data-flow="引擎结算">
+              <svg viewBox="0 0 100 28"><line class="arrow-path" x1="50" y1="0" x2="50" y2="26" stroke="var(--chalk-dimmer)" stroke-width="1.5" marker-end="url(#arrowHead)" opacity=".5"/></svg>
+              <div class="arrow-label">指令 · 结算</div>
+            </div>
+
+            <div class="layer" data-layer="engine" id="layer-engine">
+              <div class="layer-label">
+                <svg viewBox="0 0 20 20"><use href="#icon-map" /></svg>
+                游戏引擎层 <span class="badge">ENGINE</span>
+              </div>
+              <div class="layer-modules">
+                <div class="module" data-detail="en-galaxy">
+                  <svg viewBox="0 0 20 20"><use href="#icon-stars" /></svg>
+                  星图 & 空间
+                </div>
+                <div class="module" data-detail="en-economy">
+                  <svg viewBox="0 0 20 20"><use href="#icon-resource" /></svg>
+                  资源经济
+                </div>
+                <div class="module" data-detail="en-combat">
+                  <svg viewBox="0 0 20 20"><use href="#icon-battle" /></svg>
+                  战斗模拟
+                </div>
+                <div class="module" data-detail="en-victory">
+                  <svg viewBox="0 0 20 20"><use href="#icon-rank" /></svg>
+                  胜利条件
+                </div>
+              </div>
+            </div>
+
+            <div class="arrow-down" id="arrow2" data-flow="外交博弈">
+              <svg viewBox="0 0 100 28"><line class="arrow-path" x1="50" y1="0" x2="50" y2="26" stroke="var(--chalk-dimmer)" stroke-width="1.5" marker-end="url(#arrowHead)" opacity=".5"/></svg>
+              <div class="arrow-label">条约 · 议会 · 信誉</div>
+            </div>
+
+            <div class="layer" data-layer="diplomacy" id="layer-diplomacy">
+              <div class="layer-label">
+                <svg viewBox="0 0 20 20"><use href="#icon-treaty" /></svg>
+                外交关系层 <span class="badge">DIPLO</span>
+              </div>
+              <div class="layer-modules">
+                <div class="module" data-detail="dp-treaty">
+                  <svg viewBox="0 0 20 20"><use href="#icon-treaty" /></svg>
+                  条约系统
+                </div>
+                <div class="module" data-detail="dp-parliament">
+                  <svg viewBox="0 0 20 20"><use href="#icon-parliament" /></svg>
+                  星际议会
+                </div>
+                <div class="module" data-detail="dp-reputation">
+                  <svg viewBox="0 0 20 20"><use href="#icon-rank" /></svg>
+                  信誉与声望
+                </div>
+              </div>
+            </div>
+
+            <div class="arrow-down" id="arrow3" data-flow="观战呈现">
+              <svg viewBox="0 0 100 28"><line class="arrow-path" x1="50" y1="0" x2="50" y2="26" stroke="var(--chalk-dimmer)" stroke-width="1.5" marker-end="url(#arrowHead)" opacity=".5"/></svg>
+              <div class="arrow-label">实时 · 回放</div>
+            </div>
+
+            <div class="layer" data-layer="viewer" id="layer-viewer">
+              <div class="layer-label">
+                <svg viewBox="0 0 20 20"><use href="#icon-eye" /></svg>
+                观战层 <span class="badge">VIEW</span>
+              </div>
+              <div class="layer-modules">
+                <div class="module" data-detail="vw-map">
+                  <svg viewBox="0 0 20 20"><use href="#icon-map" /></svg>
+                  星图主画面
+                </div>
+                <div class="module" data-detail="vw-log">
+                  <svg viewBox="0 0 20 20"><use href="#icon-speaker" /></svg>
+                  外交日志
+                </div>
+                <div class="module" data-detail="vw-replay">
+                  <svg viewBox="0 0 20 20"><use href="#icon-refresh" /></svg>
+                  回放系统
+                </div>
+                <div class="module" data-detail="vw-rank">
+                  <svg viewBox="0 0 20 20"><use href="#icon-rank" /></svg>
+                  赛后排行榜
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="side-column" id="sideColumn">
+            <div class="side-module" data-detail="side-sanctions">
+              <div class="layer-label">
+                <svg viewBox="0 0 20 20"><use href="#icon-treaty" /></svg>
+                制裁 & 封锁
+              </div>
+              <div class="desc">经济制裁 · 航道封锁 · 资产冻结 · 代理人战争</div>
+            </div>
+            <div class="side-module" data-detail="side-trade">
+              <div class="layer-label">
+                <svg viewBox="0 0 20 20"><use href="#icon-resource" /></svg>
+                贸易系统
+              </div>
+              <div class="desc">公共市场 · 双边贸易 · 价格供需动态 · 信誉约束</div>
+            </div>
+            <div class="side-module" data-detail="side-features">
+              <div class="layer-label">
+                <svg viewBox="0 0 20 20"><use href="#icon-eye" /></svg>
+                观战特色
+              </div>
+              <div class="desc">AI 推理侧栏 · 多视角切换 · 解说模式 · 精彩集锦</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="user-flow" id="userFlow">
+          <div class="user-flow-header">
+            <svg viewBox="0 0 20 20" style="width:16px;height:16px;flex-shrink:0"><use href="#icon-refresh"/></svg>
+            用户流程路径
+            <span style="font-size:7px;color:var(--chalk-dim);font-family:var(--font-mono)">[ 动画播放中 ]</span>
+          </div>
+          <div class="user-flow-steps" id="flowSteps">
+            <div class="flow-step" data-step="0">
+              <div class="dot"><svg viewBox="0 0 20 20"><use href="#icon-ai"/></svg></div>
+              <span class="label">配置 AI 玩家</span><div class="conn"></div>
+            </div>
+            <div class="flow-step" data-step="1">
+              <div class="dot"><svg viewBox="0 0 20 20"><use href="#icon-map"/></svg></div>
+              <span class="label">生成星图</span><div class="conn"></div>
+            </div>
+            <div class="flow-step" data-step="2">
+              <div class="dot"><svg viewBox="0 0 20 20"><use href="#icon-stars"/></svg></div>
+              <span class="label">AI 提交指令</span><div class="conn"></div>
+            </div>
+            <div class="flow-step" data-step="3">
+              <div class="dot"><svg viewBox="0 0 20 20"><use href="#icon-eye"/></svg></div>
+              <span class="label">观战 & 外交</span><div class="conn"></div>
+            </div>
+            <div class="flow-step" data-step="4">
+              <div class="dot"><svg viewBox="0 0 20 20"><use href="#icon-battle"/></svg></div>
+              <span class="label">战斗 & 事件</span><div class="conn"></div>
+            </div>
+            <div class="flow-step" data-step="5">
+              <div class="dot"><svg viewBox="0 0 20 20"><use href="#icon-treaty"/></svg></div>
+              <span class="label">议会投票</span><div class="conn"></div>
+            </div>
+            <div class="flow-step" data-step="6">
+              <div class="dot"><svg viewBox="0 0 20 20"><use href="#icon-rank"/></svg></div>
+              <span class="label">赛后总结</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="detail-overlay" id="detailOverlay">
+      <div class="detail-card" id="detailCard">
+        <button class="close-btn" id="closeDetail">✕ CLOSE</button>
+        <div id="detailContent"></div>
+      </div>
+    </div>
+
+    <script>
+      const DETAILS = {
+        "ai-players": {
+          title: '<svg viewBox="0 0 20 20" class="icon" style="width:22px;height:22px"><use href="#icon-ai"/></svg> AI 玩家',
+          items: [
+            '每局 2~15 个 AI，玩家是纯旁观者',
+            '支持不同大模型同局竞技（Claude/GPT/Gemini/GLM/DeepSeek/Llama）',
+            '预设 System Prompt 模板：激进扩张、外交稳健、科技优先',
+            'Temperature、Top-P 参数可调',
+            '超时未提交 → 自动保守策略，连续超时淘汰',
+          ],
+        },
+        "ai-decision": {
+          title: '<svg viewBox="0 0 20 20" class="icon" style="width:22px;height:22px"><use href="#icon-stars"/></svg> 决策输入/输出',
+          items: [
+            'AI 收到结构化状态包：资源/星系/舰队/科研/外交消息',
+            '输出结构化 JSON 指令：经济/军事/外交/科研',
+            '所有 AI 同时提交 → 引擎统一结算',
+            '指令冲突由引擎合理裁决',
+            '不合规指令被忽略，附原因反馈',
+          ],
+        },
+        "ai-custom": {
+          title: '<svg viewBox="0 0 20 20" class="icon" style="width:22px;height:22px"><use href="#icon-map"/></svg> 自定义 API',
+          items: [
+            '兼容 OpenAI 协议即可接入',
+            '支持多个同模型对战',
+            '不同提示策略对比',
+          ],
+        },
+        "en-galaxy": {
+          title: '<svg viewBox="0 0 20 20" class="icon" style="width:22px;height:22px"><use href="#icon-stars"/></svg> 星图 & 空间',
+          items: [
+            '2D 拓扑节点星图，节点=星系，连线=跃迁航道',
+            '每局随机生成，保证重玩性',
+            '星系类型决定资源产出（矿/能/人口/特殊）',
+            '战略价值：交通枢纽、隘口、资源富集',
+            '视野局限：只能看到己方 + 邻接星系',
+          ],
+        },
+        "en-economy": {
+          title: '<svg viewBox="0 0 20 20" class="icon" style="width:22px;height:22px"><use href="#icon-resource"/></svg> 资源经济',
+          items: [
+            '三级资源：基础（星币/矿石/能量/人口）→ 产业（合金/核心/科研）→ 战略（暗物质）',
+            '每回合收入 - 支出，仓库为空且入不敷出则破产淘汰',
+            '人口分配到 5 个岗位：采矿/冶炼/能源/科研/征兵',
+            '公共市场 + 双边贸易',
+          ],
+        },
+        "en-combat": {
+          title: '<svg viewBox="0 0 20 20" class="icon" style="width:22px;height:22px"><use href="#icon-battle"/></svg> 战斗模拟',
+          items: [
+            '舰队调遣、宣战/不宣而战、航道封锁',
+            '战后处置：吞并 / 傀儡 / 中立缓冲区',
+            '吞并过快 → 其他 AI 恐惧 → 自动反联盟',
+          ],
+        },
+        "en-victory": {
+          title: '<svg viewBox="0 0 20 20" class="icon" style="width:22px;height:22px"><use href="#icon-rank"/></svg> 胜利条件',
+          items: [
+            '🏆 征服胜利 — 消灭所有其他帝国',
+            '💰 经济胜利 — 累计财富达到阈值',
+            '📊 分数胜利 — 第 200 回合最高分',
+          ],
+        },
+        "dp-treaty": {
+          title: '<svg viewBox="0 0 20 20" class="icon" style="width:22px;height:22px"><use href="#icon-treaty"/></svg> 条约系统',
+          items: [
+            '互不侵犯 — N 回合不得互攻',
+            '共同防御 — 一方被攻击另一方自动参战',
+            '自由贸易 — 双边零关税',
+            '科技共享 — 共享部分已研发科技',
+            '势力划分 — 约定不向某些星系扩张',
+          ],
+        },
+        "dp-parliament": {
+          title: '<svg viewBox="0 0 20 20" class="icon" style="width:22px;height:22px"><use href="#icon-parliament"/></svg> 星际议会',
+          items: [
+            '每 10 回合召开，所有存活 AI 参会',
+            '投票议题：经济制裁、中立区、临时停火',
+            '权重 = 经济实力 + 军事权重 + 声望',
+            'AI 可游说拉票',
+          ],
+        },
+        "dp-reputation": {
+          title: '<svg viewBox="0 0 20 20" class="icon" style="width:22px;height:22px"><use href="#icon-rank"/></svg> 信誉与声望',
+          items: [
+            '信誉 — 其他 AI 信任程度，履约↑ 背刺↓↓↓',
+            '声望 — 话语权，击败强敌↑',
+            '信誉过低 → 其他 AI 拒签任何条约',
+          ],
+        },
+        "vw-map": {
+          title: '<svg viewBox="0 0 20 20" class="icon" style="width:22px;height:22px"><use href="#icon-map"/></svg> 星图主画面',
+          items: [
+            'AI 颜色编码标识星系与舰队',
+            '舰队移动轨迹动画、战斗特效',
+            '鼠标悬停星系详情、可缩放拖动',
+          ],
+        },
+        "vw-log": {
+          title: '<svg viewBox="0 0 20 20" class="icon" style="width:22px;height:22px"><use href="#icon-speaker"/></svg> 外交日志',
+          items: [
+            'AI 私下消息可选展示',
+            '事件流实时推送',
+            '信息面板：各 AI 星系/舰队/财富/排名',
+          ],
+        },
+        "vw-replay": {
+          title: '<svg viewBox="0 0 20 20" class="icon" style="width:22px;height:22px"><use href="#icon-refresh"/></svg> 回放系统',
+          items: [
+            '关键节点回放：宣战、背叛、翻盘',
+            '多视角切换：锁定某 AI / 鸟瞰 / 分屏对比',
+            '时间轴拖动回顾',
+          ],
+        },
+        "vw-rank": {
+          title: '<svg viewBox="0 0 20 20" class="icon" style="width:22px;height:22px"><use href="#icon-rank"/></svg> 赛后排行榜',
+          items: [
+            '模型排行榜：胜率、平均存活回合',
+            '外交成功率、最爱背刺的模型',
+            '各 AI 关键决策节点标注',
+            '整局回放 + 精彩集锦',
+          ],
+        },
+        "side-sanctions": {
+          title: '<svg viewBox="0 0 20 20" class="icon" style="width:22px;height:22px"><use href="#icon-treaty"/></svg> 制裁 & 封锁',
+          items: [
+            '经济制裁 — 议会通过后交易税率 +50%',
+            '航道封锁 — 派舰队封锁航道',
+            '资产冻结 — 间谍行动冻结星系产出',
+            '代理人战争 — 资助 AI 打第三方',
+          ],
+        },
+        "side-trade": {
+          title: '<svg viewBox="0 0 20 20" class="icon" style="width:22px;height:22px"><use href="#icon-resource"/></svg> 贸易系统',
+          items: [
+            '公共市场 — 所有 AI 可买卖，价格动态决定',
+            '双边贸易 — AI 私下协议',
+            '一方可以违约（扣信誉）',
+          ],
+        },
+        "side-features": {
+          title: '<svg viewBox="0 0 20 20" class="icon" style="width:22px;height:22px"><use href="#icon-eye"/></svg> 观战特色',
+          items: [
+            'AI 推理侧栏 — 展示各 AI 推理摘要',
+            '多视角切换 — 锁定 / 鸟瞰 / 分屏',
+            '解说模式 — 另一个 LLM 实时解说',
+            '模型标签 — 每个帝国旁标注模型名称',
+            '胜率估算 — 实时计算各 AI 胜率',
+          ],
+        },
+      };
+
+      document.addEventListener("DOMContentLoaded", () => {
+        const layers = document.querySelectorAll(".layer");
+        const arrows = document.querySelectorAll(".arrow-down");
+        const flowSteps = document.querySelectorAll(".flow-step");
+        const sideModules = document.querySelectorAll(".side-module");
+        const userFlow = document.querySelector(".user-flow");
+        const overlays = document.querySelector("#detailOverlay");
+        const detailContent = document.querySelector("#detailContent");
+        const closeBtn = document.querySelector("#closeDetail");
+
+        const mainTimeline = anime.timeline({ easing: "easeOutCubic" });
+        mainTimeline.add({ targets: "#header", opacity: [0, 1], translateY: [-10, 0], duration: 600 });
+        mainTimeline.add({ targets: sideModules, opacity: [0, 1], translateX: [15, 0], duration: 400, delay: anime.stagger(120) }, "-=200");
+        mainTimeline.add({ targets: layers, opacity: [0, 1], translateY: [20, 0], duration: 500, delay: anime.stagger(150) }, "-=100");
+        mainTimeline.add({ targets: arrows, opacity: [0, 1], duration: 400, delay: anime.stagger(200) }, "-=200");
+        setTimeout(() => { document.querySelectorAll(".arrow-path").forEach((p) => { anime({ targets: p, strokeDashoffset: [200, 0], duration: 800, delay: 300, easing: "easeInOutCubic" }); }); }, 1500);
+        mainTimeline.add({ targets: userFlow, opacity: [0, 1], duration: 500 }, "-=100");
+        mainTimeline.add({ targets: flowSteps, opacity: [0, 1], translateX: [-8, 0], duration: 350, delay: anime.stagger(120) }, "-=200");
+
+        let flowIndex = 0;
+        function pulseFlow() { flowSteps.forEach((s) => s.querySelector(".dot").classList.remove("active")); flowSteps[flowIndex].querySelector(".dot").classList.add("active"); flowIndex = (flowIndex + 1) % flowSteps.length; }
+        pulseFlow(); setInterval(pulseFlow, 2500);
+
+        layers.forEach((l) => { l.addEventListener("mouseenter", () => { anime({ targets: l, borderColor: "var(--accent-gold)", backgroundColor: "rgba(251,191,36,0.06)", duration: 200 }); }); l.addEventListener("mouseleave", () => { anime({ targets: l, borderColor: "var(--chalk-dimmer)", backgroundColor: "rgba(200,216,240,0.06)", duration: 300 }); }); });
+
+        function openDetail(id) {
+          const data = DETAILS[id]; if (!data) return;
+          detailContent.innerHTML = `<h2>${data.title}</h2><ul>${data.items.map((i) => `<li>${i}</li>`).join("")}</ul>`;
+          overlays.classList.add("open");
+          anime({ targets: "#detailCard", scale: [0.85, 1], opacity: [0, 1], duration: 250, easing: "easeOutCubic" });
+        }
+        function closeDetail() { anime({ targets: "#detailCard", scale: [1, 0.85], opacity: [1, 0], duration: 200, easing: "easeInCubic", complete: () => { overlays.classList.remove("open"); } }); }
+        document.querySelectorAll(".module[data-detail]").forEach((el) => { el.addEventListener("click", () => openDetail(el.dataset.detail)); });
+        document.querySelectorAll(".side-module[data-detail]").forEach((el) => { el.addEventListener("click", () => openDetail(el.dataset.detail)); });
+        closeBtn.addEventListener("click", closeDetail);
+        overlays.addEventListener("click", (e) => { if (e.target === overlays) closeDetail(); });
+
+        const board = document.getElementById("chalkboard");
+        for (let i = 0; i < 20; i++) {
+          const dot = document.createElement("div"); dot.className = "chalk-glow";
+          dot.style.left = Math.random() * 100 + "%"; dot.style.top = Math.random() * 100 + "%";
+          dot.style.width = dot.style.height = 2 + Math.random() * 4 + "px"; dot.style.opacity = 0.05 + Math.random() * 0.1;
+          board.appendChild(dot);
+          anime({ targets: dot, translateX: [0, -10 + Math.random() * 20], translateY: [0, -10 + Math.random() * 20], opacity: [0.05, 0.15, 0.05], duration: 3000 + Math.random() * 4000, direction: "alternate", loop: true, easing: "easeInOutSine" });
+        }
+      });
+    </script>
+  </body>
+</html>

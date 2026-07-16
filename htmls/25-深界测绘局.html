@@ -1,0 +1,417 @@
+﻿<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>深界测绘局</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;600;800&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--board:#0a0e1a;--board-dark:#050810;--chalk:#c8d6e5;--chalk-dim:rgba(200,214,229,0.55);--chalk-dimmer:rgba(200,214,229,0.18);--chalk-translucent:rgba(200,214,229,0.06);--accent-teal:#2dd4bf;--accent-violet:#a78bfa;--accent-amber:#fbbf24;--accent-blue:#3b82f6;--accent-red:#f87171;--accent-emerald:#34d399;--scanline:rgba(0,0,0,0.06);--font-display:"Noto Sans SC","PingFang SC", "PingFang SC", "Microsoft YaHei", sans-serif;--font-mono:"IBM Plex Mono","SFMono-Regular", Menlo, Consolas, "SFMono-Regular", Menlo, Consolas, "Courier New", monospace}
+html,body{height:100%;background:#050710;font-family:var(--font-mono);color:var(--chalk);overflow-x:hidden}
+.screen-frame{position:relative;min-height:100vh;padding:28px 20px 20px;background:#111;border-radius:20px;box-shadow:inset 0 0 40px rgba(0,0,0,0.8),0 8px 40px rgba(0,0,0,0.6);max-width:1360px;margin:0 auto}
+.screen-frame::before{content:"";position:absolute;inset:0;border-radius:20px;background:repeating-linear-gradient(0deg,transparent,transparent 2px,var(--scanline) 2px,var(--scanline) 4px);pointer-events:none;z-index:100}
+.crt-curve{position:absolute;inset:0;border-radius:20px;background:radial-gradient(ellipse at center,transparent 65%,rgba(0,0,0,0.35) 100%);pointer-events:none;z-index:99}
+.power-led{position:absolute;top:8px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:8px;font-family:var(--font-display);font-size:10px;font-weight:600;color:var(--chalk-dim);letter-spacing:1.5px;z-index:101}
+.power-led span{display:inline-block;width:6px;height:6px;border-radius:50%;background:#4ade80;box-shadow:0 0 6px #4ade80;animation:led-pulse 2s ease-in-out infinite}
+@keyframes led-pulse{0%,100%{opacity:1;box-shadow:0 0 6px #4ade80}50%{opacity:0.5;box-shadow:0 0 2px #4ade80}}
+.chalkboard{position:relative;background:var(--board);border:3px solid #18203a;border-radius:4px;padding:32px 28px 28px;box-shadow:inset 0 0 60px rgba(0,0,0,0.5),0 4px 0 #0c1020;min-height:calc(100vh - 80px)}
+.chalkboard::after{content:"";position:absolute;inset:0;background-image:radial-gradient(circle at 20% 30%,rgba(200,214,229,0.02) 0,transparent 60%),radial-gradient(circle at 80% 70%,rgba(200,214,229,0.015) 0,transparent 50%),radial-gradient(circle at 50% 50%,rgba(200,214,229,0.01) 0,transparent 70%);pointer-events:none;border-radius:2px}
+.header{text-align:center;margin-bottom:24px;position:relative;z-index:1}
+.header h1{font-family:var(--font-display);font-size:26px;font-weight:800;color:var(--accent-teal);text-shadow:0 0 8px rgba(45,212,191,0.3);letter-spacing:2px;margin-bottom:4px;display:flex;align-items:center;justify-content:center;gap:10px}
+.header .subtitle{font-size:14px;color:var(--chalk-dim);letter-spacing:0.5px}
+.header .subtitle em{font-style:normal;color:var(--accent-amber)}
+.layout-main{display:flex;gap:20px;position:relative;z-index:1}
+.layers-column{flex:1;min-width:0}
+.side-column{width:220px;flex-shrink:0;display:flex;flex-direction:column;gap:10px}
+.svg-connectors{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:0}
+.layer{position:relative;background:var(--chalk-translucent);border:1.5px solid var(--chalk-dimmer);border-radius:6px;padding:12px 14px 14px;margin-bottom:0;cursor:pointer;transition:border-color 0.3s,background 0.3s;opacity:0;transform:translateY(20px)}
+.layer:hover{border-color:var(--accent-teal);background:rgba(45,212,191,0.06)}
+.layer-label{font-family:var(--font-display);font-size:12px;font-weight:600;color:var(--chalk-dim);letter-spacing:1px;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.layer-label .badge{font-size:10px;font-weight:600;background:var(--chalk-dimmer);color:var(--board);padding:1px 7px;border-radius:3px;letter-spacing:0}
+.layer-modules{display:flex;flex-wrap:wrap;gap:6px}
+.module{background:rgba(200,214,229,0.06);border:1px solid var(--chalk-dimmer);border-radius:4px;padding:5px 10px;font-size:12px;line-height:1.5;color:var(--chalk);transition:all 0.25s;white-space:nowrap;cursor:pointer;display:inline-flex;align-items:center;gap:5px}
+.module:hover{background:rgba(200,214,229,0.12);border-color:var(--chalk);transform:translateY(-1px)}
+svg.icon,.module svg,.side-module svg,.dot svg{width:16px;height:16px;flex-shrink:0}
+.module svg{width:15px;height:15px}
+.dot svg{width:14px;height:14px}
+.layer-label>svg:first-child{width:18px;height:18px;flex-shrink:0}
+.header h1 svg{width:28px;height:28px;flex-shrink:0}
+.module .tag{font-size:10px;font-weight:600;padding:1px 6px;border-radius:3px;margin-left:4px;opacity:0.8}
+.tag-explore{background:var(--accent-teal);color:var(--board)}
+.tag-survive{background:var(--accent-amber);color:var(--board)}
+.tag-danger{background:var(--accent-violet);color:var(--board)}
+.tag-death{background:var(--accent-deep);color:var(--board)}
+.layer[data-layer="explore"]{border-left:3px solid var(--accent-teal)}
+.layer[data-layer="survive"]{border-left:3px solid var(--accent-blue)}
+.layer[data-layer="threat"]{border-left:3px solid var(--accent-violet)}
+.layer[data-layer="world"]{border-left:3px solid var(--accent-amber)}
+.arrow-down{display:flex;align-items:center;justify-content:center;height:28px;position:relative;opacity:0}
+.arrow-down svg{width:100%;height:28px}
+.arrow-label{position:absolute;font-family:var(--font-display);font-size:10px;font-weight:600;color:var(--chalk-dim);letter-spacing:0.5px;background:var(--board);padding:0 8px;text-align:center;white-space:nowrap}
+.side-module{background:var(--chalk-translucent);border:1.5px solid var(--chalk-dimmer);border-left:3px solid var(--accent-violet);border-radius:6px;padding:10px 12px;cursor:pointer;opacity:0;transform:translateX(15px);transition:border-color 0.3s,background 0.3s}
+.side-module:hover{border-color:var(--accent-violet);background:rgba(167,139,250,0.08)}
+.side-module .layer-label{margin-bottom:4px}
+.side-module .desc{font-size:12px;color:var(--chalk-dim);line-height:1.5}
+.user-flow{margin-top:22px;padding:14px 16px;background:var(--chalk-translucent);border:1.5px solid var(--chalk-dimmer);border-radius:6px;position:relative;z-index:1;opacity:0}
+.user-flow-header{font-family:var(--font-display);font-size:12px;font-weight:600;color:var(--accent-teal);letter-spacing:0.5px;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.user-flow-steps{display:flex;align-items:center;flex-wrap:wrap;gap:0}
+.flow-step{display:flex;align-items:center;gap:0;opacity:0}
+.flow-step .dot{width:28px;height:28px;border-radius:50%;border:2px solid var(--chalk-dimmer);background:var(--board);display:flex;align-items:center;justify-content:center;font-size:13px;line-height:1;flex-shrink:0;transition:all 0.3s}
+.flow-step .dot.active{border-color:var(--accent-teal);background:rgba(45,212,191,0.12);box-shadow:0 0 10px rgba(45,212,191,0.2)}
+.flow-step .label{font-size:12px;color:var(--chalk-dim);white-space:nowrap;margin:0 8px 0 6px;line-height:1}
+.flow-step .conn{width:24px;height:2px;background:var(--chalk-dimmer);position:relative;flex-shrink:0}
+.flow-step .conn::after{content:"▸";position:absolute;right:-4px;top:-6px;font-size:10px;color:var(--chalk-dimmer)}
+.flow-step:last-child .conn{display:none}
+.detail-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:200;display:none;align-items:center;justify-content:center;backdrop-filter:blur(2px)}
+.detail-overlay.open{display:flex}
+.detail-card{background:var(--board-dark);border:2px solid var(--chalk-dimmer);border-radius:8px;padding:24px 28px;max-width:500px;width:90%;max-height:80vh;overflow-y:auto;position:relative;box-shadow:0 8px 40px rgba(0,0,0,0.6);will-change:transform,opacity;backface-visibility:hidden;-webkit-backface-visibility:hidden;transform:translateZ(0);-webkit-transform:translateZ(0)}
+.detail-card h2{margin-top: 0;font-family:var(--font-display);font-size:18px;font-weight:800;color:var(--accent-teal);margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid var(--chalk-dimmer);display:flex;align-items:center;gap:8px}
+.detail-card h2 svg{width:22px;height:22px;flex-shrink:0}
+.detail-card h3{font-family:var(--font-display);font-size:13px;font-weight:600;color:var(--chalk-dim);margin:14px 0 6px}
+.detail-card ul{list-style:none;padding:0}
+.detail-card li{font-size:13px;color:var(--chalk);padding:5px 0 5px 14px;border-left:2px solid var(--chalk-dimmer);margin-bottom:6px;line-height:1.6}
+.detail-card li .hl{color:var(--accent-teal);display:inline-flex;align-items:center;gap:4px}
+.detail-card li .hl-warn{color:var(--accent-amber)}
+.detail-card .close-btn{position:absolute;top:14px;right:16px;font-family:var(--font-display);font-size:13px;font-weight:600;color:var(--chalk-dimmer);background:none;border:1px solid var(--chalk-dimmer);border-radius:4px;padding:4px 12px;cursor:pointer;transition:all 0.2s}
+.detail-card .close-btn:hover{color:var(--accent-violet);border-color:var(--accent-violet)}
+@media (max-width:860px){
+.layout-main{flex-direction:column}
+.side-column{width:100%;flex-direction:row;flex-wrap:wrap}
+.side-module{flex:1;min-width:160px}
+.header h1{font-size:20px}
+.screen-frame{padding:24px 12px 12px}
+.chalkboard{padding:20px 14px 16px}
+.layer-modules{gap:4px}
+.module{font-size:11px;padding:4px 8px}
+.flow-step .label{font-size:10px}
+.flow-step .dot{width:24px;height:24px;font-size:11px}
+}
+@media (max-width:480px){
+.header h1{font-size:16px;letter-spacing:1px}
+.module{font-size:10px;padding:3px 6px;white-space:normal}
+.layer{padding:8px 8px 10px}
+.layer-label{font-size:10px}
+}
+.chalk-glow{position:absolute;pointer-events:none;width:4px;height:4px;border-radius:50%;background:rgba(200,214,229,0.15);filter:blur(6px)}
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:var(--board-dark)}
+::-webkit-scrollbar-thumb{background:var(--chalk-dimmer);border-radius:2px}
+.arrow-path{stroke-dasharray:200;stroke-dashoffset:200}
+.layer-label svg{width:16px;height:16px;flex-shrink:0}
+</style>
+</head>
+<body>
+<div class="screen-frame">
+<div class="crt-curve"></div>
+<div class="power-led"><span></span> SYSTEM · ONLINE</div>
+<div class="chalkboard" id="chalkboard">
+<div class="header" id="header">
+<h1>
+<svg class="icon" viewBox="0 0 20 20"><use href="#icon-cave" />
+深界测绘局
+</h1>
+<div class="subtitle">第一人称洞穴生存探索 · <em>无UI无地图，纸笔才是你的导航</em></div>
+</div>
+<svg class="svg-connectors" id="connectorSvg" preserveAspectRatio="none">
+<defs>
+<marker id="arrowHead" markerWidth="6" markerHeight="5" refX="6" refY="2.5" orient="auto"><polygon points="0 0, 6 2.5, 0 5" fill="var(--chalk-dimmer)" opacity=".6"/></marker>
+<marker id="arrowHeadFlow" markerWidth="6" markerHeight="5" refX="6" refY="2.5" orient="auto"><polygon points="0 0, 6 2.5, 0 5" fill="var(--accent-teal)"/></marker>
+<filter id="glow"><feGaussianBlur stdDeviation="1.5" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+<symbol id="icon-cave" viewBox="0 0 20 20">
+<path d="M2 16c2-4 5-6 8-4s6-2 8 4" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round"/>
+<path d="M6 5c1-2 3-3 4-1 1 2 4 1 5-1" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round"/>
+</symbol>
+<symbol id="icon-torch" viewBox="0 0 20 20">
+<rect x="8" y="9" width="4" height="8" rx="1" stroke="currentColor" fill="none" stroke-width="1.5"/>
+<path d="M10 4c-2 2-1 5-1 5h2s1-3-1-5z" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linejoin="round"/>
+</symbol>
+<symbol id="icon-map" viewBox="0 0 20 20">
+<path d="M3 5l5-2 4 3 5-2v11l-5 2-4-3-5 2V5z" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linejoin="round"/>
+<path d="M8 3v12" stroke="currentColor" fill="none" stroke-width="1.5" opacity=".5"/>
+</symbol>
+<symbol id="icon-breathe" viewBox="0 0 20 20">
+<path d="M5 10c0-3 2-5 5-5s5 2 5 5-2 5-5 5-5-2-5-5z" stroke="currentColor" fill="none" stroke-width="1.5"/>
+<path d="M7 11c.5-1.5 2-2 3-.5s2.5-1 3 .5" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round"/>
+</symbol>
+<symbol id="icon-skull" viewBox="0 0 20 20">
+<circle cx="10" cy="8" r="5" stroke="currentColor" fill="none" stroke-width="1.5"/>
+<circle cx="8" cy="7" r="1" fill="currentColor"/>
+<circle cx="12" cy="7" r="1" fill="currentColor"/>
+<path d="M8 12c1 1 3 1 4 0" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round"/>
+<path d="M9 14v2M11 14v2" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round"/>
+</symbol>
+<symbol id="icon-stone" viewBox="0 0 20 20">
+<path d="M5 8l3-4 5 1 4 4-2 5-5 2-5-2V8z" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linejoin="round"/>
+</symbol>
+<symbol id="icon-rope" viewBox="0 0 20 20">
+<path d="M3 5h14v3c0 2-2 3-4 3H7c-2 0-4-1-4-3V5z" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linejoin="round"/>
+</symbol>
+<symbol id="icon-fork" viewBox="0 0 20 20">
+<path d="M10 3v14M3 7l7 4 7-4" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round"/>
+</symbol>
+<symbol id="icon-eye" viewBox="0 0 20 20">
+<path d="M10 4c-4 0-7 3-9 6 2 3 5 6 9 6s7-3 9-6c-2-3-5-6-9-6z" stroke="currentColor" fill="none" stroke-width="1.5"/>
+<circle cx="10" cy="10" r="3" stroke="currentColor" fill="none" stroke-width="1.5"/>
+</symbol>
+<symbol id="icon-refresh" viewBox="0 0 20 20">
+<path d="M14.5 6C12.5 4 9.5 3.5 7 5 4.5 6.5 3.5 9.5 3.5 12" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M10.5 9.5l4-4 2 3" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M5.5 14c2 2.5 5.5 3 8 1.5C16 14 17 11 16.5 8" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M9.5 11l-4 4-2-3" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+</symbol>
+</defs>
+</svg>
+<div class="layout-main">
+<div class="layers-column" id="layersColumn">
+<div class="layer" data-layer="explore" id="layer-explore">
+<div class="layer-label">
+<svg viewBox="0 0 20 20"><use href="#icon-cave" />
+洞穴探索层 <span class="badge">EXPLORE</span>
+</div>
+<div class="layer-modules">
+<div class="module" data-detail="exp-move">
+<svg viewBox="0 0 20 20"><use href="#icon-cave" />
+第一人称漫行
+</div>
+<div class="module" data-detail="exp-torch">
+<svg viewBox="0 0 20 20"><use href="#icon-torch" />
+火把照明 <span class="tag tag-explore">燃烧限时</span>
+</div>
+<div class="module" data-detail="exp-sound">
+<svg viewBox="0 0 20 20"><use href="#icon-eye" />
+投石听声
+</div>
+<div class="module" data-detail="exp-stone">
+<svg viewBox="0 0 20 20"><use href="#icon-stone" />
+辨位石碑
+</div>
+</div>
+</div>
+<div class="arrow-down" id="arrow1" data-flow="生存消耗">
+<svg viewBox="0 0 100 28"><line class="arrow-path" x1="50" y1="0" x2="50" y2="26" stroke="var(--chalk-dimmer)" stroke-width="1.5" marker-end="url(#arrowHead)" opacity=".5"/></svg>
+<div class="arrow-label">资源 · 决策</div>
+</div>
+<div class="layer" data-layer="survive" id="layer-survive">
+<div class="layer-label">
+<svg viewBox="0 0 20 20"><use href="#icon-breathe" />
+生存资源层 <span class="badge">SURVIVE</span>
+</div>
+<div class="layer-modules">
+<div class="module" data-detail="sv-map">
+<svg viewBox="0 0 20 20"><use href="#icon-map" />
+纸笔地图系统 <span class="tag tag-survive">零UI</span>
+</div>
+<div class="module" data-detail="sv-res">
+<svg viewBox="0 0 20 20"><use href="#icon-rope" />
+火把/绳索/口粮
+</div>
+<div class="module" data-detail="sv-breath">
+<svg viewBox="0 0 20 20"><use href="#icon-breathe" />
+呼吸值系统
+</div>
+</div>
+</div>
+<div class="arrow-down" id="arrow2" data-flow="威胁逼近">
+<svg viewBox="0 0 100 28"><line class="arrow-path" x1="50" y1="0" x2="50" y2="26" stroke="var(--chalk-dimmer)" stroke-width="1.5" marker-end="url(#arrowHead)" opacity=".5"/></svg>
+<div class="arrow-label">紧张 · 感知</div>
+</div>
+<div class="layer" data-layer="threat" id="layer-threat">
+<div class="layer-label">
+<svg viewBox="0 0 20 20"><use href="#icon-skull" />
+威胁死亡层 <span class="badge">PERIL</span>
+</div>
+<div class="layer-modules">
+<div class="module" data-detail="thr-creature">
+<svg viewBox="0 0 20 20"><use href="#icon-eye" />
+声敏生物 <span class="tag tag-danger">呼吸驱动</span>
+</div>
+<div class="module" data-detail="thr-death">
+<svg viewBox="0 0 20 20"><use href="#icon-skull" />
+永久死亡
+</div>
+</div>
+</div>
+<div class="arrow-down" id="arrow3" data-flow="世界规则">
+<svg viewBox="0 0 100 28"><line class="arrow-path" x1="50" y1="0" x2="50" y2="26" stroke="var(--chalk-dimmer)" stroke-width="1.5" marker-end="url(#arrowHead)" opacity=".5"/></svg>
+<div class="arrow-label">随机 · 不可逆</div>
+</div>
+<div class="layer" data-layer="world" id="layer-world">
+<div class="layer-label">
+<svg viewBox="0 0 20 20"><use href="#icon-fork" />
+世界生成层 <span class="badge">WORLD</span>
+</div>
+<div class="layer-modules">
+<div class="module" data-detail="wd-gen">
+<svg viewBox="0 0 20 20"><use href="#icon-fork" />
+程序化洞穴生成
+</div>
+<div class="module" data-detail="wd-save">
+<svg viewBox="0 0 20 20"><use href="#icon-stone" />
+单存档自动保存
+</div>
+</div>
+</div>
+</div>
+<div class="side-column" id="sideColumn">
+<div class="side-module" data-detail="side-paper">
+<div class="layer-label">
+<svg viewBox="0 0 20 20"><use href="#icon-map" />
+纸笔地图核心
+</div>
+<div class="desc">屏幕零UI导航 · 玩家现实笔记 · 辨位石碑校准</div>
+</div>
+<div class="side-module" data-detail="side-sl">
+<div class="layer-label">
+<svg viewBox="0 0 20 20"><use href="#icon-skull" />
+单存档永久死亡
+</div>
+<div class="desc">迷路或资源耗尽 → 死亡 → 存档作废 · 无SL</div>
+</div>
+<div class="side-module" data-detail="side-philo">
+<div class="layer-label">
+<svg viewBox="0 0 20 20"><use href="#icon-stone" />
+设计哲学
+</div>
+<div class="desc">无战斗 · 无技能树 · 无剧情 · 唯一成长的是你的方向感</div>
+</div>
+</div>
+</div>
+<div class="user-flow" id="userFlow">
+<div class="user-flow-header">
+<svg viewBox="0 0 20 20" style="width:16px;height:16px;flex-shrink:0"><use href="#icon-refresh"/></svg>
+用户流程路径
+<span style="font-size:7px;color:var(--chalk-dim);font-family:var(--font-mono)">[ 动画播放中 ]</span>
+</div>
+<div class="user-flow-steps" id="flowSteps">
+<div class="flow-step" data-step="0">
+<div class="dot"><svg viewBox="0 0 20 20"><use href="#icon-cave"/></svg></div>
+<span class="label">出发准备</span><div class="conn"></div>
+</div>
+<div class="flow-step" data-step="1">
+<div class="dot"><svg viewBox="0 0 20 20"><use href="#icon-cave"/></svg></div>
+<span class="label">进入黑暗</span><div class="conn"></div>
+</div>
+<div class="flow-step" data-step="2">
+<div class="dot"><svg viewBox="0 0 20 20"><use href="#icon-map"/></svg></div>
+<span class="label">纸上画图</span><div class="conn"></div>
+</div>
+<div class="flow-step" data-step="3">
+<div class="dot"><svg viewBox="0 0 20 20"><use href="#icon-fork"/></svg></div>
+<span class="label">岔路抉择</span><div class="conn"></div>
+</div>
+<div class="flow-step" data-step="4">
+<div class="dot"><svg viewBox="0 0 20 20"><use href="#icon-stone"/></svg></div>
+<span class="label">石碑校准</span><div class="conn"></div>
+</div>
+<div class="flow-step" data-step="5">
+<div class="dot"><svg viewBox="0 0 20 20"><use href="#icon-torch"/></svg></div>
+<span class="label">返回地表</span><div class="conn"></div>
+</div>
+<div class="flow-step" data-step="6">
+<div class="dot"><svg viewBox="0 0 20 20"><use href="#icon-skull"/></svg></div>
+<span class="label">完成/死亡</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="detail-overlay" id="detailOverlay">
+<div class="detail-card" id="detailCard">
+<button class="close-btn" id="closeDetail">✕ CLOSE</button>
+<div id="detailContent"></div>
+</div>
+</div>
+<script>
+const DETAILS = {
+"exp-move":{
+title:'<svg viewBox="0 0 20 20" class="icon" style="width:22px;height:22px"><use href="#icon-cave"/></svg> 第一人称自由漫行',
+items:['WASD 移动 + 鼠标环视','无冲刺、无跳跃、无攀爬','通过观察环境特征建立认知地图','无任何高亮、标记或提示']
+},
+"exp-torch":{
+title:'<svg viewBox="0 0 20 20" class="icon" style="width:22px;height:22px"><use href="#icon-torch"/></svg> 火把照明系统',
+items:['手持火把照明前方扇形区域','火把 <span class="hl">随时间燃烧变短</span>，最终熄灭','熄灭后屏幕几乎全黑','燃烧时才能辨路和画图','每根约燃烧 15 分钟游戏内时间']
+},
+"exp-sound":{
+title:'<svg viewBox="0 0 20 20" class="icon" style="width:22px;height:22px"><use href="#icon-eye"/></svg> 投石听声',
+items:['向黑暗区域投掷石子','通过回声判断空间大小','消耗石子（有限数量）','无UI指示，全靠听觉判断']
+},
+"exp-stone":{
+title:'<svg viewBox="0 0 20 20" class="icon" style="width:22px;height:22px"><use href="#icon-stone"/></svg> 辨位石碑',
+items:['每个区域设置一块刻有名称的石碑','玩家需靠已有地图判断位置是否对得上','每层至少 1 块、至多 3 块','唯一的位置确认手段']
+},
+"sv-map":{
+title:'<svg viewBox="0 0 20 20" class="icon" style="width:22px;height:22px"><use href="#icon-map"/></svg> 纸笔地图系统',
+items:['<span class="hl">屏幕不提供任何定位信息</span>','玩家在现实世界用纸笔画下洞穴结构','游戏不记录、不验证玩家地图','无坐标、无指南针、无小地图、无当前位置提示','完全依靠玩家记忆和纸笔记录']
+},
+"sv-res":{
+title:'<svg viewBox="0 0 20 20" class="icon" style="width:22px;height:22px"><use href="#icon-rope"/></svg> 火把/绳索/口粮',
+items:['<span class="hl">火把</span>：限带 3 根，每根 15 分钟','<span class="hl">绳索</span>：每条 10 米，限带 2 条','<span class="hl">口粮</span>：每份供 1 天，限带 5 份','出发点有限补给，用尽不补']
+},
+"sv-breath":{
+title:'<svg viewBox="0 0 20 20" class="icon" style="width:22px;height:22px"><use href="#icon-breathe"/></svg> 呼吸值系统',
+items:['按键频率 + 急转幅度 → 呼吸值上升','生物朝呼吸值高的方向移动','呼吸声逐渐加重作为反馈','停止操作后呼吸值归零','<span class="hl">替代麦克风声敏</span>，更可靠']
+},
+"thr-creature":{
+title:'<svg viewBox="0 0 20 20" class="icon" style="width:22px;height:22px"><use href="#icon-eye"/></svg> 声敏生物',
+items:['由 <span class="hl">呼吸值驱动</span>，非麦克风','呼吸值越高生物移动越快','无跳杀，只有幽闭恐惧感','深层更密集']
+},
+"thr-death":{
+title:'<svg viewBox="0 0 20 20" class="icon" style="width:22px;height:22px"><use href="#icon-skull"/></svg> 永久死亡',
+items:['火把全灭 + 断粮 → 判定迷路死亡','<span class="hl-warn">无复活机制，存档作废</span>','单存档位，不可手动SL','成功绘制完整地图 → 游戏结束']
+},
+"wd-gen":{
+title:'<svg viewBox="0 0 20 20" class="icon" style="width:22px;height:22px"><use href="#icon-fork"/></svg> 程序化洞穴生成',
+items:['每次开档拓扑结构完全随机','确保至少 1 条可达底层路径','资源补给位置随机','石碑位置随机，每层 1-3 块']
+},
+"wd-save":{
+title:'<svg viewBox="0 0 20 20" class="icon" style="width:22px;height:22px"><use href="#icon-stone"/></svg> 单存档自动保存',
+items:['每次离开营地和进入新层时自动保存','<span class="hl-warn">不可手动 SL</span>','死亡存档自动删除']
+},
+"side-paper":{
+title:'<svg viewBox="0 0 20 20" class="icon" style="width:22px;height:22px"><use href="#icon-map"/></svg> 纸笔地图核心',
+items:['屏幕提供零导航信息','玩家必须用真实纸笔手绘地图','辨位石碑是唯一位置校准手段','不画图则无法返回']
+},
+"side-sl":{
+title:'<svg viewBox="0 0 20 20" class="icon" style="width:22px;height:22px"><use href="#icon-skull"/></svg> 永久死亡',
+items:['单存档位不可手动创建多存档','自动保存无手动选项','死亡 = 存档删除','每次决策都有真实分量']
+},
+"side-philo":{
+title:'<svg viewBox="0 0 20 20" class="icon" style="width:22px;height:22px"><use href="#icon-stone"/></svg> 设计哲学',
+items:['无战斗系统 - 核心是探索与恐惧','无角色成长 - 唯一成长的是玩家画图能力','无剧情 - 故事由玩家经历自然生成','无联机 - 单人沉浸孤独感']
+}
+};
+document.addEventListener("DOMContentLoaded",()=>{
+const layers=document.querySelectorAll(".layer");
+const arrows=document.querySelectorAll(".arrow-down");
+const flowSteps=document.querySelectorAll(".flow-step");
+const sideModules=document.querySelectorAll(".side-module");
+const userFlow=document.querySelector(".user-flow");
+const overlays=document.querySelector("#detailOverlay");
+const detailContent=document.querySelector("#detailContent");
+const closeBtn=document.querySelector("#closeDetail");
+const mainTimeline=anime.timeline({easing:"easeOutCubic"});
+mainTimeline.add({targets:"#header",opacity:[0,1],translateY:[-10,0],duration:600});
+mainTimeline.add({targets:sideModules,opacity:[0,1],translateX:[15,0],duration:400,delay:anime.stagger(120)},"-=200");
+mainTimeline.add({targets:layers,opacity:[0,1],translateY:[20,0],duration:500,delay:anime.stagger(150)},"-=100");
+mainTimeline.add({targets:arrows,opacity:[0,1],duration:400,delay:anime.stagger(200)},"-=200");
+setTimeout(()=>{document.querySelectorAll(".arrow-path").forEach((p)=>{anime({targets:p,strokeDashoffset:[200,0],duration:800,delay:300,easing:"easeInOutCubic"});});},1500);
+mainTimeline.add({targets:userFlow,opacity:[0,1],duration:500},"-=100");
+mainTimeline.add({targets:flowSteps,opacity:[0,1],translateX:[-8,0],duration:350,delay:anime.stagger(120)},"-=200");
+let flowIndex=0;function pulseFlow(){flowSteps.forEach((s)=>s.querySelector(".dot").classList.remove("active"));flowSteps[flowIndex].querySelector(".dot").classList.add("active");flowIndex=(flowIndex+1)%flowSteps.length;}
+pulseFlow();setInterval(pulseFlow,2500);
+layers.forEach((l)=>{l.addEventListener("mouseenter",()=>{anime({targets:l,borderColor:"var(--accent-teal)",backgroundColor:"rgba(45,212,191,0.06)",duration:200});});l.addEventListener("mouseleave",()=>{anime({targets:l,borderColor:"var(--chalk-dimmer)",backgroundColor:"rgba(200,214,229,0.06)",duration:300});});});
+function openDetail(id){const data=DETAILS[id];if(!data)return;detailContent.innerHTML=`<h2>${data.title}</h2><ul>${data.items.map((i)=>`<li>${i}</li>`).join("")}</ul>`;overlays.classList.add("open");anime({targets:"#detailCard",scale:[0.85,1],opacity:[0,1],duration:250,easing:"easeOutCubic"});}
+function closeDetail(){anime({targets:"#detailCard",scale:[1,0.85],opacity:[1,0],duration:200,easing:"easeInCubic",complete:()=>{overlays.classList.remove("open");}});}
+document.querySelectorAll(".module[data-detail]").forEach((el)=>{el.addEventListener("click",()=>openDetail(el.dataset.detail));});
+document.querySelectorAll(".side-module[data-detail]").forEach((el)=>{el.addEventListener("click",()=>openDetail(el.dataset.detail));});
+closeBtn.addEventListener("click",closeDetail);
+overlays.addEventListener("click",(e)=>{if(e.target===overlays)closeDetail();});
+const board=document.getElementById("chalkboard");
+for(let i=0;i<20;i++){const dot=document.createElement("div");dot.className="chalk-glow";dot.style.left=Math.random()*100+"%";dot.style.top=Math.random()*100+"%";dot.style.width=dot.style.height=2+Math.random()*4+"px";dot.style.opacity=0.05+Math.random()*0.1;board.appendChild(dot);anime({targets:dot,translateX:[0,-10+Math.random()*20],translateY:[0,-10+Math.random()*20],opacity:[0.05,0.15,0.05],duration:3000+Math.random()*4000,direction:"alternate",loop:true,easing:"easeInOutSine"});}
+});
+</script>
+</body>
+</html>

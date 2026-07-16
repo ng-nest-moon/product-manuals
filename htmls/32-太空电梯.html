@@ -1,0 +1,376 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>太空电梯</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;500;700;900&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--space:#04080f;--space-light:#0b1424;--panel:#0e1a2b;--surface:#142236;--surface-light:#1c2e48;--accent:#64b5f6;--accent-dim:rgba(100,181,246,0.2);--accent-gold:#ffd54f;--accent-orange:#ff8a65;--accent-green:#81c784;--accent-pulse:#f06292;--text-primary:#d6e4f0;--text-dim:rgba(214,228,240,0.55);--text-dimmer:rgba(214,228,240,0.2);--grid:rgba(100,181,246,0.035);--font-display:"Noto Sans SC","PingFang SC","Microsoft YaHei",sans-serif;--font-mono:"JetBrains Mono","SFMono-Regular",Menlo,Consolas,"Courier New",monospace}
+html,body{height:100%;background:var(--space);font-family:var(--font-display);color:var(--text-primary);overflow-x:hidden}
+.screen-frame{position:relative;min-height:100vh;padding:24px 20px 20px;background:radial-gradient(ellipse at 50% 0%,rgba(100,181,246,0.04) 0%,var(--space) 70%);border-radius:20px;box-shadow:inset 0 0 80px rgba(0,0,0,0.8),0 8px 40px rgba(0,0,0,0.5);max-width:1440px;margin:0 auto}
+.screen-frame::before{content:"";position:absolute;inset:0;border-radius:20px;background:repeating-linear-gradient(0deg,transparent,transparent 2px,var(--grid) 2px,var(--grid) 4px);pointer-events:none;z-index:100}
+.crt-curve{position:absolute;inset:0;border-radius:20px;background:radial-gradient(ellipse at center,transparent 50%,rgba(0,0,0,0.5) 100%);pointer-events:none;z-index:99}
+.star-field{position:absolute;inset:0;pointer-events:none;z-index:1;overflow:hidden}
+.star{position:absolute;border-radius:50%;background:#fff;opacity:0;box-shadow:0 0 4px var(--accent)}
+.status-bar{position:absolute;top:10px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:12px;font-size:9px;font-weight:500;color:var(--text-dim);letter-spacing:2px;z-index:101;background:rgba(4,8,15,0.8);padding:3px 16px;border-radius:20px;border:1px solid var(--accent-dim);backdrop-filter:blur(4px);text-transform:uppercase;font-family:var(--font-mono)}
+.status-bar .dot{display:inline-block;width:5px;height:5px;border-radius:50%;background:var(--accent);box-shadow:0 0 8px var(--accent);animation:pulse-sym 2.5s ease-in-out infinite}
+@keyframes pulse-sym{0%,100%{opacity:1;box-shadow:0 0 8px var(--accent)}50%{opacity:0.3;box-shadow:0 0 2px var(--accent)}}
+.panel{position:relative;background:var(--panel);border:1.5px solid var(--surface-light);border-radius:8px;padding:24px 24px 20px;box-shadow:inset 0 0 40px rgba(0,0,0,0.4),0 4px 0 var(--space);min-height:calc(100vh - 80px);overflow:hidden;z-index:2}
+.panel::after{content:"";position:absolute;inset:0;background-image:radial-gradient(circle at 70% 10%,rgba(100,181,246,0.02) 0,transparent 60%),radial-gradient(circle at 30% 90%,rgba(255,215,79,0.015) 0,transparent 50%);pointer-events:none}
+.header{text-align:center;margin-bottom:20px;position:relative;z-index:1}
+.header h1{font-family:var(--font-display);font-size:28px;font-weight:900;color:var(--accent);text-shadow:0 0 30px rgba(100,181,246,0.2),0 0 60px rgba(100,181,246,0.1);letter-spacing:4px;margin-bottom:2px;display:flex;align-items:center;justify-content:center;gap:12px}
+.header h1 svg{width:32px;height:32px;flex-shrink:0;filter:drop-shadow(0 0 8px rgba(100,181,246,0.4))}
+.header .subtitle{font-size:13px;font-weight:300;color:var(--text-dim);letter-spacing:0.5px;max-width:700px;margin:0 auto;line-height:1.8}
+.header .subtitle em{font-style:normal;color:var(--accent-gold);font-weight:500}
+.cable-line{position:absolute;left:50%;top:0;bottom:0;width:2px;background:linear-gradient(180deg,transparent,rgba(100,181,246,0.08) 10%,rgba(100,181,246,0.12) 50%,rgba(100,181,246,0.08) 90%,transparent);transform:translateX(-50%);z-index:0;pointer-events:none}
+.layout-main{display:flex;gap:16px;position:relative;z-index:1}
+.layers-column{flex:1;min-width:0}
+.side-column{width:210px;flex-shrink:0;display:flex;flex-direction:column;gap:8px}
+.layer{position:relative;background:rgba(28,46,72,0.4);border:1.5px solid var(--surface-light);border-radius:6px;padding:10px 12px 12px;margin-bottom:0;cursor:pointer;transition:border-color 0.3s,background 0.3s;opacity:0;transform:translateY(20px)}
+.layer:hover{border-color:var(--accent);background:rgba(100,181,246,0.05)}
+.layer-label{font-family:var(--font-display);font-size:12px;font-weight:600;color:var(--text-dim);letter-spacing:1px;margin-bottom:6px;display:flex;align-items:center;gap:6px}
+.layer-label .badge{font-size:9px;font-weight:600;background:var(--surface-light);color:var(--text-dim);padding:1px 7px;border-radius:3px;letter-spacing:0}
+.layer-modules{display:flex;flex-wrap:wrap;gap:5px}
+.module{background:rgba(214,228,240,0.04);border:1px solid var(--surface-light);border-radius:4px;padding:4px 10px;font-size:12px;line-height:1.5;color:var(--text-primary);transition:all 0.25s;white-space:nowrap;cursor:pointer;display:inline-flex;align-items:center;gap:5px}
+.module:hover{background:rgba(100,181,246,0.1);border-color:var(--accent);transform:translateY(-1px);box-shadow:0 0 12px rgba(100,181,246,0.1)}
+.module .tag{font-size:9px;font-weight:600;padding:1px 6px;border-radius:3px;margin-left:3px;opacity:0.8}
+.tag-trl{background:var(--accent-dim);color:var(--space)}
+.tag-cargo{background:var(--accent-orange);color:var(--space)}
+.tag-pass{background:var(--accent-green);color:var(--space)}
+.tag-core{background:var(--accent);color:var(--space)}
+.tag-gold{background:var(--accent-gold);color:var(--space)}
+.layer[data-layer="user"]{border-left:3px solid var(--accent)}
+.layer[data-layer="core"]{border-left:3px solid var(--accent-gold)}
+.layer[data-layer="data"]{border-left:3px solid var(--accent-green)}
+.layer[data-layer="mode"]{border-left:3px solid var(--accent-orange)}
+svg.icon,.module svg,.side-module svg{width:16px;height:16px;flex-shrink:0}
+.module svg{width:14px;height:14px}
+.layer-label>svg:first-child{width:18px;height:18px;flex-shrink:0}
+.header h1 svg{width:32px;height:32px;flex-shrink:0}
+.arrow-down{display:flex;align-items:center;justify-content:center;height:24px;position:relative;opacity:0}
+.arrow-down svg{width:100%;height:24px}
+.arrow-label{position:absolute;font-family:var(--font-mono);font-size:9px;font-weight:500;color:var(--text-dim);background:var(--panel);padding:0 10px;text-align:center;white-space:nowrap;letter-spacing:0.5px}
+.side-module{background:rgba(28,46,72,0.4);border:1.5px solid var(--surface-light);border-left:3px solid var(--accent-orange);border-radius:6px;padding:8px 10px;cursor:pointer;opacity:0;transform:translateX(15px);transition:border-color 0.3s,background 0.3s}
+.side-module:hover{border-color:var(--accent-orange);background:rgba(255,138,101,0.05)}
+.side-module .layer-label{margin-bottom:3px}
+.side-module .desc{font-size:11px;color:var(--text-dim);line-height:1.5}
+.user-flow{margin-top:18px;padding:12px 14px;background:rgba(28,46,72,0.4);border:1.5px solid var(--surface-light);border-radius:6px;position:relative;z-index:1;opacity:0}
+.user-flow-header{font-family:var(--font-display);font-size:11px;font-weight:600;color:var(--accent-gold);letter-spacing:0.5px;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.user-flow-steps{display:flex;align-items:center;flex-wrap:wrap;gap:0}
+.flow-step{display:flex;align-items:center;gap:0;opacity:0}
+.flow-step .dot{width:26px;height:26px;border-radius:50%;border:2px solid var(--surface-light);background:var(--space);display:flex;align-items:center;justify-content:center;font-size:10px;line-height:1;flex-shrink:0;transition:all 0.3s;font-family:var(--font-mono);font-weight:600;color:var(--text-dim)}
+.flow-step .dot.active{border-color:var(--accent-gold);background:rgba(255,215,79,0.1);box-shadow:0 0 12px rgba(255,215,79,0.15);color:var(--accent-gold)}
+.flow-step .label{font-size:10px;color:var(--text-dim);white-space:nowrap;margin:0 6px 0 4px;line-height:1}
+.flow-step .conn{width:22px;height:2px;background:var(--surface-light);position:relative;flex-shrink:0}
+.flow-step .conn::after{content:"▶";position:absolute;right:-4px;top:-7px;font-size:8px;color:var(--surface-light)}
+.flow-step:last-child .conn{display:none}
+.trl-bar{margin-top:14px;padding:12px 14px;background:rgba(28,46,72,0.4);border:1.5px solid var(--surface-light);border-radius:6px;position:relative;z-index:1;opacity:0}
+.trl-bar-header{font-family:var(--font-display);font-size:11px;font-weight:600;color:var(--accent);letter-spacing:0.5px;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.trl-steps{display:flex;align-items:center;gap:0;flex-wrap:wrap}
+.trl-step{display:flex;align-items:center;opacity:0}
+.trl-step .dot-t{width:26px;height:26px;border-radius:50%;border:2px solid var(--surface-light);background:var(--space);display:flex;align-items:center;justify-content:center;font-size:9px;line-height:1;flex-shrink:0;font-family:var(--font-mono);font-weight:700;color:var(--text-dim);transition:all 0.3s}
+.trl-step .dot-t.t1{border-color:var(--accent-dim);color:var(--accent)}
+.trl-step .dot-t.t2{border-color:var(--accent-gold);color:var(--accent-gold)}
+.trl-step .dot-t.t3{border-color:var(--accent-orange);color:var(--accent-orange)}
+.trl-step .dot-t.t4{border-color:var(--accent-green);color:var(--accent-green)}
+.trl-step .label-t{font-size:10px;color:var(--text-dim);white-space:nowrap;margin:0 6px;line-height:1.2}
+.trl-step .label-t .s{display:block;font-size:8px;color:var(--text-dimmer)}
+.trl-step .conn-t{width:16px;height:1.5px;background:var(--surface-light);position:relative;flex-shrink:0}
+.trl-step .conn-t::after{content:"▸";position:absolute;right:-4px;top:-6px;font-size:8px;color:var(--surface-light)}
+.trl-step:last-child .conn-t{display:none}
+.detail-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:200;display:none;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
+.detail-overlay.open{display:flex}
+.detail-card{background:var(--surface);border:2px solid var(--accent-dim);border-radius:8px;padding:22px 24px;max-width:520px;width:90%;max-height:80vh;overflow-y:auto;position:relative;box-shadow:0 8px 50px rgba(0,0,0,0.7),0 0 30px rgba(100,181,246,0.05);will-change:transform,opacity;backface-visibility:hidden;-webkit-backface-visibility:hidden;transform:translateZ(0);-webkit-transform:translateZ(0)}
+.detail-card h2{margin-top:0;font-family:var(--font-display);font-size:17px;font-weight:700;color:var(--accent);margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--surface-light);display:flex;align-items:center;gap:8px}
+.detail-card h2 svg{width:20px;height:20px;flex-shrink:0}
+.detail-card ul{list-style:none;padding:0}
+.detail-card li{font-size:13px;color:var(--text-primary);padding:4px 0 4px 14px;border-left:2px solid var(--surface-light);margin-bottom:5px;line-height:1.6}
+.detail-card li .hl{color:var(--accent);display:inline-flex;align-items:center;gap:4px}
+.detail-card li .hl-warn{color:var(--accent-pulse)}
+.detail-card .close-btn{position:absolute;top:12px;right:14px;font-family:var(--font-mono);font-size:11px;font-weight:600;color:var(--text-dimmer);background:none;border:1px solid var(--surface-light);border-radius:4px;padding:3px 10px;cursor:pointer;transition:all 0.2s}
+.detail-card .close-btn:hover{color:var(--accent-pulse);border-color:var(--accent-pulse)}
+@media (max-width:860px){
+.layout-main{flex-direction:column}
+.side-column{width:100%;flex-direction:row;flex-wrap:wrap}
+.side-module{flex:1;min-width:150px}
+.header h1{font-size:22px}
+.header h1 svg{width:24px;height:24px}
+.screen-frame{padding:20px 10px 10px}
+.panel{padding:16px 12px 14px}
+.layer-modules{gap:3px}
+.module{font-size:11px;padding:3px 7px}
+.flow-step .label{font-size:10px}
+.flow-step .dot{width:22px;height:22px;font-size:9px}
+.trl-step .label-t{font-size:9px}
+}
+@media (max-width:480px){
+.header h1{font-size:18px;letter-spacing:1px}
+.module{font-size:10px;padding:2px 5px;white-space:normal}
+.layer{padding:6px 6px 8px}
+.layer-label{font-size:10px}
+}
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:var(--space)}
+::-webkit-scrollbar-thumb{background:var(--surface-light);border-radius:2px}
+.arrow-path{stroke-dasharray:200;stroke-dashoffset:200}
+</style>
+</head>
+<body>
+<div class="screen-frame">
+<div class="crt-curve"></div>
+<div class="star-field" id="starField"></div>
+<div class="status-bar"><span class="dot"></span> Space Elevator · Orbital Lift <span style="opacity:.5">|</span> STATUS ONLINE <span style="opacity:.5">|</span> GEO: 35,786 km</div>
+<div class="panel" id="panel">
+<div class="header" id="header">
+<h1>
+<svg viewBox="0 0 32 32"><use href="#icon-elevator" /></svg>
+太空电梯
+</h1>
+<div class="subtitle">把每公斤入轨成本压到数百元，让人类像坐电梯一样日常往返天地之间 · <em>天地之间，不再依赖火箭</em></div>
+</div>
+<div class="cable-line"></div>
+<svg style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:0" preserveAspectRatio="none">
+<defs>
+<marker id="arrowHead" markerWidth="6" markerHeight="5" refX="6" refY="2.5" orient="auto"><polygon points="0 0, 6 2.5, 0 5" fill="var(--surface-light)" opacity=".5"/></marker>
+<marker id="arrowHeadFlow" markerWidth="6" markerHeight="5" refX="6" refY="2.5" orient="auto"><polygon points="0 0, 6 2.5, 0 5" fill="var(--accent-gold)"/></marker>
+<symbol id="icon-elevator" viewBox="0 0 32 32">
+<line x1="16" y1="2" x2="16" y2="30" stroke="currentColor" stroke-width="1.5" opacity="0.3"/>
+<rect x="10" y="8" width="12" height="8" rx="1" stroke="currentColor" fill="none" stroke-width="1.5"/>
+<line x1="12" y1="12" x2="20" y2="12" stroke="currentColor" stroke-width="2" opacity="0.6"/>
+<circle cx="16" cy="16" r="2" stroke="currentColor" fill="none" stroke-width="1.2"/>
+<path d="M14 4l-4 4h12l-4-4" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linejoin="round"/>
+</symbol>
+<symbol id="icon-anchor" viewBox="0 0 20 20">
+<circle cx="10" cy="4" r="2" stroke="currentColor" fill="none" stroke-width="1.5"/>
+<path d="M10 6v10M5 12l5 4 5-4" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M3 16h14" stroke="currentColor" stroke-width="1.5" opacity="0.3"/>
+</symbol>
+<symbol id="icon-cable" viewBox="0 0 20 20">
+<line x1="10" y1="2" x2="10" y2="18" stroke="currentColor" stroke-width="1.8" opacity="0.6"/>
+<line x1="4" y1="10" x2="16" y2="10" stroke="currentColor" stroke-width="1" opacity="0.2"/>
+<circle cx="10" cy="10" r="3" stroke="currentColor" fill="none" stroke-width="1.2"/>
+</symbol>
+<symbol id="icon-capsule" viewBox="0 0 20 20">
+<rect x="6" y="3" width="8" height="14" rx="3" stroke="currentColor" fill="none" stroke-width="1.5"/>
+<path d="M8 7h4M8 10h4M8 13h2" stroke="currentColor" stroke-width="1.2" opacity="0.6"/>
+</symbol>
+<symbol id="icon-satellite" viewBox="0 0 20 20">
+<rect x="8" y="2" width="4" height="6" rx="1" stroke="currentColor" fill="none" stroke-width="1.2"/>
+<line x1="4" y1="10" x2="16" y2="10" stroke="currentColor" stroke-width="1.5"/>
+<line x1="4" y1="6" x2="8" y2="10" stroke="currentColor" stroke-width="1.2"/>
+<line x1="12" y1="10" x2="16" y2="6" stroke="currentColor" stroke-width="1.2"/>
+<circle cx="10" cy="14" r="1.5" stroke="currentColor" fill="none" stroke-width="1.2"/>
+<line x1="10" y1="15.5" x2="10" y2="18" stroke="currentColor" stroke-width="1"/>
+</symbol>
+<symbol id="icon-laser" viewBox="0 0 20 20">
+<line x1="2" y1="16" x2="18" y2="6" stroke="currentColor" stroke-width="1.5" opacity="0.4"/>
+<circle cx="16" cy="6" r="2" stroke="currentColor" fill="none" stroke-width="1.2"/>
+<path d="M2 16l2-1 1-2" stroke="currentColor" fill="none" stroke-width="1" opacity="0.6"/>
+<line x1="4" y1="15" x2="16" y2="7" stroke="currentColor" stroke-width="1" opacity="0.15"/>
+<line x1="4" y1="14" x2="16" y2="6" stroke="currentColor" stroke-width="1" opacity="0.15"/>
+</symbol>
+<symbol id="icon-dispatch" viewBox="0 0 20 20">
+<circle cx="10" cy="10" r="7" stroke="currentColor" fill="none" stroke-width="1.2"/>
+<path d="M10 5v3l2 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+<circle cx="5" cy="5" r="1" fill="currentColor" opacity="0.3"/>
+<circle cx="15" cy="15" r="1" fill="currentColor" opacity="0.3"/>
+<circle cx="5" cy="15" r="1" fill="currentColor" opacity="0.3"/>
+<circle cx="15" cy="5" r="1" fill="currentColor" opacity="0.3"/>
+</symbol>
+<symbol id="icon-cost" viewBox="0 0 20 20">
+<path d="M4 10h12M10 4v12" stroke="currentColor" stroke-width="1.5" opacity="0.3"/>
+<path d="M5 5l4 4 2-2 4 4" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="10" cy="10" r="7" stroke="currentColor" fill="none" stroke-width="1.2"/>
+</symbol>
+<symbol id="icon-transfer" viewBox="0 0 20 20">
+<path d="M2 14h10M16 14h2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+<path d="M4 14l3-3M4 14l3 3" stroke="currentColor" fill="none" stroke-width="1.2" stroke-linecap="round"/>
+<path d="M18 14l-3-3M18 14l-3 3" stroke="currentColor" fill="none" stroke-width="1.2" stroke-linecap="round"/>
+<circle cx="14" cy="6" r="3" stroke="currentColor" fill="none" stroke-width="1.2"/>
+</symbol>
+<symbol id="icon-data" viewBox="0 0 20 20">
+<path d="M3 5h14v10H3z" stroke="currentColor" fill="none" stroke-width="1.2" rx="1"/>
+<path d="M6 8h8M6 11h6" stroke="currentColor" stroke-width="1" opacity="0.5" stroke-linecap="round"/>
+<polyline points="3,14 7,11 11,13 17,10" stroke="currentColor" fill="none" stroke-width="1.2" opacity="0.6"/>
+</symbol>
+<symbol id="icon-weather" viewBox="0 0 20 20">
+<circle cx="10" cy="8" r="3" stroke="currentColor" fill="none" stroke-width="1.2"/>
+<path d="M10 1v2M10 13v2M3 8h2M15 8h2" stroke="currentColor" stroke-width="1.2" opacity="0.5"/>
+<path d="M5 16c0-2 2-3 4-3h2c2 0 4 1 4 3" stroke="currentColor" fill="none" stroke-width="1.2" stroke-linecap="round"/>
+</symbol>
+<symbol id="icon-earth" viewBox="0 0 20 20">
+<circle cx="10" cy="10" r="8" stroke="currentColor" fill="none" stroke-width="1.5"/>
+<path d="M3 7c2 2 5 4 7 0s5-2 7 0" stroke="currentColor" fill="none" stroke-width="1" opacity="0.4"/>
+<path d="M3 13c2-2 5-4 7 0s5 2 7 0" stroke="currentColor" fill="none" stroke-width="1" opacity="0.4"/>
+<line x1="10" y1="2" x2="10" y2="18" stroke="currentColor" stroke-width="1" opacity="0.2"/>
+</symbol>
+<symbol id="icon-shield" viewBox="0 0 20 20">
+<path d="M10 2l7 3v5c0 4-3.5 7-7 8-3.5-1-7-4-7-8V5l7-3z" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linejoin="round"/>
+<path d="M8 11l1.5 1.5L13 9" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+</symbol>
+<symbol id="icon-schedule" viewBox="0 0 20 20">
+<rect x="3" y="4" width="14" height="12" rx="1.5" stroke="currentColor" fill="none" stroke-width="1.2"/>
+<line x1="3" y1="8" x2="17" y2="8" stroke="currentColor" stroke-width="1" opacity="0.4"/>
+<circle cx="7" cy="11" r="1" fill="currentColor" opacity="0.5"/>
+<circle cx="11" cy="11" r="1" fill="currentColor" opacity="0.5"/>
+<circle cx="15" cy="11" r="1" fill="currentColor" opacity="0.5"/>
+</symbol>
+</defs>
+</svg>
+<div class="layout-main">
+<div class="layers-column">
+<div class="layer" data-layer="user">
+<div class="layer-label"><svg viewBox="0 0 20 20"><use href="#icon-earth" /></svg>表现层 / 用户层 <span class="badge">USER</span></div>
+<div class="layer-modules">
+<div class="module" data-detail="anchor"><svg viewBox="0 0 20 20"><use href="#icon-anchor" /></svg>地面锚站</div>
+<div class="module" data-detail="capsule"><svg viewBox="0 0 20 20"><use href="#icon-capsule" /></svg>攀爬舱 <span class="tag tag-cargo">货运</span><span class="tag tag-pass">客运</span></div>
+<div class="module" data-detail="station"><svg viewBox="0 0 20 20"><use href="#icon-satellite" /></svg>在轨空间站</div>
+</div>
+</div>
+<div class="arrow-down" data-flow="上行传输">
+<svg viewBox="0 0 100 24"><line class="arrow-path" x1="50" y1="0" x2="50" y2="22" stroke="var(--surface-light)" stroke-width="1.5" marker-end="url(#arrowHead)" opacity=".5"/></svg>
+<div class="arrow-label">系绳攀爬</div>
+</div>
+<div class="layer" data-layer="core">
+<div class="layer-label"><svg viewBox="0 0 20 20"><use href="#icon-dispatch" /></svg>核心层 / 系统层 <span class="badge">CORE</span></div>
+<div class="layer-modules">
+<div class="module" data-detail="tether"><svg viewBox="0 0 20 20"><use href="#icon-cable" /></svg>系绳与缆索系统 <span class="tag tag-core">主缆</span></div>
+<div class="module" data-detail="drive"><svg viewBox="0 0 20 20"><use href="#icon-capsule" /></svg>攀爬驱动系统</div>
+<div class="module" data-detail="energy"><svg viewBox="0 0 20 20"><use href="#icon-laser" /></svg>能源与供电系统</div>
+<div class="module" data-detail="dispatch"><svg viewBox="0 0 20 20"><use href="#icon-dispatch" /></svg>调度与运营中枢</div>
+</div>
+</div>
+<div class="arrow-down" data-flow="数据汇聚">
+<svg viewBox="0 0 100 24"><line class="arrow-path" x1="50" y1="0" x2="50" y2="22" stroke="var(--surface-light)" stroke-width="1.5" marker-end="url(#arrowHead)" opacity=".5"/></svg>
+<div class="arrow-label">实时遥测</div>
+</div>
+<div class="layer" data-layer="data">
+<div class="layer-label"><svg viewBox="0 0 20 20"><use href="#icon-data" /></svg>数据层 <span class="badge">DATA</span></div>
+<div class="layer-modules">
+<div class="module" data-detail="stress"><svg viewBox="0 0 20 20"><use href="#icon-data" /></svg>缆索应力与姿态遥测</div>
+<div class="module" data-detail="weather"><svg viewBox="0 0 20 20"><use href="#icon-weather" /></svg>气象与空间天气库 <span class="tag tag-core">风/雷暴/粒子</span></div>
+<div class="module" data-detail="cargo"><svg viewBox="0 0 20 20"><use href="#icon-schedule" /></svg>舱体状态与货物清单</div>
+</div>
+</div>
+<div class="arrow-down" data-flow="状态切换">
+<svg viewBox="0 0 100 24"><line class="arrow-path" x1="50" y1="0" x2="50" y2="22" stroke="var(--surface-light)" stroke-width="1.5" marker-end="url(#arrowHead)" opacity=".5"/></svg>
+<div class="arrow-label">模式调度</div>
+</div>
+<div class="layer" data-layer="mode">
+<div class="layer-label"><svg viewBox="0 0 20 20"><use href="#icon-shield" /></svg>模式 / 阶段层 <span class="badge">MODE</span></div>
+<div class="layer-modules">
+<div class="module" data-detail="routine"><svg viewBox="0 0 20 20"><use href="#icon-schedule" /></svg>日常运输模式</div>
+<div class="module" data-detail="emergency"><svg viewBox="0 0 20 20"><use href="#icon-shield" /></svg>应急避险模式 <span class="tag tag-gold">避险</span></div>
+<div class="module" data-detail="build"><svg viewBox="0 0 20 20"><use href="#icon-data" /></svg>建设阶段 <span class="tag tag-trl">低轨→GEO</span></div>
+</div>
+</div>
+</div>
+<div class="side-column">
+<div class="side-module" data-detail="cost">
+<div class="layer-label"><svg viewBox="0 0 20 20"><use href="#icon-cost" /></svg>成本结算</div>
+<div class="desc">按载重与目标高度计费 · 入轨单价下降 1-2 个数量级</div>
+</div>
+<div class="side-module" data-detail="transfer">
+<div class="layer-label"><svg viewBox="0 0 20 20"><use href="#icon-transfer" /></svg>轨道中转</div>
+<div class="desc">同步轨道设中转站 · 换乘航天器前往深空或其他轨道</div>
+</div>
+<div class="side-module" data-detail="avoid">
+<div class="layer-label"><svg viewBox="0 0 20 20"><use href="#icon-weather" /></svg>应急避险</div>
+<div class="desc">强风 / 雷暴 / 空间天气 · 自动降速、停靠或脱困</div>
+</div>
+</div>
+</div>
+<div class="user-flow">
+<div class="user-flow-header">
+<svg viewBox="0 0 20 20" style="width:14px;height:14px;flex-shrink:0"><use href="#icon-dispatch"/></svg>
+天地运输流程
+<span style="font-size:7px;color:var(--text-dim);font-family:var(--font-mono)">[ 循环动画 ]</span>
+</div>
+<div class="user-flow-steps" id="flowSteps">
+<div class="flow-step"><div class="dot">1</div><span class="label">预约班次</span><div class="conn"></div></div>
+<div class="flow-step"><div class="dot">2</div><span class="label">装载安检</span><div class="conn"></div></div>
+<div class="flow-step"><div class="dot">3</div><span class="label">攀爬上行</span><div class="conn"></div></div>
+<div class="flow-step"><div class="dot">4</div><span class="label">轨道停靠</span><div class="conn"></div></div>
+<div class="flow-step"><div class="dot">5</div><span class="label">下行返回</span><div class="conn"></div></div>
+<div class="flow-step"><div class="dot">6</div><span class="label">结算</span></div>
+</div>
+</div>
+<div class="trl-bar">
+<div class="trl-bar-header">
+<svg viewBox="0 0 20 20" style="width:14px;height:14px;flex-shrink:0"><use href="#icon-cable"/></svg>
+技术成熟度路线
+</div>
+<div class="trl-steps" id="trlSteps">
+<div class="trl-step"><div class="dot-t t1">1</div><span class="label-t">概念验证<span class="s">TRL 1–3</span></span><div class="conn-t"></div></div>
+<div class="trl-step"><div class="dot-t t2">2</div><span class="label-t">地面样机<span class="s">TRL 4–6</span></span><div class="conn-t"></div></div>
+<div class="trl-step"><div class="dot-t t3">3</div><span class="label-t">太空演示<span class="s">TRL 7–8</span></span><div class="conn-t"></div></div>
+<div class="trl-step"><div class="dot-t t4">4</div><span class="label-t">商用运营<span class="s">TRL 9</span></span></div>
+</div>
+</div>
+</div>
+</div>
+<div class="detail-overlay">
+<div class="detail-card">
+<button class="close-btn">✕ CLOSE</button>
+<div id="detailContent"></div>
+</div>
+</div>
+<script>
+const DETAILS = {
+"anchor":{title:'<svg viewBox="0 0 20 20"><use href="#icon-anchor"/></svg> 地面锚站',items:['位于赤道无台风公海海域的可移动平台','兼作港口、海关与装载中心','避开台风与海盗航线，保障持续运营','提供攀爬舱的出发与回收场地']},
+"capsule":{title:'<svg viewBox="0 0 20 20"><use href="#icon-capsule"/></svg> 攀爬舱',items:['沿主缆运动的运输单元，靠捕获地面发射的能源驱动','货运舱：载重数吨至数十吨，巡航速度 ~200 km/h','客运舱：载客数十人，巡航速度 ~150 km/h，含生命保障','可在任意轨道高度停靠卸货或换乘','无需自带燃料，能耗仅为火箭的 5%']},
+"station":{title:'<svg viewBox="0 0 20 20"><use href="#icon-satellite"/></svg> 在轨空间站',items:['位于同步轨道高度的中转与对接平台','接收攀爬舱货物，转运至其他轨道或深空航天器','支持舱体停靠、人员换乘与燃料补给','配备机械臂用于货物转移与舱体对接']},
+"tether":{title:'<svg viewBox="0 0 20 20"><use href="#icon-cable"/></svg> 系绳与缆索系统',items:['主缆：整座电梯的命脉，从赤道锚站延伸至同步轨道配重','材料需极高比强度：碳纳米管束（目标 ~30–60 GPa·cm³/g）','连续纺丝长度需达到万公里级无断点','备份缆：主缆旁并行一根，单点断裂可降级运行','当前材料工艺距离主缆要求仍有代差','金刚石纳米线为远期候选材料']},
+"drive":{title:'<svg viewBox="0 0 20 20"><use href="#icon-capsule"/></svg> 攀爬驱动系统',items:['捕获地面基站发射的激光/微波能量并转化为驱动电力','攀爬机构沿缆索爬升，无需传统燃料推进','速度可控：货运 ~200 km/h，客运 ~150 km/h','上行与下行均通过同一套驱动系统实现','舱载缓存电池提供 30 分钟应急续航']},
+"energy":{title:'<svg viewBox="0 0 20 20"><use href="#icon-laser"/></svg> 能源与供电系统',items:['地面大功率基站向高空攀爬舱持续输电','激光阵：地面固定阵列，晴朗天气效率最佳','微波阵：备选方案，穿透云层能力更强，全天候可用','舱载缓存电池：短暂失锁时维持基本功能约 30 分钟','替代火箭自带燃料，每趟任务能耗降低 95%']},
+"dispatch":{title:'<svg viewBox="0 0 20 20"><use href="#icon-dispatch"/></svg> 调度与运营中枢',items:['所有舱体的"空中交通管制"系统','按高度分层航道，上下行错峰，每层间隔 ≥ 50 km','实时遥测 + 预测，临近交会自动调速，最小安全距离 10 km','结合气象与空间天气预报动态停班','风速超阈值或太阳风暴时暂停上行','保证缆索不共振、舱体不互撞']},
+"stress":{title:'<svg viewBox="0 0 20 20"><use href="#icon-data"/></svg> 缆索应力与姿态遥测',items:['实时监测主缆与备份缆的张力分布','检测缆索横向振动（共振预警）','姿态偏离报警与自动纠偏','数据驱动缆索健康管理与维护排程']},
+"weather":{title:'<svg viewBox="0 0 20 20"><use href="#icon-weather"/></svg> 气象与空间天气库',items:['集成全球气象模型，实时监测风速与雷暴','空间天气预报：高能粒子流、太阳耀斑等','为调度中枢提供停班/复班的决策输入','历史天气数据用于长期运营风险评估']},
+"cargo":{title:'<svg viewBox="0 0 20 20"><use href="#icon-schedule"/></svg> 舱体状态与货物清单',items:['上行：预约班次 → 装载 → 安检 → 货物清单录入','下行：货物交接 → 卸载 → 回程清单','舱体各子系统状态集中监控面板','货物全程可追溯，支持多客户并行装载']},
+"routine":{title:'<svg viewBox="0 0 20 20"><use href="#icon-schedule"/></svg> 日常运输模式',items:['定时班次，固定轨道高度与载重档位','预约制运营，按载重与目标高度计费','上下行错峰调度，提高缆索利用率','优先级：客运 > 紧急物资 > 常规货运']},
+"emergency":{title:'<svg viewBox="0 0 20 20"><use href="#icon-shield"/></svg> 应急避险模式',items:['遇强风、雷暴、空间天气时自动触发','降速运行 / 停靠最近锚点 / 返回锚站','缆索松弛或异常振动时启动紧急制动','舱体脱困程序：备份缆接管或独立脱离','锚站撤离程序：人员与关键设备优先转移']},
+"build":{title:'<svg viewBox="0 0 20 20"><use href="#icon-data"/></svg> 建设阶段',items:['阶段一：近地轨道验证缆（500 km 级测试）','阶段二：中轨道延伸与攀爬舱原型测试','阶段三：同步轨道全面铺设与配重部署','阶段四：常态化天地班次商业运营','每个阶段都包含当前 TRL 对应的核心验证目标']},
+"cost":{title:'<svg viewBox="0 0 20 20"><use href="#icon-cost"/></svg> 成本结算',items:['按载重吨位与目标轨道高度计费','入轨单价相比传统火箭下降 1–2 个数量级','货运与客运差异化定价','加急任务收取加急附加费','定期发布标准费率表及季节性调整']},
+"transfer":{title:'<svg viewBox="0 0 20 20"><use href="#icon-transfer"/></svg> 轨道中转',items:['同步轨道高度设永久中转站','货物在此换乘传统航天器前往深空或其他轨道','支持燃料补给、设备检修与人员换乘','降低深空任务的入轨段成本']},
+"avoid":{title:'<svg viewBox="0 0 20 20"><use href="#icon-weather"/></svg> 应急避险',items:['强风（风速超过阈值自动停班）','雷暴（电离层扰动影响激光输电效率）','空间天气（高能粒子流威胁电子设备）','缆索异常（张力突变 / 振动异常自动制动）','天气窗口通过调度中枢统一评估与发布']}
+};
+document.addEventListener("DOMContentLoaded",()=>{
+const layers=document.querySelectorAll(".layer");
+const arrows=document.querySelectorAll(".arrow-down");
+const flowSteps=document.querySelectorAll(".flow-step");
+const sideModules=document.querySelectorAll(".side-module");
+const userFlow=document.querySelector(".user-flow");
+const trlBar=document.querySelector(".trl-bar");
+const trlSteps=document.querySelectorAll(".trl-step");
+const overlays=document.querySelector(".detail-overlay");
+const detailContent=document.querySelector("#detailContent");
+const closeBtn=document.querySelector(".close-btn");
+const mainTimeline=anime.timeline({easing:"easeOutCubic"});
+mainTimeline.add({targets:"#header",opacity:[0,1],translateY:[-10,0],duration:600});
+mainTimeline.add({targets:sideModules,opacity:[0,1],translateX:[15,0],duration:400,delay:anime.stagger(100)},"-=200");
+mainTimeline.add({targets:layers,opacity:[0,1],translateY:[20,0],duration:450,delay:anime.stagger(130)},"-=100");
+mainTimeline.add({targets:arrows,opacity:[0,1],duration:350,delay:anime.stagger(180)},"-=200");
+setTimeout(()=>{document.querySelectorAll(".arrow-path").forEach((p)=>{anime({targets:p,strokeDashoffset:[200,0],duration:700,delay:300,easing:"easeInOutCubic"});});},1400);
+mainTimeline.add({targets:userFlow,opacity:[0,1],duration:400},"-=100");
+mainTimeline.add({targets:flowSteps,opacity:[0,1],translateX:[-8,0],duration:300,delay:anime.stagger(80)},"-=200");
+mainTimeline.add({targets:trlBar,opacity:[0,1],duration:400},"-=100");
+mainTimeline.add({targets:trlSteps,opacity:[0,1],translateX:[-6,0],duration:250,delay:anime.stagger(100)},"-=200");
+let flowIndex=0;function pulseFlow(){flowSteps.forEach((s)=>s.querySelector(".dot").classList.remove("active"));flowSteps[flowIndex].querySelector(".dot").classList.add("active");flowIndex=(flowIndex+1)%flowSteps.length;}
+pulseFlow();setInterval(pulseFlow,2500);
+layers.forEach((l)=>{l.addEventListener("mouseenter",()=>{anime({targets:l,borderColor:"var(--accent)",backgroundColor:"rgba(100,181,246,0.05)",duration:200});});l.addEventListener("mouseleave",()=>{anime({targets:l,borderColor:"var(--surface-light)",backgroundColor:"rgba(28,46,72,0.4)",duration:300});});});
+function openDetail(id){const data=DETAILS[id];if(!data)return;detailContent.innerHTML=`<h2>${data.title}</h2><ul>${data.items.map((i)=>`<li>${i}</li>`).join("")}</ul>`;overlays.classList.add("open");anime({targets:".detail-card",scale:[0.85,1],opacity:[0,1],duration:250,easing:"easeOutCubic"});}
+function closeDetail(){anime({targets:".detail-card",scale:[1,0.85],opacity:[1,0],duration:200,easing:"easeInCubic",complete:()=>{overlays.classList.remove("open");}});}
+document.querySelectorAll(".module[data-detail]").forEach((el)=>{el.addEventListener("click",()=>openDetail(el.dataset.detail));});
+document.querySelectorAll(".side-module[data-detail]").forEach((el)=>{el.addEventListener("click",()=>openDetail(el.dataset.detail));});
+closeBtn.addEventListener("click",closeDetail);
+overlays.addEventListener("click",(e)=>{if(e.target===overlays)closeDetail();});
+const board=document.getElementById("panel");
+for(let i=0;i<20;i++){const star=document.createElement("div");star.style.cssText=`position:absolute;pointer-events:none;width:${1+Math.random()*2.5}px;height:${1+Math.random()*2.5}px;border-radius:50%;background:rgba(255,255,255,${0.2+Math.random()*0.5});filter:blur(${Math.random()*1.5}px);left:${Math.random()*100}%;top:${Math.random()*100}%;opacity:${0.1+Math.random()*0.5}`;board.appendChild(star);anime({targets:star,opacity:[0.1,0.8,0.1],duration:3000+Math.random()*5000,direction:"alternate",loop:true,easing:"easeInOutSine"});}
+});
+</script>
+</body>
+</html>

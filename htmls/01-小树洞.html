@@ -1,0 +1,655 @@
+﻿<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>小树洞</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;600;800&family=IBM+Plex+Mono:wght@400;600&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <style>
+      *,
+      *::before,
+      *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+      :root {
+        --board: #4d3a2a;
+        --board-dark: #352820;
+        --chalk: #f0e6d0;
+        --chalk-dim: rgba(240, 230, 208, 0.55);
+        --chalk-dimmer: rgba(240, 230, 208, 0.18);
+        --chalk-translucent: rgba(240, 230, 208, 0.07);
+        --accent-warm: #d4a373;
+        --accent-leaf: #7a9e7e;
+        --accent-leaf-light: #b5d0b0;
+        --accent-berry: #c97070;
+        --accent-gold: #e8cba0;
+        --accent-lavender: #a898c0;
+        --accent-sky: #8ab8d0;
+        --scanline: rgba(0, 0, 0, 0.05);
+        --font-display: "Noto Sans SC", -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+        --font-mono: "IBM Plex Mono", "SFMono-Regular", Menlo, Consolas, "Courier New", monospace;
+      }
+
+      html, body { height: 100%; background: #1a1510; font-family: var(--font-mono); color: var(--chalk); overflow-x: hidden; }
+
+      /* ===== CRT SCREEN ===== */
+      .screen-frame {
+        position: relative; min-height: 100vh; padding: 28px 20px 20px;
+        background: #1a1510; border-radius: 20px;
+        box-shadow: inset 0 0 40px rgba(0,0,0,0.8), 0 8px 40px rgba(0,0,0,0.6);
+        max-width: 1360px; margin: 0 auto;
+      }
+      .screen-frame::before {
+        content: ""; position: absolute; inset: 0; border-radius: 20px;
+        background: repeating-linear-gradient(0deg, transparent, transparent 2px, var(--scanline) 2px, var(--scanline) 4px);
+        pointer-events: none; z-index: 100;
+      }
+      .crt-curve {
+        position: absolute; inset: 0; border-radius: 20px;
+        background: radial-gradient(ellipse at center, transparent 65%, rgba(0,0,0,0.35) 100%);
+        pointer-events: none; z-index: 99;
+      }
+      .power-led {
+        position: absolute; top: 8px; left: 50%; transform: translateX(-50%);
+        display: flex; align-items: center; gap: 8px;
+        font-family: var(--font-display); font-size: 10px; font-weight: 600;
+        color: var(--chalk-dim); letter-spacing: 1.5px; z-index: 101;
+      }
+      .power-led span {
+        display: inline-block; width: 6px; height: 6px; border-radius: 50%;
+        background: #4ade80; box-shadow: 0 0 6px #4ade80;
+        animation: led-pulse 2s ease-in-out infinite;
+      }
+      @keyframes led-pulse {
+        0%, 100% { opacity: 1; box-shadow: 0 0 6px #4ade80; }
+        50% { opacity: 0.5; box-shadow: 0 0 2px #4ade80; }
+      }
+
+      /* ===== CHALKBOARD ===== */
+      .chalkboard {
+        position: relative; background: var(--board);
+        border: 3px solid #5a4a3a; border-radius: 4px; padding: 32px 28px 28px;
+        box-shadow: inset 0 0 60px rgba(0,0,0,0.5), 0 4px 0 #3a2a1a;
+        min-height: calc(100vh - 80px);
+      }
+      .chalkboard::after {
+        content: ""; position: absolute; inset: 0;
+        background-image:
+          radial-gradient(circle at 20% 30%, rgba(240,234,216,0.02) 0, transparent 60%),
+          radial-gradient(circle at 80% 70%, rgba(240,234,216,0.015) 0, transparent 50%),
+          radial-gradient(circle at 50% 50%, rgba(240,234,216,0.01) 0, transparent 70%);
+        pointer-events: none; border-radius: 2px;
+      }
+
+      /* ===== HEADER ===== */
+      .header { text-align: center; margin-bottom: 20px; position: relative; z-index: 1; }
+      .header .tree-icon { width: 32px; height: 32px; color: var(--accent-leaf-light); margin-bottom: 2px; }
+      .header h1 {
+        font-family: var(--font-display); font-size: 28px; font-weight: 800;
+        color: var(--accent-gold); text-shadow: 0 0 8px rgba(232,201,160,0.25);
+        letter-spacing: 4px; margin-bottom: 6px; display: flex;
+        align-items: center; justify-content: center; gap: 10px;
+      }
+      .header .subtitle { font-size: 13px; color: var(--chalk-dim); letter-spacing: 0.5px; line-height: 1.7; }
+      .header .subtitle em { font-style: normal; color: var(--accent-leaf-light); }
+      .header .tagline {
+        font-size: 15px; color: var(--accent-warm); max-width: 600px; margin: 12px auto 0;
+        padding: 12px 18px; border-left: 2px solid var(--accent-warm);
+        line-height: 1.6; background: rgba(212,163,115,0.05); border-radius: 2px;
+      }
+      .header .age-badge { display: inline-block; margin-top: 10px; font-size: 10px; font-weight: 600; color: var(--chalk-dim); border: 1px solid var(--chalk-dimmer); padding: 2px 14px; border-radius: 10px; letter-spacing: 0.5px; }
+
+      /* ===== LAYOUT ===== */
+      .layout-main { display: flex; gap: 20px; position: relative; z-index: 1; }
+      .layers-column { flex: 1; min-width: 0; }
+      .side-column { width: 220px; flex-shrink: 0; display: flex; flex-direction: column; gap: 10px; }
+
+      /* ===== SVG CONNECTORS ===== */
+      .svg-connectors { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; }
+
+      /* ===== LAYER CARD ===== */
+      .layer {
+        position: relative; background: var(--chalk-translucent);
+        border: 1.5px solid var(--chalk-dimmer); border-radius: 6px;
+        padding: 12px 14px 14px; transition: border-color 0.3s, background 0.3s;
+        opacity: 0; transform: translateY(20px);
+      }
+      .layer:hover { border-color: var(--accent-gold); background: rgba(232,201,160,0.06); }
+      .layer-label {
+        font-family: var(--font-display); font-size: 12px; font-weight: 600;
+        color: var(--chalk-dim); letter-spacing: 1px; margin-bottom: 8px;
+        display: flex; align-items: center; gap: 6px;
+      }
+      .layer-label .badge {
+        font-size: 10px; font-weight: 600; background: var(--chalk-dimmer);
+        color: var(--board); padding: 1px 7px; border-radius: 3px; letter-spacing: 0;
+      }
+      .layer-modules { display: flex; flex-wrap: wrap; gap: 6px; }
+      .module {
+        background: rgba(240,234,216,0.06); border: 1px solid var(--chalk-dimmer);
+        border-radius: 4px; padding: 5px 10px; font-size: 12px; line-height: 1.5;
+        color: var(--chalk); transition: all 0.25s; white-space: nowrap;
+        cursor: pointer; display: inline-flex; align-items: center; gap: 5px;
+      }
+      .module:hover { background: rgba(240,234,216,0.12); border-color: var(--chalk); transform: translateY(-1px); }
+      svg.icon, .module svg, .side-module svg, .dot svg { width: 16px; height: 16px; flex-shrink: 0; }
+      .module svg { width: 15px; height: 15px; }
+      .dot svg { width: 14px; height: 14px; }
+      .layer-label > svg:first-child { width: 18px; height: 18px; flex-shrink: 0; }
+
+      .layer[data-layer="user"] { border-left: 3px solid var(--accent-gold); }
+      .layer[data-layer="core"] { border-left: 3px solid var(--accent-leaf); }
+      .layer[data-layer="data"] { border-left: 3px solid var(--accent-lavender); }
+      .layer[data-layer="engine"] { border-left: 3px solid var(--accent-sky); }
+
+      .tag {
+        font-size: 10px; font-weight: 600; padding: 1px 6px; border-radius: 3px;
+        margin-left: 4px; opacity: 0.8;
+      }
+      .tag-warm { background: var(--accent-warm); color: var(--board); }
+      .tag-leaf { background: var(--accent-leaf); color: var(--board); }
+
+      /* ===== ARROW ===== */
+      .arrow-down { display: flex; align-items: center; justify-content: center; height: 28px; position: relative; opacity: 0; }
+      .arrow-down svg { width: 100%; height: 28px; }
+      .arrow-label {
+        position: absolute; font-family: var(--font-display); font-size: 12px; font-weight: 600;
+        color: var(--chalk-dim); letter-spacing: 0.5px; background: var(--board);
+        padding: 0 10px; text-align: center; white-space: nowrap;
+      }
+
+      /* ===== SIDE ===== */
+      .side-module {
+        background: var(--chalk-translucent); border: 1.5px solid var(--chalk-dimmer);
+        border-left: 3px solid var(--accent-lavender); border-radius: 6px;
+        padding: 10px 12px; cursor: pointer;
+        opacity: 0; transform: translateX(15px); transition: border-color 0.3s, background 0.3s;
+      }
+      .side-module:hover { border-color: var(--accent-lavender); background: rgba(155,142,196,0.08); }
+      .side-module .layer-label { margin-bottom: 4px; }
+      .side-module .desc { font-size: 11px; color: var(--chalk-dim); line-height: 1.5; }
+
+      /* ===== USER FLOW ===== */
+      .user-flow {
+        margin-top: 22px; padding: 14px 16px; background: var(--chalk-translucent);
+        border: 1.5px solid var(--chalk-dimmer); border-radius: 6px; position: relative; z-index: 1; opacity: 0;
+      }
+      .user-flow-header {
+        font-family: var(--font-display); font-size: 12px; font-weight: 600;
+        color: var(--accent-gold); letter-spacing: 0.5px; margin-bottom: 10px;
+        display: flex; align-items: center; gap: 6px;
+      }
+      .user-flow-steps { display: flex; align-items: center; flex-wrap: wrap; gap: 0; }
+      .flow-step { display: flex; align-items: center; gap: 0; opacity: 0; }
+      .flow-step .dot {
+        width: 28px; height: 28px; border-radius: 50%; border: 2px solid var(--chalk-dimmer);
+        background: var(--board); display: flex; align-items: center; justify-content: center;
+        font-size: 13px; line-height: 1; flex-shrink: 0; transition: all 0.3s;
+      }
+      .flow-step .dot.active { border-color: var(--accent-gold); background: rgba(232,201,160,0.12); box-shadow: 0 0 10px rgba(232,201,160,0.2); }
+      .flow-step .label { font-size: 11px; color: var(--chalk-dim); white-space: nowrap; margin: 0 6px 0 5px; line-height: 1; }
+      .flow-step .conn { width: 20px; height: 2px; background: var(--chalk-dimmer); position: relative; flex-shrink: 0; }
+      .flow-step .conn::after { content: "▸"; position: absolute; right: -4px; top: -6px; font-size: 10px; color: var(--chalk-dimmer); }
+      .flow-step:last-child .conn { display: none; }
+
+      /* ===== DETAIL OVERLAY ===== */
+      .detail-overlay {
+        position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 200;
+        display: none; align-items: center; justify-content: center; backdrop-filter: blur(2px);
+      }
+      .detail-overlay.open { display: flex; }
+      .detail-card {
+        background: var(--board-dark); border: 2px solid var(--chalk-dimmer);
+        border-radius: 8px; padding: 24px 28px; max-width: 520px; width: 90%;
+        max-height: 80vh; overflow-y: auto; position: relative;
+        box-shadow: 0 8px 40px rgba(0,0,0,0.6);
+        will-change: transform, opacity; backface-visibility: hidden; transform: translateZ(0);
+      }
+      .detail-card h2 {
+        margin-top: 0;
+        font-family: var(--font-display); font-size: 17px; font-weight: 800;
+        color: var(--accent-gold); margin-bottom: 12px; padding-bottom: 10px;
+        border-bottom: 1px solid var(--chalk-dimmer); display: flex; align-items: center; gap: 8px;
+      }
+      .detail-card h2 svg { width: 22px; height: 22px; flex-shrink: 0; }
+      .detail-card h3 { font-family: var(--font-display); font-size: 13px; font-weight: 600; color: var(--chalk-dim); margin: 14px 0 6px; }
+      .detail-card ul { list-style: none; padding: 0; }
+      .detail-card li {
+        font-size: 13px; color: var(--chalk); padding: 5px 0 5px 14px;
+        border-left: 2px solid var(--chalk-dimmer); margin-bottom: 6px; line-height: 1.6;
+      }
+      .detail-card li .hl { color: var(--accent-leaf-light); font-weight: 600; }
+      .detail-card li .hl-w { color: var(--accent-gold); font-weight: 600; }
+      .detail-card .close-btn {
+        position: absolute; top: 14px; right: 16px; font-family: var(--font-display);
+        font-size: 13px; font-weight: 600; color: var(--chalk-dimmer);
+        background: none; border: 1px solid var(--chalk-dimmer); border-radius: 4px;
+        padding: 4px 12px; cursor: pointer; transition: all 0.2s; z-index: 1;
+      }
+      .detail-card .close-btn:hover { color: var(--accent-berry); border-color: var(--accent-berry); }
+      .detail-card::-webkit-scrollbar { width: 4px; }
+      .detail-card::-webkit-scrollbar-track { background: var(--board-dark); }
+      .detail-card::-webkit-scrollbar-thumb { background: var(--chalk-dimmer); border-radius: 2px; }
+
+      /* ===== CHALK GLOW ===== */
+      .chalk-glow { position: absolute; pointer-events: none; width: 4px; height: 4px; border-radius: 50%; background: rgba(240,234,216,0.15); filter: blur(6px); }
+
+      ::-webkit-scrollbar { width: 4px; }
+      ::-webkit-scrollbar-track { background: var(--board-dark); }
+      ::-webkit-scrollbar-thumb { background: var(--chalk-dimmer); border-radius: 2px; }
+
+      .arrow-path { stroke-dasharray: 200; stroke-dashoffset: 200; }
+
+      /* ===== BACKGROUND TREE ===== */
+      .bg-tree-wrap {
+        position: absolute; inset: 0; display: flex; align-items: center;
+        justify-content: center; pointer-events: none; z-index: 0; overflow: hidden;
+      }
+      .bg-tree {
+        width: 420px; height: 420px; opacity: 0.035;
+        color: var(--accent-leaf-light);
+        filter: blur(2px);
+      }
+      .bg-tree.glow {
+        position: absolute;
+        width: 500px; height: 500px;
+        background: radial-gradient(circle, rgba(122,158,126,0.06) 0%, transparent 70%);
+        border-radius: 50%;
+      }
+
+      /* ===== FIREFLY ===== */
+      .firefly {
+        position: absolute; pointer-events: none; border-radius: 50%;
+        background: radial-gradient(circle at 30% 30%, #fff, transparent);
+        mix-blend-mode: screen;
+        will-change: transform, opacity;
+      }
+
+
+
+      @media (max-width: 860px) {
+        .layout-main { flex-direction: column; }
+        .side-column { width: 100%; flex-direction: row; flex-wrap: wrap; }
+        .side-module { flex: 1; min-width: 160px; }
+        .header h1 { font-size: 22px; }
+        .screen-frame { padding: 24px 12px 12px; }
+        .chalkboard { padding: 20px 14px 16px; }
+        .module { font-size: 11px; padding: 4px 8px; }
+        .flow-step .label { font-size: 10px; }
+        .flow-step .dot { width: 24px; height: 24px; font-size: 11px; }
+      }
+      @media (max-width: 480px) {
+        .header h1 { font-size: 18px; letter-spacing: 2px; }
+        .module { font-size: 10px; padding: 3px 6px; white-space: normal; }
+        .layer { padding: 8px 8px 10px; }
+        .layer-label { font-size: 10px; }
+      }
+    .layer-label svg{width:16px;height:16px;flex-shrink:0}
+</style>
+  </head>
+  <body>
+    <div class="screen-frame">
+      <div class="crt-curve"></div>
+      <div class="power-led"><span></span> TREEHOLE · WARM · MODE</div>
+
+      <div class="chalkboard" id="chalkboard">
+        <!-- BACKGROUND TREE + GLOW -->
+        <div class="bg-tree-wrap">
+          <div class="bg-tree glow" id="treeGlow"></div>
+          <svg class="bg-tree" id="bgTree" viewBox="0 0 100 120">
+            <path d="M50 10L25 55h15L30 110l20-30 20 30-10-55h15L50 10z" fill="currentColor"/>
+            <circle cx="50" cy="30" r="3" fill="currentColor" opacity="0.6"/>
+            <circle cx="40" cy="45" r="2" fill="currentColor" opacity="0.4"/>
+            <circle cx="60" cy="40" r="2.5" fill="currentColor" opacity="0.5"/>
+            <path d="M30 70Q50 75 70 70" fill="none" stroke="currentColor" stroke-width="0.5" opacity="0.3"/>
+            <path d="M35 80Q50 84 65 80" fill="none" stroke="currentColor" stroke-width="0.5" opacity="0.25"/>
+            <path d="M38 90Q50 93 62 90" fill="none" stroke="currentColor" stroke-width="0.5" opacity="0.2"/>
+          </svg>
+        </div>
+        <!-- HEADER -->
+        <div class="header" id="header">
+          <svg class="tree-icon" viewBox="0 0 24 24"><use href="#icon-tree"/></svg>
+          <h1>
+            <svg viewBox="0 0 24 24" style="width:30px;height:30px"><use href="#icon-tree"/></svg>
+            小树洞
+          </h1>
+          <div class="subtitle">不做妈妈，只把妈妈从"人肉执行器"的角色里解放出来，让她重新做回那个<em>孩子愿意靠近的人</em></div>
+          <div class="age-badge">适龄建议 · 6岁以上</div>
+        </div>
+
+        <!-- SVG DEFS -->
+        <svg class="svg-connectors" id="connectorSvg" preserveAspectRatio="none">
+          <defs>
+            <marker id="arrowHead" markerWidth="6" markerHeight="5" refX="6" refY="2.5" orient="auto">
+              <polygon points="0 0, 6 2.5, 0 5" fill="var(--chalk-dimmer)" opacity=".6"/>
+            </marker>
+            <symbol id="icon-tree" viewBox="0 0 24 24"><path d="M12 2L6 12h3l-2 8 5-4 5 4-2-8h3L12 2z" stroke="currentColor" fill="none" stroke-width="1.6" stroke-linejoin="round"/><circle cx="12" cy="9" r="1.3" stroke="currentColor" fill="none" stroke-width="1.3"/></symbol>
+            <symbol id="icon-users" viewBox="0 0 20 20"><circle cx="7.5" cy="6" r="3" stroke="currentColor" fill="none" stroke-width="1.5"/><circle cx="14" cy="7" r="2.5" stroke="currentColor" fill="none" stroke-width="1.5"/><path d="M3 18c1-4 4-5 9-5s5 1 6 5" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M11.5 14c2 0 3 .5 4 3" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round"/></symbol>
+            <symbol id="icon-heart" viewBox="0 0 20 20"><path d="M10 17c-6-4-8-7-8-10 0-2.5 2-4 4-4 2 0 4 1.5 4 3 0-1.5 2-3 4-3s4 1.5 4 4c0 3-2 6-8 10z" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linejoin="round"/></symbol>
+            <symbol id="icon-parent" viewBox="0 0 20 20"><path d="M4 18v-5a6 6 0 0 1 12 0v5M8 7a2 2 0 1 0 0-4 2 2 0 0 0 0 4zm4 0a2 2 0 1 0 0-4 2 2 0 0 0 0 4zM6 18h8" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+            <symbol id="icon-child" viewBox="0 0 20 20"><circle cx="10" cy="6" r="3" stroke="currentColor" fill="none" stroke-width="1.5"/><path d="M5 18c1-3 2.5-5 5-5s4 2 5 5" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round"/><path d="M10 11v3" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round"/></symbol>
+            <symbol id="icon-sun" viewBox="0 0 20 20"><circle cx="10" cy="10" r="4" stroke="currentColor" fill="none" stroke-width="1.5"/><path d="M10 1v3m0 12v3M1 10h3m12 0h3M4.5 4.5l2 2m7 7 2 2M4.5 15.5l2-2m7-7 2-2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></symbol>
+            <symbol id="icon-forest" viewBox="0 0 20 20"><path d="M2 17.5h16M6 11l2 4 2-5 2 5 2-4 2 5.5" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 4l-2 4 1 2 1-2-2-2 2-2z" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linejoin="round"/></symbol>
+            <symbol id="icon-star" viewBox="0 0 20 20"><path d="M10 2l2 4 4 .5-3 3 1 4.5-4-2-4 2 1-4.5-3-3L8 6l2-4z" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linejoin="round"/></symbol>
+            <symbol id="icon-home" viewBox="0 0 20 20"><path d="M3 9l7-7 7 7v8H3V9z" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linejoin="round"/><path d="M8 17v-5h4v5" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+            <symbol id="icon-chat" viewBox="0 0 20 20"><path d="M3 4h14v10H7l-4 3V4z" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linejoin="round"/><path d="M6 8h8M6 11h5" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round"/></symbol>
+            <symbol id="icon-book" viewBox="0 0 20 20"><path d="M10 4C8 2 5 3 4 4v12c1-1 4-2 6 0V4zm0 0c2-2 5-1 6 0v12c-1-1-4-2-6 0V4z" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linejoin="round"/></symbol>
+            <symbol id="icon-mic" viewBox="0 0 20 20"><rect x="8" y="2" width="4" height="9" rx="2" stroke="currentColor" fill="none" stroke-width="1.5"/><path d="M5 10c0 3 2.2 5 5 5s5-2 5-5M10 15v3" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round"/></symbol>
+            <symbol id="icon-trophy" viewBox="0 0 24 24"><path d="M6 3h12v5c0 4-3 7-6 7s-6-3-6-7V3z" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linejoin="round"/><path d="M6 8H4c0 3 1 5 2 6M18 8h2c0 3-1 5-2 6M9 15l3 3 3-3M12 18v5" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+            <symbol id="icon-museum" viewBox="0 0 24 24"><path d="M4 20h16l-2-8H6l-2 8zM12 4L4 12h16L12 4z" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linejoin="round"/><path d="M12 4V2" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round"/><path d="M8 20v-5M12 20v-5M16 20v-5" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round"/></symbol>
+            <symbol id="icon-db" viewBox="0 0 20 20"><ellipse cx="10" cy="5.5" rx="6" ry="2.5" stroke="currentColor" fill="none" stroke-width="1.5"/><path d="M4 5.5v9c0 1.4 2.7 2.5 6 2.5s6-1.1 6-2.5v-9" stroke="currentColor" fill="none" stroke-width="1.5"/><path d="M4 10c0 1.4 2.7 2.5 6 2.5s6-1.1 6-2.5" stroke="currentColor" fill="none" stroke-width="1.5"/></symbol>
+            <symbol id="icon-log" viewBox="0 0 20 20"><rect x="3" y="3" width="14" height="14" rx="1.5" stroke="currentColor" fill="none" stroke-width="1.5"/><path d="M6 7h8M6 10h8M6 13h5" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round"/></symbol>
+            <symbol id="icon-activity" viewBox="0 0 20 20"><path d="M3 17h14M5 12V8M9 14V5M13 13V9M17 12V7" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round"/></symbol>
+            <symbol id="icon-target" viewBox="0 0 20 20"><circle cx="10" cy="10" r="7" stroke="currentColor" fill="none" stroke-width="1.5"/><circle cx="10" cy="10" r="3" stroke="currentColor" fill="none" stroke-width="1.5"/><path d="M10 1v3m0 12v3M1 10h3m12 0h3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></symbol>
+            <symbol id="icon-gear" viewBox="0 0 20 20"><circle cx="10" cy="10" r="4" stroke="currentColor" fill="none" stroke-width="1.5"/><path d="M10 2l1 2h2l1-1 2 2-1 1v2l2 1v2l-2 1v2l1 1-2 2-1-1h-2l-1 2h-2l-1-2H7l-1 1-2-2 1-1v-2l-2-1v-2l2-1V7l-1-1 2-2 1 1h2l1-2z" stroke="currentColor" fill="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+            <symbol id="icon-ice" viewBox="0 0 20 20"><path d="M10 2v16M2 10h16" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round"/><path d="M4 4l3 3M16 16l-3-3M4 16l3-3M16 4l-3 3" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round"/></symbol>
+            <symbol id="icon-refresh" viewBox="0 0 20 20"><path d="M14.5 6C12.5 4 9.5 3.5 7 5 4.5 6.5 3.5 9.5 3.5 12" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M10.5 9.5l4-4 2 3" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M5.5 14c2 2.5 5.5 3 8 1.5C16 14 17 11 16.5 8" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M9.5 11l-4 4-2-3" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+            <symbol id="icon-pin" viewBox="0 0 20 20"><path d="M10 3c-3 0-5 2.5-5 5.5S10 17 10 17s5-5.5 5-8.5S13 3 10 3z" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linejoin="round"/><circle cx="10" cy="8.5" r="2" stroke="currentColor" fill="none" stroke-width="1.5"/></symbol>
+            <symbol id="icon-x" viewBox="0 0 20 20"><path d="M5 5l10 10M15 5L5 15" stroke="currentColor" fill="none" stroke-width="1.8" stroke-linecap="round"/></symbol>
+            <symbol id="icon-list" viewBox="0 0 20 20"><path d="M3 6h14M3 10h14M3 14h14" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round"/></symbol>
+          </defs>
+        </svg>
+
+        <!-- LAYOUT -->
+        <div class="layout-main">
+          <div class="layers-column" id="layersColumn">
+            <!-- 用户层 -->
+            <div class="layer" data-layer="user" id="layer-user">
+              <div class="layer-label"><svg viewBox="0 0 20 20"><use href="#icon-users"/></svg> 用户层 <span class="badge">USER</span></div>
+              <div class="layer-modules">
+                <div class="module" data-detail="parent"><svg viewBox="0 0 20 20"><use href="#icon-parent"/></svg> 家长端</div>
+                <div class="module" data-detail="child"><svg viewBox="0 0 20 20"><use href="#icon-child"/></svg> 孩子端</div>
+              </div>
+            </div>
+            <div class="arrow-down" id="arrow1" data-flow="指令·反馈">
+              <svg viewBox="0 0 100 28"><line class="arrow-path" x1="50" y1="0" x2="50" y2="26" stroke="var(--chalk-dimmer)" stroke-width="1.5" marker-end="url(#arrowHead)" opacity=".5"/></svg>
+              <div class="arrow-label">指令 · 反馈</div>
+            </div>
+            <!-- 核心层 -->
+            <div class="layer" data-layer="core" id="layer-core">
+              <div class="layer-label"><svg viewBox="0 0 20 20"><use href="#icon-target"/></svg> 核心层 <span class="badge">CORE</span></div>
+              <div class="layer-modules">
+                <div class="module" data-detail="dawn-dusk"><svg viewBox="0 0 20 20"><use href="#icon-sun"/></svg> 晨夕岛</div>
+                <div class="module" data-detail="attention"><svg viewBox="0 0 20 20"><use href="#icon-forest"/></svg> 注意力森林</div>
+                <div class="module" data-detail="heroes"><svg viewBox="0 0 20 20"><use href="#icon-star"/></svg> 榜样学院</div>
+                <div class="module" data-detail="secret"><svg viewBox="0 0 20 20"><use href="#icon-home"/></svg> 秘密基地</div>
+                <div class="module" data-detail="translator"><svg viewBox="0 0 20 20"><use href="#icon-chat"/></svg> 情绪翻译器</div>
+                <div class="module" data-detail="doctor"><svg viewBox="0 0 20 20"><use href="#icon-book"/></svg> 故事医生</div>
+                <div class="module" data-detail="reverse"><svg viewBox="0 0 20 20"><use href="#icon-mic"/></svg> 反向课堂</div>
+                <div class="module" data-detail="heroboard"><svg viewBox="0 0 24 24"><use href="#icon-trophy"/></svg> 家庭英雄榜 <span class="tag tag-warm">全家参与</span></div>
+                <div class="module" data-detail="museum"><svg viewBox="0 0 24 24"><use href="#icon-museum"/></svg> 成长博物馆 <span class="tag tag-leaf">不存分数</span></div>
+              </div>
+            </div>
+            <div class="arrow-down" id="arrow2" data-flow="读写·存储">
+              <svg viewBox="0 0 100 28"><line class="arrow-path" x1="50" y1="0" x2="50" y2="26" stroke="var(--chalk-dimmer)" stroke-width="1.5" marker-end="url(#arrowHead)" opacity=".5"/></svg>
+              <div class="arrow-label">读写 · 存储</div>
+            </div>
+            <!-- 数据层 -->
+            <div class="layer" data-layer="data" id="layer-data">
+              <div class="layer-label"><svg viewBox="0 0 20 20"><use href="#icon-db"/></svg> 数据层 <span class="badge">DATA</span></div>
+              <div class="layer-modules">
+                <div class="module" data-detail="log"><svg viewBox="0 0 20 20"><use href="#icon-log"/></svg> 行为日志</div>
+                <div class="module" data-detail="emotion"><svg viewBox="0 0 20 20"><use href="#icon-heart"/></svg> 情绪曲线</div>
+                <div class="module" data-detail="focus"><svg viewBox="0 0 20 20"><use href="#icon-target"/></svg> 专注曲线</div>
+                <div class="module" data-detail="family"><svg viewBox="0 0 20 20"><use href="#icon-activity"/></svg> 家庭互动指标</div>
+              </div>
+            </div>
+            <div class="arrow-down" id="arrow3" data-flow="诊断·调度">
+              <svg viewBox="0 0 100 28"><line class="arrow-path" x1="50" y1="0" x2="50" y2="26" stroke="var(--chalk-dimmer)" stroke-width="1.5" marker-end="url(#arrowHead)" opacity=".5"/></svg>
+              <div class="arrow-label">诊断 · 调度</div>
+            </div>
+            <!-- 阶段引擎 -->
+            <div class="layer" data-layer="engine" id="layer-engine">
+              <div class="layer-label"><svg viewBox="0 0 20 20"><use href="#icon-gear"/></svg> 阶段引擎 <span class="badge">STAGE</span></div>
+              <div class="layer-modules">
+                <div class="module" data-detail="ice"><svg viewBox="0 0 20 20"><use href="#icon-ice"/></svg> 破冰期 <span class="tag tag-leaf">第1-2周</span></div>
+                <div class="module" data-detail="rebuild"><svg viewBox="0 0 20 20"><use href="#icon-refresh"/></svg> 重建期 <span class="tag tag-warm">第3-6周</span></div>
+                <div class="module" data-detail="symbiosis"><svg viewBox="0 0 20 20"><use href="#icon-heart"/></svg> 共生期 <span class="tag tag-leaf">第7周起</span></div>
+              </div>
+            </div>
+          </div>
+          <!-- SIDE -->
+          <div class="side-column" id="sideColumn">
+            <div class="side-module" data-detail="principles">
+              <div class="layer-label"><svg viewBox="0 0 20 20"><use href="#icon-heart"/></svg> 落地原则</div>
+              <div class="desc">三条底线 · 不替代妈妈 · 不监控 · 目标自主运转</div>
+            </div>
+            <div class="side-module" data-detail="boundaries">
+              <div class="layer-label"><svg viewBox="0 0 20 20"><use href="#icon-pin"/></svg> 边界声明</div>
+              <div class="desc">不监控 · 不诊断 · 不替代 · 不排名 · 不上瘾</div>
+            </div>
+            <div class="side-module" data-detail="configs">
+              <div class="layer-label"><svg viewBox="0 0 20 20"><use href="#icon-gear"/></svg> 配置示例</div>
+              <div class="desc">8岁高敏感 · 6岁注意力 · 10岁紧张关系</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- USER FLOW -->
+        <div class="user-flow" id="userFlow">
+          <div class="user-flow-header">
+            <svg viewBox="0 0 20 20" style="width:16px;height:16px;flex-shrink:0"><use href="#icon-refresh"/></svg>
+            三阶段演进路径
+            <span style="font-size:7px;color:var(--chalk-dim)">[ 动画播放中 ]</span>
+          </div>
+          <div class="user-flow-steps" id="flowSteps">
+            <div class="flow-step" data-step="0">
+              <div class="dot"><svg viewBox="0 0 20 20"><use href="#icon-heart"/></svg></div>
+              <span class="label">家庭加入</span><div class="conn"></div>
+            </div>
+            <div class="flow-step" data-step="1">
+              <div class="dot"><svg viewBox="0 0 20 20"><use href="#icon-ice"/></svg></div>
+              <span class="label">破冰期</span><div class="conn"></div>
+            </div>
+            <div class="flow-step" data-step="2">
+              <div class="dot"><svg viewBox="0 0 20 20"><use href="#icon-refresh"/></svg></div>
+              <span class="label">重建期</span><div class="conn"></div>
+            </div>
+            <div class="flow-step" data-step="3">
+              <div class="dot"><svg viewBox="0 0 20 20"><use href="#icon-heart"/></svg></div>
+              <span class="label">共生期</span><div class="conn"></div>
+            </div>
+            <div class="flow-step" data-step="4">
+              <div class="dot"><svg viewBox="0 0 24 24"><use href="#icon-museum"/></svg></div>
+              <span class="label">自主运转</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- OVERLAY -->
+    <div class="detail-overlay" id="detailOverlay">
+      <div class="detail-card" id="detailCard">
+        <button class="close-btn" id="closeDetail">✕ CLOSE</button>
+        <div id="detailContent"></div>
+      </div>
+    </div>
+
+    <script>
+      var DETAILS = {
+        parent: { title: '<svg viewBox="0 0 20 20" style="width:22px;height:22px"><use href="#icon-parent"/></svg> 家长端', items: ['<span class="hl">规则配置</span>：设定晨起时间、奖励规则、阶段目标','<span class="hl">情绪翻译器</span>：冲突瞬间 3 秒内推送一句孩子接得住的话','<span class="hl">数据看板</span>：冲突趋势、专注时长趋势、进步信号而非告状','只看趋势，<span class="hl-w">不看秘密基地的对话内容</span>'] },
+        child: { title: '<svg viewBox="0 0 20 20" style="width:22px;height:22px"><use href="#icon-child"/></svg> 孩子端', items: ['<span class="hl">榜样角色</span>：选择喜欢的学长学姐陪伴日常','<span class="hl">游戏化流程</span>：番茄钟、能量条、奖励碎片','<span class="hl">秘密基地</span>：专属树洞，不评判不传话','孩子知道自己有一个 <span class="hl-w">安全的空间</span>'] },
+        "dawn-dusk": { title: '<svg viewBox="0 0 20 20" style="width:22px;height:22px"><use href="#icon-sun"/></svg> 晨夕岛', items: ['每天两次最紧张时段——早上出门和晚上睡觉——由榜样角色替代妈妈当 <span class="hl">"唤醒者"</span>','<span class="hl-w">晨间唤醒</span>：渐进唤醒 → 刷牙挑战 → 准时出门，妈妈只需坐餐桌前说"早上好"','<span class="hl-w">晚间安睡</span>：洗澡提醒 → 收拾书包 → 晚安故事 → 5分钟催眠引导','<span class="hl">配置</span>：语音角色、唤醒强度、渐醒时长'] },
+        attention: { title: '<svg viewBox="0 0 20 20" style="width:22px;height:22px"><use href="#icon-forest"/></svg> 注意力森林', items: ['<span class="hl">课文陪读</span>：AI 高亮当前句子，走神 3 秒即提醒','<span class="hl-w">读错处理</span>：不打断，整段读完以游戏方式提示——"第三行有个字藏起来了"','<span class="hl">作业番茄钟</span>：默认 8+2，走神不停计时器','<span class="hl">专注能量条</span>：百分比、连续时长、星星数，<span class="hl-w">只跟自己比</span>'] },
+        heroes: { title: '<svg viewBox="0 0 20 20" style="width:22px;height:22px"><use href="#icon-star"/></svg> 榜样学院', items: ['不是"你应该向某某学习"，而是<span class="hl">"ta 当年也遇到过这个困难"</span>','<span class="hl-w">角色库</span>：小兔姐姐 / 学霸阿哲 / 小宇宙 / 艾拉公主 / 代码猫','每个角色有一套"我当年也是这样"故事库，场景自动触发','选定后不能轻易换——角色会记得孩子每天的进步'] },
+        secret: { title: '<svg viewBox="0 0 20 20" style="width:22px;height:22px"><use href="#icon-home"/></svg> 秘密基地', items: ['入口 <span class="hl">只有孩子知道</span>（特定图案/语音口令）','可以说话/打字、画画/涂鸦、写"不想让妈妈知道的话"','<span class="hl-w">AI 原则</span>：不说"你应该""你不该"，先说"听起来你很难过"','<span class="hl">匿名反馈</span>：严重信号预警家长；普通分享不反馈——那是属于她的安全感'] },
+        translator: { title: '<svg viewBox="0 0 20 20" style="width:22px;height:22px"><use href="#icon-chat"/></svg> 情绪翻译器', items: ['冲突瞬间家长情绪上头时，AI 在 <span class="hl">3 秒内</span> 推送一句孩子接得住的表达','"你怎么这么慢" → <span class="hl-w">"我有点担心我们来不及，要不要加快一点？"</span>','"你什么态度" → <span class="hl-w">"你刚才的语气让我有点难过，你是有不开心的事吗？"</span>','静默推送，用完可反馈"有用/没用"让 AI 学习'] },
+        doctor: { title: '<svg viewBox="0 0 20 20" style="width:22px;height:22px"><use href="#icon-book"/></svg> 故事医生', items: ['<span class="hl">不讲道理，只讲故事</span>——用隐喻故事代替训斥','<span class="hl-w">故事原型</span>：顶嘴→小刺猬 / 打人→小火山 / 撒谎→小木偶 / 不刷牙→蛀牙菌王国','讲完就结束让孩子自己消化；主动问"它后来怎么样了"再继续','家长可请 AI 生成特定故事，睡前念给孩子听'] },
+        reverse: { title: '<svg viewBox="0 0 20 20" style="width:22px;height:22px"><use href="#icon-mic"/></svg> 反向课堂', items: ['让她当老师，AI 当 <span class="hl">"不会的学生"</span>','"我教你背这首诗" → <span class="hl-w">"好难啊，我记不住第一句"</span>','"这道题我会做" → <span class="hl-w">"为什么这里要除2？我不懂"</span>','AI 真诚地"没有你帮忙我做不到"，讲解录音自动存进成长博物馆'] },
+        heroboard: { title: '<svg viewBox="0 0 24 24" style="width:22px;height:22px"><use href="#icon-trophy"/></svg> 家庭英雄榜', items: ['<span class="hl">不是只让孩子改，是全家一起玩</span>','每周主题：早起挑战 → 情绪控制 → 餐桌礼仪 → 作业自主','<span class="hl-w">积分</span>：每人做到一次 +1 分；全家一起做到额外 +3 分（合作分）','周日晚家庭会议：AI 主持 → 投出超级英雄 → 奖励 → 下周主题投票'] },
+        museum: { title: '<svg viewBox="0 0 24 24" style="width:22px;height:22px"><use href="#icon-museum"/></svg> 成长博物馆', items: ['<span class="hl">不存分数、不存排名。存只有她有的东西。</span>','收藏品：第一次主动刷牙、写的第一首小诗、读完一本书的录音、教会 AI 一道题的录音','每月的朗读对比自动生成（两段录音 + 时间轴）','<span class="hl-w">AI 会说的话</span>："这是三个月前的你，那时候每天早上还要妈妈叫"'] },
+        log: { title: '<svg viewBox="0 0 20 20" style="width:22px;height:22px"><use href="#icon-log"/></svg> 行为日志', items: ['记录每个环节的 <span class="hl">完成情况与耗时</span>','秘密基地访问频次（<span class="hl-w">不记录内容</span>）','为阶段引擎自动切换提供数据依据'] },
+        emotion: { title: '<svg viewBox="0 0 20 20" style="width:22px;height:22px"><use href="#icon-heart"/></svg> 情绪曲线', items: ['孩子的 <span class="hl">情绪波动趋势</span> 可视化','基于秘密基地匿名信号 + 家长反馈综合判断','连续3天情绪低落 → 触发家长看板预警'] },
+        focus: { title: '<svg viewBox="0 0 20 20" style="width:22px;height:22px"><use href="#icon-target"/></svg> 专注曲线', items: ['<span class="hl">有效学习时间</span> 与注意力变化追踪','流利度曲线仅供 AI 参考，<span class="hl-w">不给孩子看分数</span>','"比昨天又顺了一点点"——只跟自己比'] },
+        family: { title: '<svg viewBox="0 0 20 20" style="width:22px;height:22px"><use href="#icon-activity"/></svg> 家庭互动指标', items: ['<span class="hl">冲突频次</span> 与 <span class="hl">正向互动频次</span> 追踪','情绪翻译器使用频次与效果反馈','帮助衡量家庭关系改善的客观指标'] },
+        ice: { title: '<svg viewBox="0 0 20 20" style="width:22px;height:22px"><use href="#icon-ice"/></svg> 破冰期（第1-2周）', items: ['<span class="hl">目标</span>：降低对抗，让孩子愿意接受系统','<span class="hl-w">启动</span>：晨夕岛 + 秘密基地 + 反向课堂','<span class="hl-w">暂不开启</span>：注意力森林、家庭英雄榜','妈妈只做一件事：每天睡前10分钟专属陪伴'] },
+        rebuild: { title: '<svg viewBox="0 0 20 20" style="width:22px;height:22px"><use href="#icon-refresh"/></svg> 重建期（第3-6周）', items: ['<span class="hl">目标</span>：恢复专注力，妈妈退出人肉监控角色','<span class="hl-w">启动</span>：注意力森林 + 榜样学院 + 情绪翻译器','妈妈任务：写作业时退出房间，只检查结果','预期：专注时长提升、每天冲突次数下降'] },
+        symbiosis: { title: '<svg viewBox="0 0 20 20" style="width:22px;height:22px"><use href="#icon-heart"/></svg> 共生期（第7周起）', items: ['<span class="hl">目标</span>：全家一起变得更好，系统自动运转','<span class="hl-w">启动</span>：家庭英雄榜 + 故事医生 + 成长博物馆','妈妈任务：每周家庭会议主持，日常由系统执行','预期：家庭正向互动 > 对抗频次'] },
+        principles: { title: '<svg viewBox="0 0 20 20" style="width:22px;height:22px"><use href="#icon-heart"/></svg> 落地原则', items: ['<span class="hl">① 不替代妈妈——只接走消耗</span>：做提醒、计时、检查、记录；妈妈做陪伴、拥抱、倾听','<span class="hl">② 不制造"被监控"的感觉</span>：家长能看到趋势，看不到秘密基地的对话内容','<span class="hl">③ 目标不是"听话"，是"不需要管也能自己运转"</span>：孩子学会管理注意力、表达情绪、承担责任'] },
+        boundaries: { title: '<svg viewBox="0 0 20 20" style="width:22px;height:22px"><use href="#icon-pin"/></svg> 边界声明', items: ['<span class="hl-w">✕</span> 摄像头监控——侵犯隐私','<span class="hl-w">✕</span> 替代妈妈陪伴——睡前拥抱永远是妈妈的工作','<span class="hl-w">✕</span> 用惩罚等级吓唬孩子——不做恐惧教育','<span class="hl-w">✕</span> 给孩子贴诊断标签——不输出"你孩子可能是 ADHD"','<span class="hl-w">✕</span> 社交/游戏化上瘾设计——不用无限滚屏','<span class="hl-w">✕</span> 学校成绩排名——不录入考试成绩','<span class="hl-w">✕</span> 取代真实社交——AI 陪伴是补充','<span class="hl-w">✕</span> 医疗级别的心理诊断——只做预警'] },
+        configs: { title: '<svg viewBox="0 0 20 20" style="width:22px;height:22px"><use href="#icon-gear"/></svg> 配置示例', items: ['<span class="hl">8岁高敏感对抗型女孩</span>：破冰期、小兔姐姐、温柔渐醒10分钟、高频翻译器、全开放秘密基地','<span class="hl">6岁男孩注意力不集中</span>：小宇宙榜样、5+3分钟番茄钟、每天10分钟教AI拼乐高','<span class="hl">10岁女孩亲子关系紧张</span>：破冰期、秘密基地最高优先级、看板上锁一周、教AI画画'] },
+      };
+
+      document.addEventListener("DOMContentLoaded", function () { setTimeout(initAnimations, 300); });
+
+      function initAnimations() {
+        var tl = anime.timeline({ easing: "easeOutCubic" });
+        tl.add({ targets: "#layer-engine", opacity: [0, 1], translateY: [20, 0], duration: 600 })
+          .add({ targets: "#arrow3", opacity: [0, 1], duration: 400 }, "-=200")
+          .add({ targets: "#layer-data", opacity: [0, 1], translateY: [20, 0], duration: 600 }, "-=200")
+          .add({ targets: "#arrow2", opacity: [0, 1], duration: 400 }, "-=200")
+          .add({ targets: "#layer-core", opacity: [0, 1], translateY: [20, 0], duration: 600 }, "-=200")
+          .add({ targets: "#arrow1", opacity: [0, 1], duration: 400 }, "-=200")
+          .add({ targets: "#layer-user", opacity: [0, 1], translateY: [20, 0], duration: 600 }, "-=200");
+
+        var sideMods = document.querySelectorAll(".side-module");
+        tl.add({ targets: sideMods, opacity: [0, 1], translateX: [15, 0], duration: 500, delay: anime.stagger(120) }, "-=200");
+        tl.add({ targets: "#userFlow", opacity: [0, 1], duration: 500 }, "-=200");
+
+        var arrowPaths = document.querySelectorAll(".arrow-path");
+        tl.add({ targets: arrowPaths, strokeDashoffset: [200, 0], duration: 800, delay: anime.stagger(300), easing: "easeInOutSine" }, "-=100");
+
+        var flowSteps = document.querySelectorAll(".flow-step");
+        tl.add({ targets: flowSteps, opacity: [0, 1], translateX: [-8, 0], duration: 400, delay: anime.stagger(180), easing: "easeOutCubic" }, "-=200");
+
+        function animateFlowHighlight() {
+          var dots = document.querySelectorAll(".flow-step .dot");
+          var tl2 = anime.timeline({ easing: "easeInOutQuad", loop: true, loopDelay: 2000 });
+          dots.forEach(function(dot, i) {
+            tl2.add({ targets: dot, scale: [1, 1.15, 1], borderColor: ["var(--chalk-dimmer)","var(--accent-gold)","var(--chalk-dimmer)"], duration: 500,
+              begin: function() { dots.forEach(function(d) { d.classList.remove("active"); }); dot.classList.add("active"); }
+            }, i === 0 ? "-=200" : "-=100");
+          });
+          tl2.add({ targets: dots, duration: 1, begin: function() { dots.forEach(function(d) { d.classList.remove("active"); }); } });
+        }
+        setTimeout(animateFlowHighlight, tl.totalDuration + 600);
+
+        var modules = document.querySelectorAll(".module");
+        modules.forEach(function(mod) {
+          mod.addEventListener("mouseenter", function() {
+            var layer = mod.closest(".layer");
+            if (layer) anime({ targets: layer, borderColor: "var(--accent-gold)", duration: 200 });
+          });
+          mod.addEventListener("mouseleave", function() {
+            var layer = mod.closest(".layer");
+            if (layer) {
+              var colors = { user: "var(--accent-gold)", core: "var(--accent-leaf)", data: "var(--accent-lavender)", engine: "var(--accent-sky)" };
+              anime({ targets: layer, borderColor: colors[layer.getAttribute("data-layer")] || "var(--chalk-dimmer)", duration: 200 });
+            }
+          });
+        });
+
+        arrowPaths.forEach(function(p) { p.setAttribute("stroke-dasharray", "200"); p.setAttribute("stroke-dashoffset", "200"); });
+
+        // OVERLAY
+        var overlay = document.getElementById("detailOverlay");
+        var detailContent = document.getElementById("detailContent");
+        var closeBtn = document.getElementById("closeDetail");
+
+        function showDetail(key) {
+          var data = DETAILS[key];
+          if (!data) return;
+          var html = "<h2>" + data.title + "</h2><ul>";
+          data.items.forEach(function(item) { html += "<li>" + item + "</li>"; });
+          html += "</ul>";
+          detailContent.innerHTML = html;
+          overlay.classList.add("open");
+          anime({ targets: ".detail-card", translateY: [24, 0], opacity: [0, 1], duration: 320, easing: "easeOutCubic" });
+        }
+        document.querySelectorAll("[data-detail]").forEach(function(el) {
+          el.addEventListener("click", function(e) { e.stopPropagation(); showDetail(el.getAttribute("data-detail")); });
+        });
+        function closeDetail() {
+          anime({ targets: ".detail-card", translateY: [0, 18], opacity: [1, 0], duration: 220, easing: "easeInCubic",
+            complete: function() { overlay.classList.remove("open"); var c = document.querySelector(".detail-card"); if (c) c.style.transform = "translateZ(0)"; }
+          });
+        }
+        closeBtn.addEventListener("click", closeDetail);
+        overlay.addEventListener("click", function(e) { if (e.target === overlay) closeDetail(); });
+        document.addEventListener("keydown", function(e) { if (e.key === "Escape") closeDetail(); });
+
+        // ================================================================
+        // FIREFLY PARTICLES
+        // ================================================================
+        var board = document.getElementById("chalkboard");
+        var rect = board.getBoundingClientRect();
+        var boardW = board.offsetWidth;
+        var boardH = board.offsetHeight;
+        var fireflies = [];
+        var fireflyCount = 35;
+        var colors = ["rgba(212,163,115,", "rgba(232,201,160,", "rgba(181,208,176,", "rgba(122,158,126,"];
+
+        for (var i = 0; i < fireflyCount; i++) {
+          var f = document.createElement("div");
+          f.className = "firefly";
+          var size = 2 + Math.random() * 5;
+          var x = 5 + Math.random() * 90;
+          var y = 5 + Math.random() * 90;
+          var c = colors[Math.floor(Math.random() * colors.length)];
+          f.style.cssText = "left:" + x + "%;top:" + y + "%;width:" + size + "px;height:" + size + "px;background:radial-gradient(circle at 30% 30%, rgba(255,255,255,0.9), " + c + "0.6)";
+          f.style.boxShadow = "0 0 " + (size * 3) + "px " + c + "0.3)";
+          board.appendChild(f);
+
+          fireflies.push({
+            el: f,
+            x: x,
+            y: y,
+            size: size,
+            speedX: 0.3 + Math.random() * 0.6,
+            speedY: 0.3 + Math.random() * 0.6,
+            phaseX: Math.random() * Math.PI * 2,
+            phaseY: Math.random() * Math.PI * 2,
+            drift: 0.5 + Math.random() * 1.5,
+          });
+        }
+
+        // Animate fireflies with looping motion
+        function animateFireflies() {
+          fireflies.forEach(function(f, idx) {
+            var tx = Math.sin(Date.now() * 0.0005 * f.speedX + f.phaseX) * f.drift;
+            var ty = Math.cos(Date.now() * 0.0004 * f.speedY + f.phaseY) * f.drift;
+            var sc = 0.7 + 0.3 * Math.sin(Date.now() * 0.0008 + idx);
+            var op = 0.25 + 0.4 * (0.5 + 0.5 * Math.sin(Date.now() * 0.0006 + idx * 0.7));
+            f.el.style.transform = "translate3d(" + tx + "px," + ty + "px,0) scale(" + sc + ")";
+            f.el.style.opacity = op;
+          });
+          requestAnimationFrame(animateFireflies);
+        }
+        animateFireflies();
+
+        // ================================================================
+        // TREE BREATHING GLOW
+        // ================================================================
+        var treeGlow = document.getElementById("treeGlow");
+        if (treeGlow) {
+          anime({
+            targets: treeGlow,
+            scale: [1, 1.25, 1],
+            opacity: [0.3, 0.7, 0.3],
+            duration: 4000,
+            easing: "easeInOutSine",
+            loop: true,
+          });
+        }
+        var bgTree = document.getElementById("bgTree");
+        if (bgTree) {
+          anime({
+            targets: bgTree,
+            scale: [1, 1.04, 1],
+            opacity: [0.025, 0.05, 0.025],
+            duration: 5000,
+            easing: "easeInOutSine",
+            loop: true,
+          });
+        }
+
+        console.log("[小树洞] 产品功能说明书已加载 — 点击模块查看详情 | ESC 关闭");
+      }
+    </script>
+  </body>
+</html>

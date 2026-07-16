@@ -1,0 +1,500 @@
+﻿<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>有啥吃啥</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;600;800&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <style>
+      *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+      :root {
+        --board: #1a1e12; --board-dark: #0f120a;
+        --chalk: #e8f0d0; --chalk-dim: rgba(232,240,208,0.55);
+        --chalk-dimmer: rgba(232,240,208,0.18); --chalk-translucent: rgba(232,240,208,0.06);
+        --accent-lime: #84cc16; --accent-amber: #f59e0b; --accent-rose: #fb7185;
+        --accent-green: #22c55e; --accent-orange: #f97316;
+        --scanline: rgba(0,0,0,0.06); --font-display: "Noto Sans SC","PingFang SC", "PingFang SC", "Microsoft YaHei", sans-serif; --font-mono: "IBM Plex Mono","SFMono-Regular", Menlo, Consolas, "SFMono-Regular", Menlo, Consolas, "Courier New", monospace;
+      }
+      html,body{height:100%;background:#0a0d07;font-family:var(--font-mono);color:var(--chalk);overflow-x:hidden}
+      .screen-frame{position:relative;min-height:100vh;padding:28px 20px 20px;background:#111;border-radius:20px;box-shadow:inset 0 0 40px rgba(0,0,0,0.8),0 8px 40px rgba(0,0,0,0.6);max-width:1360px;margin:0 auto}
+      .screen-frame::before{content:"";position:absolute;inset:0;border-radius:20px;background:repeating-linear-gradient(0deg,transparent,transparent 2px,var(--scanline) 2px,var(--scanline) 4px);pointer-events:none;z-index:100}
+      .crt-curve{position:absolute;inset:0;border-radius:20px;background:radial-gradient(ellipse at center,transparent 65%,rgba(0,0,0,0.35) 100%);pointer-events:none;z-index:99}
+      .power-led{position:absolute;top:8px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:8px;font-family:var(--font-display);font-size:10px;font-weight:600;color:var(--chalk-dim);letter-spacing:1.5px;z-index:101}
+      .power-led span{display:inline-block;width:6px;height:6px;border-radius:50%;background:#4ade80;box-shadow:0 0 6px #4ade80;animation:led-pulse 2s ease-in-out infinite}
+      @keyframes led-pulse{0%,100%{opacity:1;box-shadow:0 0 6px #4ade80}50%{opacity:0.5;box-shadow:0 0 2px #4ade80}}
+      .chalkboard{position:relative;background:var(--board);border:3px solid #2e3a1a;border-radius:4px;padding:32px 28px 28px;box-shadow:inset 0 0 60px rgba(0,0,0,0.5),0 4px 0 #151a0c;min-height:calc(100vh - 80px)}
+      .chalkboard::after{content:"";position:absolute;inset:0;background-image:radial-gradient(circle at 20% 30%,rgba(232,240,208,0.02) 0,transparent 60%),radial-gradient(circle at 80% 70%,rgba(232,240,208,0.015) 0,transparent 50%),radial-gradient(circle at 50% 50%,rgba(232,240,208,0.01) 0,transparent 70%);pointer-events:none;border-radius:2px}
+      .header{text-align:center;margin-bottom:24px;position:relative;z-index:1}
+      .header h1{font-family:var(--font-display);font-size:26px;font-weight:800;color:var(--accent-lime);text-shadow:0 0 8px rgba(132,204,22,0.3);letter-spacing:2px;margin-bottom:4px;display:flex;align-items:center;justify-content:center;gap:10px}
+      .header .subtitle{font-size:14px;color:var(--chalk-dim);letter-spacing:0.5px}
+      .header .subtitle em{font-style:normal;color:var(--accent-amber)}
+      .layout-main{display:flex;gap:20px;position:relative;z-index:1}
+      .layers-column{flex:1;min-width:0}
+      .side-column{width:220px;flex-shrink:0;display:flex;flex-direction:column;gap:10px}
+      .svg-connectors{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:0}
+      .layer{position:relative;background:var(--chalk-translucent);border:1.5px solid var(--chalk-dimmer);border-radius:6px;padding:12px 14px 14px;margin-bottom:0;cursor:pointer;transition:border-color 0.3s,background 0.3s;opacity:0;transform:translateY(20px)}
+      .layer:hover{border-color:var(--accent-lime);background:rgba(132,204,22,0.06)}
+      .layer-label{font-family:var(--font-display);font-size:12px;font-weight:600;color:var(--chalk-dim);letter-spacing:1px;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+      .layer-label .badge{font-size:10px;font-weight:600;background:var(--chalk-dimmer);color:var(--board);padding:1px 7px;border-radius:3px;letter-spacing:0}
+      .layer-modules{display:flex;flex-wrap:wrap;gap:6px}
+      .module{background:rgba(232,240,208,0.06);border:1px solid var(--chalk-dimmer);border-radius:4px;padding:5px 10px;font-size:12px;line-height:1.5;color:var(--chalk);transition:all 0.25s;white-space:nowrap;cursor:pointer;display:inline-flex;align-items:center;gap:5px}
+      .module:hover{background:rgba(232,240,208,0.12);border-color:var(--chalk);transform:translateY(-1px)}
+      svg.icon,.module svg,.side-module svg,.dot svg{width:16px;height:16px;flex-shrink:0}
+      .module svg{width:15px;height:15px}
+      .dot svg{width:14px;height:14px}
+      .layer-label>svg:first-child{width:18px;height:18px;flex-shrink:0}
+      .header h1 svg{width:28px;height:28px;flex-shrink:0}
+      .module .tag{font-size:10px;font-weight:600;padding:1px 6px;border-radius:3px;margin-left:4px;opacity:0.8}
+      .tag-scan{background:var(--accent-amber);color:var(--board)}
+      .tag-core{background:var(--accent-lime);color:var(--board)}
+      .tag-warn{background:var(--accent-rose);color:var(--board)}
+      .tag-rec{background:var(--accent-green);color:var(--board)}
+      .layer[data-layer="input"]{border-left:3px solid var(--accent-amber)}
+      .layer[data-layer="engine"]{border-left:3px solid var(--accent-lime)}
+      .layer[data-layer="output"]{border-left:3px solid var(--accent-orange)}
+      .arrow-down{display:flex;align-items:center;justify-content:center;height:28px;position:relative;opacity:0}
+      .arrow-down svg{width:100%;height:28px}
+      .arrow-label{position:absolute;font-family:var(--font-display);font-size:10px;font-weight:600;color:var(--chalk-dim);letter-spacing:0.5px;background:var(--board);padding:0 8px;text-align:center;white-space:nowrap}
+      .side-module{background:var(--chalk-translucent);border:1.5px solid var(--chalk-dimmer);border-left:3px solid var(--accent-rose);border-radius:6px;padding:10px 12px;cursor:pointer;opacity:0;transform:translateX(15px);transition:border-color 0.3s,background 0.3s}
+      .side-module:hover{border-color:var(--accent-rose);background:rgba(251,113,133,0.08)}
+      .side-module .layer-label{margin-bottom:4px}
+      .side-module .desc{font-size:12px;color:var(--chalk-dim);line-height:1.5}
+      .user-flow{margin-top:22px;padding:14px 16px;background:var(--chalk-translucent);border:1.5px solid var(--chalk-dimmer);border-radius:6px;position:relative;z-index:1;opacity:0}
+      .user-flow-header{font-family:var(--font-display);font-size:12px;font-weight:600;color:var(--accent-lime);letter-spacing:0.5px;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+      .user-flow-steps{display:flex;align-items:center;flex-wrap:wrap;gap:0}
+      .flow-step{display:flex;align-items:center;gap:0;opacity:0}
+      .flow-step .dot{width:28px;height:28px;border-radius:50%;border:2px solid var(--chalk-dimmer);background:var(--board);display:flex;align-items:center;justify-content:center;font-size:13px;line-height:1;flex-shrink:0;transition:all 0.3s}
+      .flow-step .dot.active{border-color:var(--accent-lime);background:rgba(132,204,22,0.12);box-shadow:0 0 10px rgba(132,204,22,0.2)}
+      .flow-step .label{font-size:12px;color:var(--chalk-dim);white-space:nowrap;margin:0 8px 0 6px;line-height:1}
+      .flow-step .conn{width:24px;height:2px;background:var(--chalk-dimmer);position:relative;flex-shrink:0}
+      .flow-step .conn::after{content:"▸";position:absolute;right:-4px;top:-6px;font-size:10px;color:var(--chalk-dimmer)}
+      .flow-step:last-child .conn{display:none}
+      .detail-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:200;display:none;align-items:center;justify-content:center;backdrop-filter:blur(2px)}
+      .detail-overlay.open{display:flex}
+      .detail-card{background:var(--board-dark);border:2px solid var(--chalk-dimmer);border-radius:8px;padding:24px 28px;max-width:500px;width:90%;max-height:80vh;overflow-y:auto;position:relative;box-shadow:0 8px 40px rgba(0,0,0,0.6);will-change:transform,opacity;backface-visibility:hidden;-webkit-backface-visibility:hidden;transform:translateZ(0);-webkit-transform:translateZ(0)}
+      .detail-card h2{margin-top: 0;font-family:var(--font-display);font-size:18px;font-weight:800;color:var(--accent-lime);margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid var(--chalk-dimmer);display:flex;align-items:center;gap:8px}
+      .detail-card h2 svg{width:22px;height:22px;flex-shrink:0}
+      .detail-card h3{font-family:var(--font-display);font-size:13px;font-weight:600;color:var(--chalk-dim);margin:14px 0 6px}
+      .detail-card ul{list-style:none;padding:0}
+      .detail-card li{font-size:13px;color:var(--chalk);padding:5px 0 5px 14px;border-left:2px solid var(--chalk-dimmer);margin-bottom:6px;line-height:1.6}
+      .detail-card li .hl{color:var(--accent-amber);display:inline-flex;align-items:center;gap:4px}
+      .detail-card li .hl-warn{color:var(--accent-rose)}
+      .detail-card .close-btn{position:absolute;top:14px;right:16px;font-family:var(--font-display);font-size:13px;font-weight:600;color:var(--chalk-dimmer);background:none;border:1px solid var(--chalk-dimmer);border-radius:4px;padding:4px 12px;cursor:pointer;transition:all 0.2s}
+      .detail-card .close-btn:hover{color:var(--accent-rose);border-color:var(--accent-rose)}
+      @media (max-width:860px){
+        .layout-main{flex-direction:column}
+        .side-column{width:100%;flex-direction:row;flex-wrap:wrap}
+        .side-module{flex:1;min-width:160px}
+        .header h1{font-size:20px}
+        .screen-frame{padding:24px 12px 12px}
+        .chalkboard{padding:20px 14px 16px}
+        .layer-modules{gap:4px}
+        .module{font-size:11px;padding:4px 8px}
+        .flow-step .label{font-size:10px}
+        .flow-step .dot{width:24px;height:24px;font-size:11px}
+      }
+      @media (max-width:480px){
+        .header h1{font-size:16px;letter-spacing:1px}
+        .module{font-size:10px;padding:3px 6px;white-space:normal}
+        .layer{padding:8px 8px 10px}
+        .layer-label{font-size:10px}
+      }
+      .chalk-glow{position:absolute;pointer-events:none;width:4px;height:4px;border-radius:50%;background:rgba(232,240,208,0.15);filter:blur(6px)}
+      ::-webkit-scrollbar{width:4px}
+      ::-webkit-scrollbar-track{background:var(--board-dark)}
+      ::-webkit-scrollbar-thumb{background:var(--chalk-dimmer);border-radius:2px}
+      .arrow-path{stroke-dasharray:200;stroke-dashoffset:200}
+    .layer-label svg{width:16px;height:16px;flex-shrink:0}
+</style>
+  </head>
+  <body>
+    <div class="screen-frame">
+      <div class="crt-curve"></div>
+      <div class="power-led"><span></span> SYSTEM · ONLINE</div>
+      <div class="chalkboard" id="chalkboard">
+        <div class="header" id="header">
+          <h1>
+            <svg class="icon" viewBox="0 0 20 20"><use href="#icon-cook" /></svg>
+            有啥吃啥
+          </h1>
+          <div class="subtitle">对着冰箱拍一张，AI 给你配好一桌菜 · <em>不用想，拍了就做</em></div>
+        </div>
+        <svg class="svg-connectors" id="connectorSvg" preserveAspectRatio="none">
+          <defs>
+            <marker id="arrowHead" markerWidth="6" markerHeight="5" refX="6" refY="2.5" orient="auto"><polygon points="0 0, 6 2.5, 0 5" fill="var(--chalk-dimmer)" opacity=".6"/></marker>
+            <marker id="arrowHeadFlow" markerWidth="6" markerHeight="5" refX="6" refY="2.5" orient="auto"><polygon points="0 0, 6 2.5, 0 5" fill="var(--accent-lime)"/></marker>
+            <filter id="glow"><feGaussianBlur stdDeviation="1.5" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+            <symbol id="icon-cook" viewBox="0 0 20 20">
+              <rect x="4" y="8" width="12" height="8" rx="1" stroke="currentColor" fill="none" stroke-width="1.5"/>
+              <path d="M7 8V5a3 3 0 016 0v3" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round"/>
+              <circle cx="7" cy="12" r="1" fill="var(--accent-amber)"/>
+              <circle cx="13" cy="12" r="1" fill="var(--accent-amber)"/>
+            </symbol>
+            <symbol id="icon-camera" viewBox="0 0 20 20">
+              <rect x="3" y="5" width="14" height="11" rx="1.5" stroke="currentColor" fill="none" stroke-width="1.5"/>
+              <circle cx="10" cy="11" r="3" stroke="currentColor" fill="none" stroke-width="1.5"/>
+              <path d="M7 5l1-2h4l1 2" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linejoin="round"/>
+            </symbol>
+            <symbol id="icon-mic" viewBox="0 0 20 20">
+              <rect x="8" y="2" width="4" height="9" rx="2" stroke="currentColor" fill="none" stroke-width="1.5"/>
+              <path d="M5 10c0 3 2.2 5 5 5s5-2 5-5M10 15v3" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round"/>
+            </symbol>
+            <symbol id="icon-heart" viewBox="0 0 20 20">
+              <path d="M10 17S4 12 4 7.5C4 5 6 3 8.5 3c1.5 0 2.5.8 3 1.5C11.5 3.8 12.5 3 14 3 16.5 3 18 5 18 7.5 18 12 10 17 10 17z" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linejoin="round"/>
+            </symbol>
+            <symbol id="icon-weather" viewBox="0 0 20 20">
+              <circle cx="10" cy="9" r="4" stroke="currentColor" fill="none" stroke-width="1.5"/>
+              <path d="M10 1v3M10 14v3M1 9h3M16 9h3M4 4l2 2M14 14l2 2M4 14l2-2M14 4l2 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            </symbol>
+            <symbol id="icon-clock" viewBox="0 0 20 20">
+              <circle cx="10" cy="10" r="7" stroke="currentColor" fill="none" stroke-width="1.5"/>
+              <path d="M10 6v4l3 2" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </symbol>
+            <symbol id="icon-user" viewBox="0 0 20 20">
+              <circle cx="10" cy="6" r="3" stroke="currentColor" fill="none" stroke-width="1.5"/>
+              <path d="M3 18c1-5 3-7 7-7s6 2 7 7" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round"/>
+            </symbol>
+            <symbol id="icon-refresh" viewBox="0 0 20 20">
+              <path d="M14.5 6C12.5 4 9.5 3.5 7 5 4.5 6.5 3.5 9.5 3.5 12" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M10.5 9.5l4-4 2 3" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M5.5 14c2 2.5 5.5 3 8 1.5C16 14 17 11 16.5 8" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M9.5 11l-4 4-2-3" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </symbol>
+            <symbol id="icon-thumb" viewBox="0 0 20 20">
+              <path d="M6 9H3v8h3M6 9l3-6h2c1 0 2 1 2 2v2h4l1 3-1 5H6" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linejoin="round"/>
+            </symbol>
+            <symbol id="icon-kid" viewBox="0 0 20 20">
+              <circle cx="10" cy="8" r="4" stroke="currentColor" fill="none" stroke-width="1.5"/>
+              <path d="M5 17c1-3 3-4 5-4s4 1 5 4" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round"/>
+              <path d="M8 6l2 2 2-2" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </symbol>
+            <symbol id="icon-message" viewBox="0 0 20 20">
+              <path d="M3 4h14v10H7l-4 3V4z" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linejoin="round"/>
+              <path d="M6 8h8M6 11h5" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round"/>
+            </symbol>
+          </defs>
+        </svg>
+
+        <div class="layout-main">
+          <div class="layers-column" id="layersColumn">
+            <div class="layer" data-layer="input" id="layer-input">
+              <div class="layer-label">
+                <svg viewBox="0 0 20 20"><use href="#icon-camera" /></svg>
+                输入识别层 <span class="badge">INPUT</span>
+              </div>
+              <div class="layer-modules">
+                <div class="module" data-detail="in-photo">
+                  <svg viewBox="0 0 20 20"><use href="#icon-camera" /></svg>
+                  拍照识别
+                </div>
+                <div class="module" data-detail="in-voice">
+                  <svg viewBox="0 0 20 20"><use href="#icon-mic" /></svg>
+                  语音输入
+                </div>
+                <div class="module" data-detail="in-manual">
+                  <svg viewBox="0 0 20 20"><use href="#icon-user" /></svg>
+                  手动补录
+                </div>
+              </div>
+            </div>
+
+            <div class="arrow-down" id="arrow1" data-flow="食材解析">
+              <svg viewBox="0 0 100 28"><line class="arrow-path" x1="50" y1="0" x2="50" y2="26" stroke="var(--chalk-dimmer)" stroke-width="1.5" marker-end="url(#arrowHead)" opacity=".5"/></svg>
+              <div class="arrow-label">AI 识别 · 食材列表</div>
+            </div>
+
+            <div class="layer" data-layer="engine" id="layer-engine">
+              <div class="layer-label">
+                <svg viewBox="0 0 20 20"><use href="#icon-heart" /></svg>
+                推荐引擎层 <span class="badge">RECOMMEND</span>
+              </div>
+              <div class="layer-modules">
+                <div class="module" data-detail="eng-dedup">
+                  <svg viewBox="0 0 20 20"><use href="#icon-refresh" /></svg>
+                  不重复推荐
+                </div>
+                <div class="module" data-detail="eng-expire">
+                  <svg viewBox="0 0 20 20"><use href="#icon-clock" /></svg>
+                  快过期优先
+                </div>
+                <div class="module" data-detail="eng-pref">
+                  <svg viewBox="0 0 20 20"><use href="#icon-heart" /></svg>
+                  偏好学习 <span class="tag tag-core">👍</span>
+                </div>
+                <div class="module" data-detail="eng-weather">
+                  <svg viewBox="0 0 20 20"><use href="#icon-weather" /></svg>
+                  天气适应
+                </div>
+                <div class="module" data-detail="eng-time">
+                  <svg viewBox="0 0 20 20"><use href="#icon-clock" /></svg>
+                  时间预算
+                </div>
+                <div class="module" data-detail="eng-kid">
+                  <svg viewBox="0 0 20 20"><use href="#icon-kid" /></svg>
+                  小孩适配 <span class="tag tag-warn">排敏</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="arrow-down" id="arrow2" data-flow="菜谱生成">
+              <svg viewBox="0 0 100 28"><line class="arrow-path" x1="50" y1="0" x2="50" y2="26" stroke="var(--chalk-dimmer)" stroke-width="1.5" marker-end="url(#arrowHead)" opacity=".5"/></svg>
+              <div class="arrow-label">人数 × 搭配</div>
+            </div>
+
+            <div class="layer" data-layer="output" id="layer-output">
+              <div class="layer-label">
+                <svg viewBox="0 0 20 20"><use href="#icon-cook" /></svg>
+                菜谱输出层 <span class="badge">MENU</span>
+              </div>
+              <div class="layer-modules">
+                <div class="module" data-detail="out-dish">
+                  <svg viewBox="0 0 20 20"><use href="#icon-cook" /></svg>
+                  一桌菜
+                </div>
+                <div class="module" data-detail="out-recipe">
+                  <svg viewBox="0 0 20 20"><use href="#icon-heart" /></svg>
+                  做法说明
+                </div>
+<div class="module" data-detail="out-missing">
+                  <svg viewBox="0 0 20 20"><use href="#icon-message" /></svg>
+                   还缺啥
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="side-column" id="sideColumn">
+            <div class="side-module" data-detail="side-rules">
+              <div class="layer-label">
+                <svg viewBox="0 0 20 20"><use href="#icon-clock" /></svg>
+                硬约束
+              </div>
+              <div class="desc">只出家常菜 · 每道不超30分钟 · 调料不超6样</div>
+            </div>
+            <div class="side-module" data-detail="side-feedback">
+              <div class="layer-label">
+                <svg viewBox="0 0 20 20"><use href="#icon-thumb" /></svg>
+                反馈学习
+              </div>
+              <div class="desc">点"搞定"正向学习 · 关闭负向 · 连续3次无反馈则降低频次</div>
+            </div>
+            <div class="side-module" data-detail="side-boundary">
+              <div class="layer-label">
+                <svg viewBox="0 0 20 20"><use href="#icon-user" /></svg>
+                边界声明
+              </div>
+              <div class="desc">无社区 · 无菜谱库 · 无购物车 · 无营养计算</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="user-flow" id="userFlow">
+          <div class="user-flow-header">
+            <svg viewBox="0 0 20 20" style="width:16px;height:16px;flex-shrink:0"><use href="#icon-refresh"/></svg>
+            用户流程路径
+            <span style="font-size:7px;color:var(--chalk-dim);font-family:var(--font-mono)">[ 动画播放中 ]</span>
+          </div>
+          <div class="user-flow-steps" id="flowSteps">
+            <div class="flow-step" data-step="0">
+              <div class="dot"><svg viewBox="0 0 20 20"><use href="#icon-user"/></svg></div>
+              <span class="label">设定人口</span><div class="conn"></div>
+            </div>
+            <div class="flow-step" data-step="1">
+              <div class="dot"><svg viewBox="0 0 20 20"><use href="#icon-camera"/></svg></div>
+              <span class="label">拍冰箱</span><div class="conn"></div>
+            </div>
+            <div class="flow-step" data-step="2">
+              <div class="dot"><svg viewBox="0 0 20 20"><use href="#icon-cook"/></svg></div>
+              <span class="label">等 3 秒出菜</span><div class="conn"></div>
+            </div>
+            <div class="flow-step" data-step="3">
+              <div class="dot"><svg viewBox="0 0 20 20"><use href="#icon-heart"/></svg></div>
+              <span class="label">开做</span><div class="conn"></div>
+            </div>
+            <div class="flow-step" data-step="4">
+              <div class="dot"><svg viewBox="0 0 20 20"><use href="#icon-thumb"/></svg></div>
+              <span class="label">点"搞定"</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="detail-overlay" id="detailOverlay">
+      <div class="detail-card" id="detailCard">
+        <button class="close-btn" id="closeDetail">✕ CLOSE</button>
+        <div id="detailContent"></div>
+      </div>
+    </div>
+
+    <script>
+      const DETAILS = {
+        "in-photo": {
+          title: '<svg viewBox="0 0 20 20" class="icon" style="width:22px;height:22px"><use href="#icon-camera"/></svg> 拍照识别',
+          items: [
+            '对冰箱/台面/橱柜拍照，AI 识别现有食材',
+            '一次最多 3 张照片',
+            'GPT-4o / Gemini 视觉识别',
+          ],
+        },
+        "in-voice": {
+          title: '<svg viewBox="0 0 20 20" class="icon" style="width:22px;height:22px"><use href="#icon-mic"/></svg> 语音输入',
+          items: [
+            '说「有鸡蛋番茄青椒」也行',
+            '语音转文字后送入分析',
+          ],
+        },
+        "in-manual": {
+          title: '<svg viewBox="0 0 20 20" class="icon" style="width:22px;height:22px"><use href="#icon-user"/></svg> 手动补录',
+          items: [
+            '识别错了？拍完直接打字补一两个词',
+            '「还有葱」「冰箱里还有豆腐」',
+          ],
+        },
+        "eng-dedup": {
+          title: '<svg viewBox="0 0 20 20" class="icon" style="width:22px;height:22px"><use href="#icon-refresh"/></svg> 不重复推荐',
+          items: [
+            '昨天做了啥 → 今天不重复',
+            '最优先级规则',
+          ],
+        },
+        "eng-expire": {
+          title: '<svg viewBox="0 0 20 20" class="icon" style="width:22px;height:22px"><use href="#icon-clock"/></svg> 快过期优先',
+          items: [
+            '冰箱里最快要过期的食材优先用掉',
+            '减少食物浪费',
+          ],
+        },
+        "eng-pref": {
+          title: '<svg viewBox="0 0 20 20" class="icon" style="width:22px;height:22px"><use href="#icon-heart"/></svg> 偏好学习',
+          items: [
+            '上次做完你点了 👍 的 → 相近的优先',
+            '点"搞定" → 正向学习',
+            '没点搞定直接关 App → 负向',
+          ],
+        },
+        "eng-weather": {
+          title: '<svg viewBox="0 0 20 20" class="icon" style="width:22px;height:22px"><use href="#icon-weather"/></svg> 天气适应',
+          items: [
+            '热天偏凉拌/冷天偏炖汤',
+            '自动感知当日天气',
+          ],
+        },
+        "eng-time": {
+          title: '<svg viewBox="0 0 20 20" class="icon" style="width:22px;height:22px"><use href="#icon-clock"/></svg> 时间预算',
+          items: [
+            '如果日历显示有会到 8 点 → 做 20 分钟内搞定的',
+            '全部菜合计不超 45 分钟',
+          ],
+        },
+        "eng-kid": {
+          title: '<svg viewBox="0 0 20 20" class="icon" style="width:22px;height:22px"><use href="#icon-kid"/></svg> 小孩适配',
+          items: [
+            '排除辣菜、刺多的鱼、整颗坚果',
+            '优先好入口的菜式',
+            '人口设定中区分大人/小孩数量',
+          ],
+        },
+        "out-dish": {
+          title: '<svg viewBox="0 0 20 20" class="icon" style="width:22px;height:22px"><use href="#icon-cook"/></svg> 一桌菜',
+          items: [
+            '按人数出菜：1人1道 / 2人2道 / 3-4人3道 / 5+人4道',
+            '荤素搭配好，每道菜有菜名 + 预计用时',
+          ],
+        },
+        "out-recipe": {
+          title: '<svg viewBox="0 0 20 20" class="icon" style="width:22px;height:22px"><use href="#icon-heart"/></svg> 做法说明',
+          items: [
+            '每道菜 3-5 句简明做法，不超过 60 字',
+            '从开火到上桌，不用复杂技巧',
+          ],
+        },
+        "out-missing": {
+          title: '<svg viewBox="0 0 20 20" class="icon" style="width:22px;height:22px"><use href="#icon-message"/></svg> 还缺啥',
+          items: [
+            '可选字段：提示缺少的配料',
+            '用常备调料（油盐酱醋糖料酒）不算缺',
+          ],
+        },
+        "side-rules": {
+          title: '<svg viewBox="0 0 20 20" class="icon" style="width:22px;height:22px"><use href="#icon-clock"/></svg> 硬约束',
+          items: [
+            '只出家常菜 — 排除烘焙、西餐、复杂料理',
+            '每道不超 30 分钟 — 从开火到上桌',
+            '调料不超过 6 样 — 常备的不算',
+            '全部菜合计不超 45 分钟',
+            '可以用剩菜/隔夜饭改造',
+          ],
+        },
+        "side-feedback": {
+          title: '<svg viewBox="0 0 20 20" class="icon" style="width:22px;height:22px"><use href="#icon-thumb"/></svg> 反馈学习',
+          items: [
+            '点「搞定」→ +1，以后类似优先',
+            '没点搞定关掉 App → -1',
+            '手动说「今晚做的水煮鱼」并拍照 → 更新偏好',
+            '连续 3 次没反馈 → 降低频次，问是否不准',
+          ],
+        },
+        "side-boundary": {
+          title: '<svg viewBox="0 0 20 20" class="icon" style="width:22px;height:22px"><use href="#icon-user"/></svg> 边界声明',
+          items: [
+            '不做社区/分享',
+            '不自建菜谱库，对接现有 API',
+            '不做一周规划',
+            '不做营养计算',
+            '不做购物车/买菜',
+          ],
+        },
+      };
+
+      document.addEventListener("DOMContentLoaded", () => {
+        const layers = document.querySelectorAll(".layer");
+        const arrows = document.querySelectorAll(".arrow-down");
+        const flowSteps = document.querySelectorAll(".flow-step");
+        const sideModules = document.querySelectorAll(".side-module");
+        const userFlow = document.querySelector(".user-flow");
+        const overlays = document.querySelector("#detailOverlay");
+        const detailContent = document.querySelector("#detailContent");
+        const closeBtn = document.querySelector("#closeDetail");
+
+        const mainTimeline = anime.timeline({ easing: "easeOutCubic" });
+        mainTimeline.add({ targets: "#header", opacity: [0, 1], translateY: [-10, 0], duration: 600 });
+        mainTimeline.add({ targets: sideModules, opacity: [0, 1], translateX: [15, 0], duration: 400, delay: anime.stagger(120) }, "-=200");
+        mainTimeline.add({ targets: layers, opacity: [0, 1], translateY: [20, 0], duration: 500, delay: anime.stagger(150) }, "-=100");
+        mainTimeline.add({ targets: arrows, opacity: [0, 1], duration: 400, delay: anime.stagger(200) }, "-=200");
+        setTimeout(() => { document.querySelectorAll(".arrow-path").forEach((p) => { anime({ targets: p, strokeDashoffset: [200, 0], duration: 800, delay: 300, easing: "easeInOutCubic" }); }); }, 1500);
+        mainTimeline.add({ targets: userFlow, opacity: [0, 1], duration: 500 }, "-=100");
+        mainTimeline.add({ targets: flowSteps, opacity: [0, 1], translateX: [-8, 0], duration: 350, delay: anime.stagger(120) }, "-=200");
+
+        let flowIndex = 0;
+        function pulseFlow() { flowSteps.forEach((s) => s.querySelector(".dot").classList.remove("active")); flowSteps[flowIndex].querySelector(".dot").classList.add("active"); flowIndex = (flowIndex + 1) % flowSteps.length; }
+        pulseFlow(); setInterval(pulseFlow, 2500);
+
+        layers.forEach((l) => { l.addEventListener("mouseenter", () => { anime({ targets: l, borderColor: "var(--accent-lime)", backgroundColor: "rgba(132,204,22,0.06)", duration: 200 }); }); l.addEventListener("mouseleave", () => { anime({ targets: l, borderColor: "var(--chalk-dimmer)", backgroundColor: "rgba(232,240,208,0.06)", duration: 300 }); }); });
+
+        function openDetail(id) {
+          const data = DETAILS[id]; if (!data) return;
+          detailContent.innerHTML = `<h2>${data.title}</h2><ul>${data.items.map((i) => `<li>${i}</li>`).join("")}</ul>`;
+          overlays.classList.add("open");
+          anime({ targets: "#detailCard", scale: [0.85, 1], opacity: [0, 1], duration: 250, easing: "easeOutCubic" });
+        }
+        function closeDetail() { anime({ targets: "#detailCard", scale: [1, 0.85], opacity: [1, 0], duration: 200, easing: "easeInCubic", complete: () => { overlays.classList.remove("open"); } }); }
+        document.querySelectorAll(".module[data-detail]").forEach((el) => { el.addEventListener("click", () => openDetail(el.dataset.detail)); });
+        document.querySelectorAll(".side-module[data-detail]").forEach((el) => { el.addEventListener("click", () => openDetail(el.dataset.detail)); });
+        closeBtn.addEventListener("click", closeDetail);
+        overlays.addEventListener("click", (e) => { if (e.target === overlays) closeDetail(); });
+
+        const board = document.getElementById("chalkboard");
+        for (let i = 0; i < 20; i++) {
+          const dot = document.createElement("div"); dot.className = "chalk-glow";
+          dot.style.left = Math.random() * 100 + "%"; dot.style.top = Math.random() * 100 + "%";
+          dot.style.width = dot.style.height = 2 + Math.random() * 4 + "px"; dot.style.opacity = 0.05 + Math.random() * 0.1;
+          board.appendChild(dot);
+          anime({ targets: dot, translateX: [0, -10 + Math.random() * 20], translateY: [0, -10 + Math.random() * 20], opacity: [0.05, 0.15, 0.05], duration: 3000 + Math.random() * 4000, direction: "alternate", loop: true, easing: "easeInOutSine" });
+        }
+      });
+    </script>
+  </body>
+</html>

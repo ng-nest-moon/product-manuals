@@ -1,4 +1,6 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Sans+SC:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+/* 字体通过模板 <head> 中的非阻塞 <link> 加载（display=swap）。
+   以下回退栈确保即使 Google Fonts 不可达（如国内网络），
+   中文也能立即用系统字体正确渲染，版式不崩。 */
 
 *, *::before, *::after {
   box-sizing: border-box;
@@ -34,8 +36,10 @@
   --pm-radius-sm: 8px;
   --pm-radius-full: 9999px;
 
-  --font-sans: 'Inter', 'Noto Sans SC', -apple-system, BlinkMacSystemFont, sans-serif;
-  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+  /* 系统 CJK 字体前置，保证无网络也好看 */
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Noto Sans SC', sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', 'SFMono-Regular', Menlo, Consolas, 'Courier New', monospace;
+  --font-display: var(--font-sans);
 }
 
 [data-theme="dark"] {
@@ -404,7 +408,7 @@ img {
 }
 
 .pm-stat-number {
-  font-family: 'Inter', sans-serif;
+  font-family: var(--font-sans);
   font-size: 2.4rem;
   font-weight: 700;
   background: linear-gradient(135deg, var(--pm-primary), var(--pm-accent));
@@ -483,20 +487,20 @@ img {
   box-shadow: var(--pm-card-shadow);
 }
 
-.pm-product-card:nth-child(2n)::before {
-  background: linear-gradient(90deg, #10b981, #34d399);
-}
-
-.pm-product-card:nth-child(3n)::before {
+.pm-product-card[data-category="game"]::before {
   background: linear-gradient(90deg, #8b5cf6, #a78bfa);
 }
 
-.pm-product-card:nth-child(4n)::before {
-  background: linear-gradient(90deg, #f59e0b, #fbbf24);
+.pm-product-card[data-category="tool"]::before {
+  background: linear-gradient(90deg, #10b981, #34d399);
 }
 
-.pm-product-card:nth-child(5n)::before {
-  background: linear-gradient(90deg, #ec4899, #f472b6);
+.pm-product-card[data-category="setting"]::before {
+  background: linear-gradient(90deg, #0ea5e9, #38bdf8);
+}
+
+.pm-product-card[data-category="future"]::before {
+  background: linear-gradient(90deg, #f59e0b, #fbbf24);
 }
 
 .pm-product-card::before {
@@ -542,6 +546,22 @@ img {
   transform: translateY(-5px);
   box-shadow: var(--pm-card-shadow-hover);
   border-color: var(--pm-primary-light);
+}
+
+.pm-product-card[data-category="game"]:hover {
+  border-color: #8b5cf6;
+}
+
+.pm-product-card[data-category="tool"]:hover {
+  border-color: #10b981;
+}
+
+.pm-product-card[data-category="setting"]:hover {
+  border-color: #0ea5e9;
+}
+
+.pm-product-card[data-category="future"]:hover {
+  border-color: #f59e0b;
 }
 
 .pm-product-card:hover::before {
@@ -655,7 +675,66 @@ img {
   border-color: rgba(16, 185, 129, 0.3);
 }
 
+.pm-category-badge--setting {
+  background: rgba(14, 165, 233, 0.1);
+  color: #0ea5e9;
+  border: 1px solid rgba(14, 165, 233, 0.2);
+}
+
+[data-theme="dark"] .pm-category-badge--setting {
+  background: rgba(14, 165, 233, 0.2);
+  border-color: rgba(14, 165, 233, 0.3);
+}
+
+.pm-category-badge--future {
+  background: rgba(245, 158, 11, 0.1);
+  color: #f59e0b;
+  border: 1px solid rgba(245, 158, 11, 0.2);
+}
+
+[data-theme="dark"] .pm-category-badge--future {
+  background: rgba(245, 158, 11, 0.2);
+  border-color: rgba(245, 158, 11, 0.3);
+}
+
 /* ==================== FEATURES SECTION ==================== */
+
+.pm-filter-bar {
+  display: flex;
+  gap: 0.6rem;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-bottom: 2rem;
+}
+
+.pm-filter-chip {
+  padding: 0.45rem 1.15rem;
+  border-radius: var(--pm-radius-full);
+  border: 1px solid var(--pm-border);
+  background: var(--pm-surface);
+  color: var(--pm-text-secondary);
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.pm-filter-chip:hover {
+  color: var(--pm-text);
+  border-color: var(--pm-primary);
+}
+
+.pm-filter-chip.active {
+  background: var(--pm-primary);
+  color: #fff;
+  border-color: var(--pm-primary);
+  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25);
+}
+
+.pm-product-card.is-hidden {
+  display: none;
+}
 
 .pm-features {
   display: grid;
@@ -1008,7 +1087,7 @@ img {
 
 .pm-manual-layout {
   display: flex;
-  max-width: 1300px;
+  max-width: 1200px;
   margin: 0 auto;
   min-height: calc(100vh - 64px);
 }
@@ -1079,7 +1158,7 @@ img {
 .pm-manual-content {
   flex: 1;
   min-width: 0;
-  padding: 2.5rem 3rem;
+  padding: 2.5rem 1.5rem;
   max-width: 880px;
 }
 
@@ -1652,6 +1731,38 @@ img {
   border-radius: 1px;
 }
 
+.pm-product-header[data-category="game"]::after {
+  background: linear-gradient(90deg, #8b5cf6, #a78bfa);
+}
+
+.pm-product-header[data-category="tool"]::after {
+  background: linear-gradient(90deg, #10b981, #34d399);
+}
+
+.pm-product-header[data-category="setting"]::after {
+  background: linear-gradient(90deg, #0ea5e9, #38bdf8);
+}
+
+.pm-product-header[data-category="future"]::after {
+  background: linear-gradient(90deg, #f59e0b, #fbbf24);
+}
+
+.pm-product-header[data-category="game"] .pm-card-number {
+  background: linear-gradient(135deg, #8b5cf6, #a78bfa);
+}
+
+.pm-product-header[data-category="tool"] .pm-card-number {
+  background: linear-gradient(135deg, #10b981, #34d399);
+}
+
+.pm-product-header[data-category="setting"] .pm-card-number {
+  background: linear-gradient(135deg, #0ea5e9, #38bdf8);
+}
+
+.pm-product-header[data-category="future"] .pm-card-number {
+  background: linear-gradient(135deg, #f59e0b, #fbbf24);
+}
+
 .pm-product-header-meta {
   display: flex;
   align-items: center;
@@ -1697,6 +1808,54 @@ img {
 .pm-back-link:hover {
   color: var(--pm-primary);
   background: var(--pm-primary-bg);
+}
+
+/* ==================== INTERACTIVE DIAGRAM ==================== */
+
+.pm-interactive-section {
+  margin: 0 0 2.5rem;
+  border-radius: var(--pm-radius-sm);
+  overflow: hidden;
+  border: 1px solid var(--pm-border);
+  box-shadow: var(--pm-card-shadow);
+}
+
+.pm-layout--interactive .pm-sidebar {
+  display: none;
+}
+
+.pm-layout--interactive .pm-manual-content {
+  max-width: none;
+}
+
+/* ==================== MANUAL DOWNLOAD ==================== */
+
+.pm-manual-download {
+  text-align: center;
+  padding: 3rem 1.5rem;
+  background: var(--pm-surface);
+  border: 1px solid var(--pm-border);
+  border-radius: var(--pm-radius);
+  margin: 1.5rem 0;
+}
+
+.pm-manual-download p {
+  color: var(--pm-text-secondary);
+  margin-bottom: 0.75rem;
+  font-size: 0.95rem;
+}
+
+.pm-manual-download .pm-btn {
+  margin-top: 0.5rem;
+}
+
+.pm-interactive-embed {
+  background: #0b0f19;
+  color: #f0e6d0;
+  font-family: var(--font-mono);
+  border-radius: var(--pm-radius-sm);
+  overflow: hidden;
+  position: relative;
 }
 
 /* ==================== MANUAL BODY ==================== */

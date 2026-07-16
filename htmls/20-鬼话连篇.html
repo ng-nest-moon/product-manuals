@@ -1,0 +1,220 @@
+﻿<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>鬼话连篇</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;600;800&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--board:#1e1428;--board-dark:#0f0a15;--chalk:#f3e8ff;--chalk-dim:rgba(243,232,255,0.55);--chalk-dimmer:rgba(243,232,255,0.18);--chalk-translucent:rgba(243,232,255,0.06);--accent-violet:#a78bfa;--accent-pink:#f472b6;--accent-purple:#7c3aed;--accent-plum:#d946ef;--accent-lavender:#c4b5fd;--accent-red:#fb7185;--scanline:rgba(0,0,0,0.06);--font-display:"Noto Sans SC","PingFang SC","Microsoft YaHei",sans-serif;--font-mono:"IBM Plex Mono","SFMono-Regular",Menlo,Consolas,"Courier New",monospace}
+html,body{height:100%;background:#0e0712;font-family:var(--font-mono);color:var(--chalk);overflow-x:hidden}
+.screen-frame{position:relative;min-height:100vh;padding:28px 20px 20px;background:#111;border-radius:20px;box-shadow:inset 0 0 40px rgba(0,0,0,0.8),0 8px 40px rgba(0,0,0,0.6);max-width:1360px;margin:0 auto}
+.screen-frame::before{content:"";position:absolute;inset:0;border-radius:20px;background:repeating-linear-gradient(0deg,transparent,transparent 2px,var(--scanline) 2px,var(--scanline) 4px);pointer-events:none;z-index:100}
+.crt-curve{position:absolute;inset:0;border-radius:20px;background:radial-gradient(ellipse at center,transparent 65%,rgba(0,0,0,0.35) 100%);pointer-events:none;z-index:99}
+.power-led{position:absolute;top:8px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:8px;font-family:var(--font-display);font-size:10px;font-weight:600;color:var(--chalk-dim);letter-spacing:1.5px;z-index:101}
+.power-led span{display:inline-block;width:6px;height:6px;border-radius:50%;background:#fb7185;box-shadow:0 0 6px #fb7185;animation:led-pulse 2s ease-in-out infinite}
+@keyframes led-pulse{0%,100%{opacity:1;box-shadow:0 0 6px #fb7185}50%{opacity:0.5;box-shadow:0 0 2px #fb7185}}
+.chalkboard{position:relative;background:var(--board);border:3px solid #2f1c3e;border-radius:4px;padding:32px 28px 28px;box-shadow:inset 0 0 60px rgba(0,0,0,0.5),0 4px 0 #140d1c;min-height:calc(100vh - 80px)}
+.chalkboard::after{content:"";position:absolute;inset:0;background-image:radial-gradient(circle at 20% 30%,rgba(243,232,255,0.02) 0,transparent 60%),radial-gradient(circle at 80% 70%,rgba(243,232,255,0.015) 0,transparent 50%),radial-gradient(circle at 50% 50%,rgba(243,232,255,0.01) 0,transparent 70%);pointer-events:none;border-radius:2px}
+.header{text-align:center;margin-bottom:24px;position:relative;z-index:1}
+.header h1{font-family:var(--font-display);font-size:26px;font-weight:800;color:var(--accent-pink);text-shadow:0 0 8px rgba(244,114,182,0.3);letter-spacing:2px;margin-bottom:4px;display:flex;align-items:center;justify-content:center;gap:10px}
+.header .subtitle{font-size:14px;color:var(--chalk-dim);letter-spacing:0.5px;max-width:680px;margin:0 auto;line-height:1.7}
+.header .subtitle em{font-style:normal;color:var(--accent-violet)}
+.layout-main{display:flex;gap:20px;position:relative;z-index:1}
+.layers-column{flex:1;min-width:0}
+.side-column{width:220px;flex-shrink:0;display:flex;flex-direction:column;gap:10px}
+.layer{position:relative;background:var(--chalk-translucent);border:1.5px solid var(--chalk-dimmer);border-radius:6px;padding:12px 14px 14px;cursor:pointer;transition:border-color 0.3s,background 0.3s;opacity:0;transform:translateY(20px)}
+.layer:hover{border-color:var(--accent-pink);background:rgba(244,114,182,0.06)}
+.layer-label{font-family:var(--font-display);font-size:12px;font-weight:600;color:var(--chalk-dim);letter-spacing:1px;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.layer-label .badge{font-size:10px;font-weight:600;background:var(--chalk-dimmer);color:var(--board);padding:1px 7px;border-radius:3px}
+.layer-modules{display:flex;flex-wrap:wrap;gap:6px}
+.module{background:rgba(243,232,255,0.06);border:1px solid var(--chalk-dimmer);border-radius:4px;padding:5px 10px;font-size:12px;line-height:1.5;color:var(--chalk);transition:all 0.25s;white-space:nowrap;cursor:pointer;display:inline-flex;align-items:center;gap:5px}
+.module:hover{background:rgba(243,232,255,0.12);border-color:var(--chalk);transform:translateY(-1px)}
+svg.icon,.module svg,.side-module svg,.dot svg{width:16px;height:16px;flex-shrink:0}
+.module svg{width:15px;height:15px}
+.dot svg{width:14px;height:14px}
+.module .tag{font-size:10px;font-weight:600;padding:1px 6px;border-radius:3px;margin-left:4px;opacity:0.8}
+.tag-story{background:var(--accent-pink);color:var(--board)}
+.tag-pollute{background:var(--accent-purple);color:var(--chalk)}
+.tag-fear{background:var(--accent-red);color:var(--board)}
+.tag-end{background:var(--accent-violet);color:var(--board)}
+.layer[data-layer="scene"]{border-left:3px solid var(--accent-violet)}
+.layer[data-layer="engine"]{border-left:3px solid var(--accent-plum)}
+.layer[data-layer="system"]{border-left:3px solid var(--accent-purple)}
+.layer[data-layer="end"]{border-left:3px solid var(--accent-red)}
+.arrow-down{display:flex;align-items:center;justify-content:center;height:28px;position:relative;opacity:0}
+.arrow-down svg{width:100%;height:28px}
+.arrow-label{position:absolute;font-family:var(--font-display);font-size:10px;font-weight:600;color:var(--chalk-dim);letter-spacing:0.5px;background:var(--board);padding:0 8px;white-space:nowrap}
+.side-module{background:var(--chalk-translucent);border:1.5px solid var(--chalk-dimmer);border-left:3px solid var(--accent-lavender);border-radius:6px;padding:10px 12px;cursor:pointer;opacity:0;transform:translateX(15px);transition:border-color 0.3s,background 0.3s}
+.side-module:hover{border-color:var(--accent-lavender);background:rgba(196,181,253,0.08)}
+.side-module .layer-label{margin-bottom:4px}
+.side-module .desc{font-size:12px;color:var(--chalk-dim);line-height:1.5}
+.user-flow{margin-top:22px;padding:14px 16px;background:var(--chalk-translucent);border:1.5px solid var(--chalk-dimmer);border-radius:6px;position:relative;z-index:1;opacity:0}
+.user-flow-header{font-family:var(--font-display);font-size:12px;font-weight:600;color:var(--accent-pink);letter-spacing:0.5px;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.user-flow-steps{display:flex;align-items:center;flex-wrap:wrap}
+.flow-step{display:flex;align-items:center;opacity:0}
+.flow-step .dot{width:28px;height:28px;border-radius:50%;border:2px solid var(--chalk-dimmer);background:var(--board);display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;transition:all 0.3s}
+.flow-step .dot.active{border-color:var(--accent-pink);background:rgba(244,114,182,0.12);box-shadow:0 0 10px rgba(244,114,182,0.2)}
+.flow-step .label{font-size:12px;color:var(--chalk-dim);white-space:nowrap;margin:0 8px 0 6px}
+.flow-step .conn{width:24px;height:2px;background:var(--chalk-dimmer);flex-shrink:0;position:relative}
+.flow-step .conn::after{content:">";position:absolute;right:-4px;top:-7px;font-size:10px;color:var(--chalk-dimmer)}
+.flow-step:last-child .conn{display:none}
+.detail-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:200;display:none;align-items:center;justify-content:center;backdrop-filter:blur(2px)}
+.detail-overlay.open{display:flex}
+.detail-card{background:var(--board-dark);border:2px solid var(--chalk-dimmer);border-radius:8px;padding:24px 28px;max-width:520px;width:90%;max-height:80vh;overflow-y:auto;position:relative}
+.detail-card h2{margin-top:0;font-family:var(--font-display);font-size:18px;font-weight:800;color:var(--accent-pink);margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid var(--chalk-dimmer);display:flex;align-items:center;gap:8px}
+.detail-card h2 svg{width:22px;height:22px;flex-shrink:0}
+.detail-card ul{list-style:none;padding:0}
+.detail-card li{font-size:13px;color:var(--chalk);padding:5px 0 5px 14px;border-left:2px solid var(--chalk-dimmer);margin-bottom:6px;line-height:1.6}
+.detail-card li .hl{color:var(--accent-violet)}
+.detail-card li .hl-w{color:var(--accent-pink)}
+.detail-card .close-btn{position:absolute;top:14px;right:16px;font-family:var(--font-display);font-size:13px;font-weight:600;color:var(--chalk-dimmer);background:none;border:1px solid var(--chalk-dimmer);border-radius:4px;padding:4px 12px;cursor:pointer}
+.detail-card .close-btn:hover{color:var(--accent-pink);border-color:var(--accent-pink)}
+@media (max-width:860px){.layout-main{flex-direction:column}.side-column{width:100%;flex-direction:row;flex-wrap:wrap}.side-module{flex:1;min-width:160px}.header h1{font-size:20px}.screen-frame{padding:24px 12px 12px}.chalkboard{padding:20px 14px 16px}.module{font-size:11px;padding:4px 8px}.flow-step .label{font-size:10px}.flow-step .dot{width:24px;height:24px}}
+@media (max-width:480px){.header h1{font-size:16px}.module{font-size:10px;padding:3px 6px;white-space:normal}.layer{padding:8px 8px 10px}}
+.chalk-glow{position:absolute;pointer-events:none;width:4px;height:4px;border-radius:50%;background:rgba(243,232,255,0.15);filter:blur(6px)}
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-thumb{background:var(--chalk-dimmer);border-radius:2px}
+.arrow-path{stroke-dasharray:200;stroke-dashoffset:200}
+.layer-label svg{width:16px;height:16px;flex-shrink:0}
+.svg-connectors{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:0}
+</style>
+</head>
+<body>
+<div class="screen-frame"><div class="crt-curve"></div><div class="power-led"><span></span> STORIES · 污染 · 递增</div>
+<div class="chalkboard" id="chalkboard">
+<div class="header" id="header">
+<h1><svg viewBox="0 0 24 24" class="icon" style="width:28px;height:28px"><use href="#icon-ghost" /></svg>鬼话连篇</h1>
+<div class="subtitle">恐怖推理游戏——分辨真假故事 · <em>相信错误的故事，会害死你</em></div>
+</div>
+<svg class="svg-connectors" id="connectorSvg" preserveAspectRatio="none">
+<defs>
+<marker id="arrowHead" markerWidth="6" markerHeight="5" refX="6" refY="2.5" orient="auto"><polygon points="0 0, 6 2.5, 0 5" fill="var(--chalk-dimmer)" opacity=".6"/></marker>
+<marker id="arrowHeadFlow" markerWidth="6" markerHeight="5" refX="6" refY="2.5" orient="auto"><polygon points="0 0, 6 2.5, 0 5" fill="var(--accent-pink)"/></marker>
+<filter id="glow"><feGaussianBlur stdDeviation="1.5" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+<symbol id="icon-ghost" viewBox="0 0 24 24"><path d="M12 3c-4 0-7 3-7 7v8l2-2 2 2 3-3 3 3 2-2 2 2v-8c0-4-3-7-7-7z" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linejoin="round"/><circle cx="9" cy="10" r="1" fill="currentColor"/><circle cx="15" cy="10" r="1" fill="currentColor"/></symbol>
+<symbol id="icon-room" viewBox="0 0 20 20"><path d="M3 8l7-5 7 5v9H3V8z" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linejoin="round"/><path d="M8 17v-6h4v6" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linejoin="round"/></symbol>
+<symbol id="icon-record" viewBox="0 0 20 20"><rect x="3" y="4" width="14" height="12" rx="1" stroke="currentColor" fill="none" stroke-width="1.5"/><line x1="6" y1="7" x2="14" y2="7" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round"/><line x1="6" y1="10" x2="12" y2="10" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round"/><line x1="6" y1="13" x2="10" y2="13" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round"/></symbol>
+<symbol id="icon-hud" viewBox="0 0 20 20"><rect x="3" y="3" width="14" height="14" rx="1" stroke="currentColor" fill="none" stroke-width="1.5"/><line x1="3" y1="8" x2="17" y2="8" stroke="currentColor" fill="none" stroke-width="1.5"/><line x1="3" y1="12" x2="17" y2="12" stroke="currentColor" fill="none" stroke-width="1.5"/><line x1="8" y1="3" x2="8" y2="17" stroke="currentColor" fill="none" stroke-width="1.5"/></symbol>
+<symbol id="icon-gauge" viewBox="0 0 20 20"><path d="M10 3c-4 0-7 3-7 7h14c0-4-3-7-7-7z" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linejoin="round"/><line x1="10" y1="10" x2="10" y2="7" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round"/><line x1="10" y1="10" x2="13" y2="10" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round"/></symbol>
+<symbol id="icon-env" viewBox="0 0 20 20"><path d="M2 10a8 8 0 1116 0" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round"/><path d="M4 10a6 6 0 1112 0" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round"/><circle cx="10" cy="10" r="2" stroke="currentColor" fill="none" stroke-width="1.5"/></symbol>
+<symbol id="icon-event" viewBox="0 0 20 20"><path d="M10 2l2 4h4l-3 3 1 4-4-2-4 2 1-4-3-3h4l2-4z" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linejoin="round"/></symbol>
+<symbol id="icon-corrupt" viewBox="0 0 20 20"><path d="M4 4l12 12M16 4L4 16" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round"/></symbol>
+<symbol id="icon-npc" viewBox="0 0 20 20"><circle cx="10" cy="6" r="2.5" stroke="currentColor" fill="none" stroke-width="1.5"/><path d="M5 16c0-3 2.5-5 5-5s5 2 5 5" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round"/></symbol>
+<symbol id="icon-brain" viewBox="0 0 20 20"><path d="M14 4c2 0 3 1.5 3 3 0 1.5-1 2.5-2 3 1 1 1 3 0 4 1 1 0 3-1 3-1 2-3 2-4 2s-3 0-4-2c-1 0-2-2-1-3-1-1-1-3 0-4-1-.5-2-1.5-2-3 0-1.5 1-3 3-3 1 0 2 1 4 1s3-1 4-1z" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+<symbol id="icon-check" viewBox="0 0 20 20"><path d="M5 10l3 3 7-7" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+<symbol id="icon-heart" viewBox="0 0 20 20"><path d="M10 17S4 12 4 7.5C4 5 6 3 8.5 3c1.5 0 2.5.8 3 1.5C11.5 3.8 12.5 3 14 3 16.5 3 18 5 18 7.5 18 12 10 17 10 17z" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linejoin="round"/></symbol>
+<symbol id="icon-flag" viewBox="0 0 20 20"><path d="M4 18V3h12l-2 4 2 4H4" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linejoin="round"/></symbol>
+<symbol id="icon-clock" viewBox="0 0 20 20"><circle cx="10" cy="10" r="7" stroke="currentColor" fill="none" stroke-width="1.5"/><path d="M10 6v4l3 2" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+<symbol id="icon-close" viewBox="0 0 20 20"><path d="M5 5l10 10M15 5L5 15" stroke="currentColor" fill="none" stroke-width="1.8" stroke-linecap="round"/></symbol>
+<symbol id="icon-money" viewBox="0 0 20 20"><rect x="3" y="7" width="14" height="9" rx="1.5" stroke="currentColor" fill="none" stroke-width="1.5"/><circle cx="10" cy="11.5" r="2.5" stroke="currentColor" fill="none" stroke-width="1.5"/></symbol>
+</defs>
+</svg>
+<div class="layout-main">
+<div class="layers-column" id="layersColumn">
+<div class="layer" data-layer="scene" id="layer-scene">
+<div class="layer-label"><svg viewBox="0 0 20 20"><use href="#icon-room" /></svg> 表现层 <span class="badge">SCENE</span></div>
+<div class="layer-modules">
+<div class="module" data-detail="room"><svg viewBox="0 0 20 20"><use href="#icon-room" /></svg> 客厅场景 <span class="tag tag-story">第一人称</span></div>
+<div class="module" data-detail="narrative"><svg viewBox="0 0 20 20"><use href="#icon-record" /></svg> 叙事记录 <span class="tag tag-story">自动转录</span></div>
+<div class="module" data-detail="hud"><svg viewBox="0 0 20 20"><use href="#icon-hud" /></svg> 状态HUD <span class="tag tag-story">污染/恐惧/时间</span></div>
+</div>
+</div>
+<div class="arrow-down" id="arrow1"><svg viewBox="0 0 100 28"><line class="arrow-path" x1="50" y1="0" x2="50" y2="26" stroke="var(--chalk-dimmer)" stroke-width="1.5" marker-end="url(#arrowHead)" opacity=".5"/></svg><div class="arrow-label">故事·污染</div></div>
+<div class="layer" data-layer="engine" id="layer-engine">
+<div class="layer-label"><svg viewBox="0 0 20 20"><use href="#icon-gauge" /></svg> 叙事污染引擎 <span class="badge">CORE</span></div>
+<div class="layer-modules">
+<div class="module" data-detail="pollution"><svg viewBox="0 0 20 20"><use href="#icon-gauge" /></svg> 污染值计算 <span class="tag tag-pollute">细节×情绪×真实</span></div>
+<div class="module" data-detail="env"><svg viewBox="0 0 20 20"><use href="#icon-env" /></svg> 环境反馈 <span class="tag tag-pollute">逐级恶化</span></div>
+<div class="module" data-detail="manifest"><svg viewBox="0 0 20 20"><use href="#icon-event" /></svg> 显现事件 <span class="tag tag-pollute">鬼物具象化</span></div>
+<div class="module" data-detail="corrupt"><svg viewBox="0 0 20 20"><use href="#icon-corrupt" /></svg> 污染篡改 <span class="tag tag-pollute">记录被改</span></div>
+</div>
+</div>
+<div class="arrow-down" id="arrow2"><svg viewBox="0 0 100 28"><line class="arrow-path" x1="50" y1="0" x2="50" y2="26" stroke="var(--chalk-dimmer)" stroke-width="1.5" marker-end="url(#arrowHead)" opacity=".5"/></svg><div class="arrow-label">推理·恐惧</div></div>
+<div class="layer" data-layer="system" id="layer-system">
+<div class="layer-label"><svg viewBox="0 0 20 20"><use href="#icon-npc" /></svg> 系统层 <span class="badge">SYSTEM</span></div>
+<div class="layer-modules">
+<div class="module" data-detail="npc"><svg viewBox="0 0 20 20"><use href="#icon-npc" /></svg> NPC系统 <span class="tag tag-fear">6人·信任网络</span></div>
+<div class="module" data-detail="deduction"><svg viewBox="0 0 20 20"><use href="#icon-brain" /></svg> 推理系统 <span class="tag tag-fear">矛盾检测</span></div>
+<div class="module" data-detail="fear"><svg viewBox="0 0 20 20"><use href="#icon-heart" /></svg> 恐惧值 <span class="tag tag-fear">影响判断力</span></div>
+</div>
+</div>
+<div class="arrow-down" id="arrow3"><svg viewBox="0 0 100 28"><line class="arrow-path" x1="50" y1="0" x2="50" y2="26" stroke="var(--chalk-dimmer)" stroke-width="1.5" marker-end="url(#arrowHead)" opacity=".5"/></svg><div class="arrow-label">最终判断</div></div>
+<div class="layer" data-layer="end" id="layer-end">
+<div class="layer-label"><svg viewBox="0 0 20 20"><use href="#icon-flag" /></svg> 结局系统 <span class="badge">END</span></div>
+<div class="layer-modules">
+<div class="module" data-detail="end1"><svg viewBox="0 0 20 20"><use href="#icon-flag" /></svg> 清醒者 <span class="tag tag-end">识破一切</span></div>
+<div class="module" data-detail="end2"><svg viewBox="0 0 20 20"><use href="#icon-flag" /></svg> 幸存者 <span class="tag tag-end">活到天明</span></div>
+<div class="module" data-detail="end3"><svg viewBox="0 0 20 20"><use href="#icon-flag" /></svg> 沉沦者 <span class="tag tag-end">被污染吞没</span></div>
+<div class="module" data-detail="end4"><svg viewBox="0 0 20 20"><use href="#icon-flag" /></svg> 揭穿者 <span class="tag tag-end">揭露真相</span></div>
+<div class="module" data-detail="end5"><svg viewBox="0 0 20 20"><use href="#icon-flag" /></svg> 迷失者 <span class="tag tag-end">真假不分</span></div>
+</div>
+</div>
+</div>
+<div class="side-column" id="sideColumn">
+<div class="side-module" data-detail="side-world"><div class="layer-label"><svg viewBox="0 0 20 20"><use href="#icon-ghost" /></svg> 世界观</div><div class="desc">7人困老宅·地脉裂隙·叙事撕裂现实</div></div>
+<div class="side-module" data-detail="side-npcs"><div class="layer-label"><svg viewBox="0 0 20 20"><use href="#icon-npc" /></svg> NPC角色</div><div class="desc">6个不可靠叙事者·各自秘密</div></div>
+<div class="side-module" data-detail="side-edge"><div class="layer-label"><svg viewBox="0 0 20 20"><use href="#icon-close" /></svg> 边界声明</div><div class="desc">无联机·无战斗·无跳吓·买断制</div></div>
+</div>
+</div>
+<div class="user-flow" id="userFlow">
+<div class="user-flow-header"><svg viewBox="0 0 24 24" style="width:16px;height:16px;flex-shrink:0"><use href="#icon-ghost"/></svg> 游戏流程 <span style="font-size:7px;color:var(--chalk-dim);font-family:var(--font-mono)">[ 动画播放中 ]</span></div>
+<div class="user-flow-steps" id="flowSteps">
+<div class="flow-step" data-step="0"><div class="dot"><svg viewBox="0 0 20 20"><use href="#icon-room"/></svg></div><span class="label">序幕</span><div class="conn"></div></div>
+<div class="flow-step" data-step="1"><div class="dot"><svg viewBox="0 0 20 20"><use href="#icon-gauge"/></svg></div><span class="label">暖场</span><div class="conn"></div></div>
+<div class="flow-step" data-step="2"><div class="dot"><svg viewBox="0 0 20 20"><use href="#icon-env"/></svg></div><span class="label">蔓延</span><div class="conn"></div></div>
+<div class="flow-step" data-step="3"><div class="dot"><svg viewBox="0 0 20 20"><use href="#icon-event"/></svg></div><span class="label">失控</span><div class="conn"></div></div>
+<div class="flow-step" data-step="4"><div class="dot"><svg viewBox="0 0 20 20"><use href="#icon-flag"/></svg></div><span class="label">终局</span></div>
+</div>
+</div>
+</div>
+</div>
+<div class="detail-overlay" id="detailOverlay"><div class="detail-card" id="detailCard"><button class="close-btn" id="closeDetail">✕ CLOSE</button><div id="detailContent"></div></div></div>
+<script>
+var DETAILS={
+"room":{tit:'<svg viewBox="0 0 20 20" class="icon" style="width:22px;height:22px"><use href="#icon-room"/></svg> 客厅场景',its:["<span class=hl>第一人称视角</span>，老宅客厅固定视角","7 人围坐一圈，环境随污染逐级变化","从灯光闪烁到空间扭曲的视听演变"]},
+"narrative":{tit:'<svg viewBox="0 0 20 20" class="icon" style="width:22px;height:22px"><use href="#icon-record"/></svg> 叙事记录',its:["NPC 的每句话<span class=hl>自动转录</span>","自动标签分类：事实/观点/情绪/编造","<span class=hl-w>矛盾检测</span>：时间/人物/因果/自相矛盾"]},
+"hud":{tit:'<svg viewBox="0 0 20 20" class="icon" style="width:22px;height:22px"><use href="#icon-hud"/></svg> 状态HUD',its:["<span class=hl>污染指示器</span>：0-400+ 六级","<span class=hl-w>NPC 状态</span>：信任度/恐惧度","恐惧值：0-200","距天亮时间倒计时"]},
+"pollution":{tit:'<svg viewBox="0 0 20 20" class="icon" style="width:22px;height:22px"><use href="#icon-gauge"/></svg> 污染值计算',its:["<span class=hl>四因子</span>：细节密度×情绪强度×听众反应×故事真实性","污染不可逆，只能抑制","抑制手段：停止讲故事/转移话题/质疑讲述者"]},
+"env":{tit:'<svg viewBox="0 0 20 20" class="icon" style="width:22px;height:22px"><use href="#icon-env"/></svg> 环境反馈',its:["<span class=hl-w>Lv.0 安宁</span> 0-20：正常状态","<span class=hl-w>Lv.1 低语</span> 20-50：灯光闪烁","<span class=hl-w>Lv.2 寒意</span> 50-100：温度下降，角落有影子","<span class=hl-w>Lv.3 骚动</span> 100-200：物体位移，记录出乱码","<span class=hl-w>Lv.4 显现</span> 200-400：鬼物具象化","<span class=hl-w>Lv.5 侵蚀</span> 400+：空间扭曲"]},
+"manifest":{tit:'<svg viewBox="0 0 20 20" class="icon" style="width:22px;height:22px"><use href="#icon-event"/></svg> 显现事件',its:["污染达阈值时触发","故事中的鬼物<span class=hl>真正出现在现实中</span>","事件池随机抽取，每局不同"]},
+"corrupt":{tit:'<svg viewBox="0 0 20 20" class="icon" style="width:22px;height:22px"><use href="#icon-corrupt"/></svg> 污染篡改',its:["高污染下<span class=hl>你的记录可能被篡改</span>","不能完全信任自己的笔记","<span class=hl-w>信息不可靠</span>——核心设计"]},
+"npc":{tit:'<svg viewBox="0 0 20 20" class="icon" style="width:22px;height:22px"><use href="#icon-npc"/></svg> NPC系统',its:["<span class=hl>6 个独立角色</span>，各有身份和动机","<span class=hl-w>信任网络</span>：信任度影响私下信息获取","故事真伪参半，每人讲述风格不同","林述/苏晚/陈小满/方竞/老赵/白鸦"]},
+"deduction":{tit:'<svg viewBox="0 0 20 20" class="icon" style="width:22px;height:22px"><use href="#icon-brain"/></svg> 推理系统',its:["叙事记录自动关联比照","<span class=hl>矛盾检测</span>：时间/人物/因果/自相矛盾","<span class=hl-w>可信度评估</span>：对每个NPC的每句话标注可信度","最终回答 4 个触发结局的问题"]},
+"fear":{tit:'<svg viewBox="0 0 20 20" class="icon" style="width:22px;height:22px"><use href="#icon-heart"/></svg> 恐惧值系统',its:["来源：讲故事/异常观察/独自一人/污染升级/显现事件","<span class=hl>恐惧 &gt; 60</span>：推理干扰","<span class=hl>恐惧 &gt; 100</span>：记录乱码","<span class=hl>恐惧 &gt; 150</span>：幻觉与真实混杂","<span class=hl>恐惧 &gt; 200</span>：失能"]},
+"end1":{tit:'<svg viewBox="0 0 20 20" class="icon" style="width:22px;height:22px"><use href="#icon-flag"/></svg> 清醒者',its:["<span class=hl-w>识破一切</span>","完整推理出 6 人的秘密和真相"]},
+"end2":{tit:'<svg viewBox="0 0 20 20" class="icon" style="width:22px;height:22px"><use href="#icon-flag"/></svg> 幸存者',its:["<span class=hl-w>活到天明</span>","有效抑制污染，但没有完全搞清楚真相"]},
+"end3":{tit:'<svg viewBox="0 0 20 20" class="icon" style="width:22px;height:22px"><use href="#icon-flag"/></svg> 沉沦者',its:["<span class=hl-w>被污染吞没</span>","污染超过阈值，被鬼物吞噬"]},
+"end4":{tit:'<svg viewBox="0 0 20 20" class="icon" style="width:22px;height:22px"><use href="#icon-flag"/></svg> 揭穿者',its:["<span class=hl-w>揭露真相</span>","在众人面前揭穿关键谎言"]},
+"end5":{tit:'<svg viewBox="0 0 20 20" class="icon" style="width:22px;height:22px"><use href="#icon-flag"/></svg> 迷失者',its:["<span class=hl-w>真假不分</span>","恐惧压倒理智，无法做出判断"]},
+"side-world":{tit:'<svg viewBox="0 0 20 20" class="icon" style="width:22px;height:22px"><use href="#icon-ghost"/></svg> 世界观',its:["<span class=hl>7 人被困老宅</span>，大雨封路","有人提议讲鬼故事","老宅建在<span class=hl-w>地脉裂隙</span>上","强烈的叙事会撕裂现实与非现实的边界"]},
+"side-npcs":{tit:'<svg viewBox="0 0 20 20" class="icon" style="width:22px;height:22px"><use href="#icon-npc"/></svg> NPC角色',its:["<span class=hl>林述</span>：民宿老板，真假混讲","<span class=hl>苏晚</span>：中学教师，只讲听来的","<span class=hl>陈小满</span>：大学生，胆子最小","<span class=hl>方竞</span>：摄影师，编造离奇经历","<span class=hl>老赵</span>：退休工人，细节矛盾","<span class=hl>白鸦</span>：身份不明，细节异常真实"]},
+"side-edge":{tit:'<svg viewBox="0 0 20 20" class="icon" style="width:22px;height:22px"><use href="#icon-close"/></svg> 边界声明',its:["<span class=hl-w>✕</span> 多人联机——知道别人不是 AI 会破坏恐怖感","<span class=hl-w>✕</span> 战斗系统——无力感是恐怖感的来源","<span class=hl-w>✕</span> 开放式地图——封闭空间强化压迫感","<span class=hl-w>✕</span> 跳吓式恐怖——不依赖突然出现的鬼脸","<span class=hl-w>✕</span> 跨局存档互通——每局独立","<span class=hl-w>✕</span> 内购/抽卡——买断制"]}
+};
+document.addEventListener("DOMContentLoaded",function(){
+var L=document.querySelectorAll(".layer");var A=document.querySelectorAll(".arrow-down");var F=document.querySelectorAll(".flow-step");var S=document.querySelectorAll(".side-module");var U=document.querySelector(".user-flow");var O=document.querySelector("#detailOverlay");var C=document.querySelector("#detailContent");var B=document.querySelector("#closeDetail");
+var T=anime.timeline({easing:"easeOutCubic"});
+T.add({targets:"#header",opacity:[0,1],translateY:[-10,0],duration:600});
+T.add({targets:S,opacity:[0,1],translateX:[15,0],duration:400,delay:anime.stagger(120)},"-=200");
+T.add({targets:L,opacity:[0,1],translateY:[20,0],duration:500,delay:anime.stagger(150)},"-=100");
+T.add({targets:A,opacity:[0,1],duration:400,delay:anime.stagger(200)},"-=200");
+setTimeout(function(){document.querySelectorAll(".arrow-path").forEach(function(p){anime({targets:p,strokeDashoffset:[200,0],duration:800,delay:300,easing:"easeInOutCubic"});});},1500);
+T.add({targets:U,opacity:[0,1],duration:500},"-=100");
+T.add({targets:F,opacity:[0,1],translateX:[-8,0],duration:350,delay:anime.stagger(120)},"-=200");
+var i=0;function pulse(){F.forEach(function(s){s.querySelector(".dot").classList.remove("active");});F[i].querySelector(".dot").classList.add("active");i=(i+1)%F.length;}
+pulse();setInterval(pulse,2500);
+L.forEach(function(l){l.addEventListener("mouseenter",function(){anime({targets:l,borderColor:"var(--accent-pink)",backgroundColor:"rgba(244,114,182,0.06)",duration:200});});l.addEventListener("mouseleave",function(){anime({targets:l,borderColor:"var(--chalk-dimmer)",backgroundColor:"rgba(243,232,255,0.06)",duration:300});});});
+function openDetail(id){var d=DETAILS[id];if(!d)return;C.innerHTML='<h2>'+d.tit+'</h2><ul>'+d.its.map(function(s){return '<li>'+s+'</li>';}).join('')+'</ul>';O.classList.add("open");anime({targets:"#detailCard",scale:[0.85,1],opacity:[0,1],duration:250,easing:"easeOutCubic"});}
+function closeDetail(){anime({targets:"#detailCard",scale:[1,0.85],opacity:[1,0],duration:200,easing:"easeInCubic",complete:function(){O.classList.remove("open");}});}
+document.querySelectorAll(".module[data-detail]").forEach(function(el){el.addEventListener("click",function(){openDetail(el.dataset.detail);});});
+document.querySelectorAll(".side-module[data-detail]").forEach(function(el){el.addEventListener("click",function(){openDetail(el.dataset.detail);});});
+B.addEventListener("click",closeDetail);O.addEventListener("click",function(e){if(e.target===O)closeDetail();});
+var board=document.getElementById("chalkboard");
+for(var n=0;n<20;n++){var dot=document.createElement("div");dot.className="chalk-glow";dot.style.left=Math.random()*100+"%";dot.style.top=Math.random()*100+"%";dot.style.width=dot.style.height=2+Math.random()*4+"px";dot.style.opacity=0.05+Math.random()*0.1;board.appendChild(dot);anime({targets:dot,translateX:[0,-10+Math.random()*20],translateY:[0,-10+Math.random()*20],opacity:[0.05,0.15,0.05],duration:3000+Math.random()*4000,direction:"alternate",loop:true,easing:"easeInOutSine"});}
+});
+</script>
+</body>
+</html>

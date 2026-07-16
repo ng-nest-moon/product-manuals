@@ -1,0 +1,274 @@
+﻿<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>易经算命</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;600;800&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--board:#1c1410;--board-dark:#0e0a07;--chalk:#f0e3d0;--chalk-dim:rgba(240,227,208,0.55);--chalk-dimmer:rgba(240,227,208,0.18);--chalk-translucent:rgba(240,227,208,0.06);--accent-red:#c0392b;--accent-gold:#d4a84b;--accent-jade:#6b8e5a;--accent-cream:#f5e6cc;--accent-ember:#e67e22;--scanline:rgba(0,0,0,0.06);--font-display:"Noto Sans SC","PingFang SC", "PingFang SC", "Microsoft YaHei", sans-serif;--font-mono:"IBM Plex Mono","SFMono-Regular", Menlo, Consolas, "SFMono-Regular", Menlo, Consolas, "Courier New", monospace}
+html,body{height:100%;background:#0a0503;font-family:var(--font-mono);color:var(--chalk);overflow-x:hidden}
+.screen-frame{position:relative;min-height:100vh;padding:28px 20px 20px;background:#111;border-radius:20px;box-shadow:inset 0 0 40px rgba(0,0,0,0.8),0 8px 40px rgba(0,0,0,0.6);max-width:1360px;margin:0 auto}
+.screen-frame::before{content:"";position:absolute;inset:0;border-radius:20px;background:repeating-linear-gradient(0deg,transparent,transparent 2px,var(--scanline) 2px,var(--scanline) 4px);pointer-events:none;z-index:100}
+.crt-curve{position:absolute;inset:0;border-radius:20px;background:radial-gradient(ellipse at center,transparent 65%,rgba(0,0,0,0.35) 100%);pointer-events:none;z-index:99}
+.power-led{position:absolute;top:8px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:8px;font-family:var(--font-display);font-size:10px;font-weight:600;color:var(--chalk-dim);letter-spacing:1.5px;z-index:101}
+.power-led span{display:inline-block;width:6px;height:6px;border-radius:50%;background:#d4a84b;box-shadow:0 0 6px #d4a84b;animation:led-pulse 2s ease-in-out infinite}
+@keyframes led-pulse{0%,100%{opacity:1;box-shadow:0 0 6px #d4a84b}50%{opacity:0.5;box-shadow:0 0 2px #d4a84b}}
+.chalkboard{position:relative;background:var(--board);border:3px solid #3d2418;border-radius:4px;padding:32px 28px 28px;box-shadow:inset 0 0 60px rgba(0,0,0,0.5),0 4px 0 #1a0f0a;min-height:calc(100vh - 80px)}
+.chalkboard::after{content:"";position:absolute;inset:0;background-image:radial-gradient(circle at 20% 30%,rgba(240,227,208,0.02) 0,transparent 60%),radial-gradient(circle at 80% 70%,rgba(240,227,208,0.015) 0,transparent 50%),radial-gradient(circle at 50% 50%,rgba(240,227,208,0.01) 0,transparent 70%);pointer-events:none;border-radius:2px}
+.header{text-align:center;margin-bottom:24px;position:relative;z-index:1}
+.header h1{font-family:var(--font-display);font-size:26px;font-weight:800;color:var(--accent-red);text-shadow:0 0 8px rgba(192,57,43,0.3);letter-spacing:2px;margin-bottom:4px;display:flex;align-items:center;justify-content:center;gap:10px}
+.header .subtitle{font-size:14px;color:var(--chalk-dim);letter-spacing:0.5px}
+.header .subtitle em{font-style:normal;color:var(--accent-jade)}
+.layout-main{display:flex;gap:20px;position:relative;z-index:1}
+.layers-column{flex:1;min-width:0}
+.side-column{width:220px;flex-shrink:0;display:flex;flex-direction:column;gap:10px}
+.svg-connectors{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:0}
+.layer{position:relative;background:var(--chalk-translucent);border:1.5px solid var(--chalk-dimmer);border-radius:6px;padding:12px 14px 14px;margin-bottom:0;cursor:pointer;transition:border-color 0.3s,background 0.3s;opacity:0;transform:translateY(20px)}
+.layer:hover{border-color:var(--accent-gold);background:rgba(212,168,75,0.06)}
+.layer-label{font-family:var(--font-display);font-size:12px;font-weight:600;color:var(--chalk-dim);letter-spacing:1px;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.layer-label .badge{font-size:10px;font-weight:600;background:var(--chalk-dimmer);color:var(--board);padding:1px 7px;border-radius:3px;letter-spacing:0}
+.layer-modules{display:flex;flex-wrap:wrap;gap:6px}
+.module{background:rgba(240,227,208,0.06);border:1px solid var(--chalk-dimmer);border-radius:4px;padding:5px 10px;font-size:12px;line-height:1.5;color:var(--chalk);transition:all 0.25s;white-space:nowrap;cursor:pointer;display:inline-flex;align-items:center;gap:5px}
+.module:hover{background:rgba(240,227,208,0.12);border-color:var(--chalk);transform:translateY(-1px)}
+svg.icon,.module svg,.side-module svg,.dot svg{width:16px;height:16px;flex-shrink:0}
+.module svg{width:15px;height:15px}
+.dot svg{width:14px;height:14px}
+.layer-label>svg:first-child{width:18px;height:18px;flex-shrink:0}
+.header h1 svg{width:28px;height:28px;flex-shrink:0}
+.module .tag{font-size:10px;font-weight:600;padding:1px 6px;border-radius:3px;margin-left:4px;opacity:0.8}
+.tag-ritual{background:var(--accent-red);color:var(--board)}
+.tag-engine{background:var(--accent-ember);color:var(--board)}
+.tag-library{background:var(--accent-jade);color:var(--board)}
+.tag-history{background:var(--accent-gold);color:var(--board)}
+.layer[data-layer="ritual"]{border-left:3px solid var(--accent-red)}
+.layer[data-layer="engine"]{border-left:3px solid var(--accent-ember)}
+.layer[data-layer="library"]{border-left:3px solid var(--accent-jade)}
+.layer[data-layer="history"]{border-left:3px solid var(--accent-gold)}
+.arrow-down{display:flex;align-items:center;justify-content:center;height:28px;position:relative;opacity:0}
+.arrow-down svg{width:100%;height:28px}
+.arrow-label{position:absolute;font-family:var(--font-display);font-size:10px;font-weight:600;color:var(--chalk-dim);letter-spacing:0.5px;background:var(--board);padding:0 8px;text-align:center;white-space:nowrap}
+.side-module{background:var(--chalk-translucent);border:1.5px solid var(--chalk-dimmer);border-left:3px solid var(--accent-jade);border-radius:6px;padding:10px 12px;cursor:pointer;opacity:0;transform:translateX(15px);transition:border-color 0.3s,background 0.3s}
+.side-module:hover{border-color:var(--accent-jade);background:rgba(107,142,90,0.08)}
+.side-module .layer-label{margin-bottom:4px}
+.side-module .desc{font-size:12px;color:var(--chalk-dim);line-height:1.5}
+.user-flow{margin-top:22px;padding:14px 16px;background:var(--chalk-translucent);border:1.5px solid var(--chalk-dimmer);border-radius:6px;position:relative;z-index:1;opacity:0}
+.user-flow-header{font-family:var(--font-display);font-size:12px;font-weight:600;color:var(--accent-gold);letter-spacing:0.5px;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.user-flow-steps{display:flex;align-items:center;flex-wrap:wrap;gap:0}
+.flow-step{display:flex;align-items:center;gap:0;opacity:0}
+.flow-step .dot{width:28px;height:28px;border-radius:50%;border:2px solid var(--chalk-dimmer);background:var(--board);display:flex;align-items:center;justify-content:center;font-size:13px;line-height:1;flex-shrink:0;transition:all 0.3s}
+.flow-step .dot.active{border-color:var(--accent-gold);background:rgba(212,168,75,0.12);box-shadow:0 0 10px rgba(212,168,75,0.2)}
+.flow-step .label{font-size:12px;color:var(--chalk-dim);white-space:nowrap;margin:0 8px 0 6px;line-height:1}
+.flow-step .conn{width:24px;height:2px;background:var(--chalk-dimmer);position:relative;flex-shrink:0}
+.flow-step .conn::after{content:"▸";position:absolute;right:-4px;top:-6px;font-size:10px;color:var(--chalk-dimmer)}
+.flow-step:last-child .conn{display:none}
+.detail-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:200;display:none;align-items:center;justify-content:center;backdrop-filter:blur(2px)}
+.detail-overlay.open{display:flex}
+.detail-card{background:var(--board-dark);border:2px solid var(--chalk-dimmer);border-radius:8px;padding:24px 28px;max-width:500px;width:90%;max-height:80vh;overflow-y:auto;position:relative;box-shadow:0 8px 40px rgba(0,0,0,0.6);will-change:transform,opacity;backface-visibility:hidden;-webkit-backface-visibility:hidden;transform:translateZ(0);-webkit-transform:translateZ(0)}
+.detail-card h2{margin-top: 0;font-family:var(--font-display);font-size:18px;font-weight:800;color:var(--accent-gold);margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid var(--chalk-dimmer);display:flex;align-items:center;gap:8px}
+.detail-card h2 svg{width:22px;height:22px;flex-shrink:0}
+.detail-card ul{list-style:none;padding:0}
+.detail-card li{font-size:13px;color:var(--chalk);padding:5px 0 5px 14px;border-left:2px solid var(--chalk-dimmer);margin-bottom:6px;line-height:1.6}
+.detail-card li .hl{color:var(--accent-jade);display:inline-flex;align-items:center;gap:4px}
+.detail-card li .hl-warn{color:var(--accent-red)}
+.detail-card .close-btn{position:absolute;top:14px;right:16px;font-family:var(--font-display);font-size:13px;font-weight:600;color:var(--chalk-dimmer);background:none;border:1px solid var(--chalk-dimmer);border-radius:4px;padding:4px 12px;cursor:pointer;transition:all 0.2s}
+.detail-card .close-btn:hover{color:var(--accent-red);border-color:var(--accent-red)}
+@media (max-width:860px){
+.layout-main{flex-direction:column}
+.side-column{width:100%;flex-direction:row;flex-wrap:wrap}
+.side-module{flex:1;min-width:160px}
+.header h1{font-size:20px}
+.screen-frame{padding:24px 12px 12px}
+.chalkboard{padding:20px 14px 16px}
+.layer-modules{gap:4px}
+.module{font-size:11px;padding:4px 8px}
+.flow-step .label{font-size:10px}
+.flow-step .dot{width:24px;height:24px;font-size:11px}
+}
+@media (max-width:480px){
+.header h1{font-size:16px;letter-spacing:1px}
+.module{font-size:10px;padding:3px 6px;white-space:normal}
+.layer{padding:8px 8px 10px}
+.layer-label{font-size:10px}
+}
+.chalk-glow{position:absolute;pointer-events:none;width:4px;height:4px;border-radius:50%;background:rgba(240,227,208,0.15);filter:blur(6px)}
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:var(--board-dark)}
+::-webkit-scrollbar-thumb{background:var(--chalk-dimmer);border-radius:2px}
+.arrow-path{stroke-dasharray:200;stroke-dashoffset:200}
+.layer-label svg{width:16px;height:16px;flex-shrink:0}
+</style>
+</head>
+<body>
+<div class="screen-frame">
+<div class="crt-curve"></div>
+<div class="power-led"><span></span> SYSTEM · ORACLE</div>
+<div class="chalkboard" id="chalkboard">
+<div class="header" id="header">
+<h1>
+<svg class="icon" viewBox="0 0 20 20"><use href="#icon-iching" /></svg>
+易经算命
+</h1>
+<div class="subtitle">基于六十四卦的手动起卦工具 · <em>逐爻选阴阳，一键得卦象</em></div>
+</div>
+<svg class="svg-connectors" preserveAspectRatio="none">
+<defs>
+<marker id="arrowHead" markerWidth="6" markerHeight="5" refX="6" refY="2.5" orient="auto"><polygon points="0 0, 6 2.5, 0 5" fill="var(--chalk-dimmer)" opacity=".6"/></marker>
+<marker id="arrowHeadFlow" markerWidth="6" markerHeight="5" refX="6" refY="2.5" orient="auto"><polygon points="0 0, 6 2.5, 0 5" fill="var(--accent-gold)"/></marker>
+<filter id="glow"><feGaussianBlur stdDeviation="1.5" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+<symbol id="icon-iching" viewBox="0 0 20 20">
+<path d="M4 3h5v14H4zM11 3h5v14h-5z" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linejoin="round"/>
+<path d="M6 6h2M10 6h2M6 10h2M10 10h2M6 14h2M10 14h2" stroke="currentColor" fill="none" stroke-width="1.2" stroke-linecap="round"/>
+</symbol>
+<symbol id="icon-yao" viewBox="0 0 20 20">
+<path d="M4 10h12" stroke="currentColor" fill="none" stroke-width="2" stroke-linecap="round"/>
+<path d="M4 12h12" stroke="currentColor" fill="none" stroke-width="1" stroke-linecap="round"/>
+</symbol>
+<symbol id="icon-trigram" viewBox="0 0 20 20">
+<line x1="4" y1="4" x2="16" y2="4" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round"/>
+<line x1="6" y1="10" x2="14" y2="10" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round"/>
+<line x1="8" y1="16" x2="12" y2="16" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round"/>
+</symbol>
+<symbol id="icon-reading" viewBox="0 0 20 20">
+<path d="M10 4h7v12H3V4h7m0 0v12" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linejoin="round"/>
+<path d="M7 8h6M7 11h4" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round"/>
+</symbol>
+<symbol id="icon-book" viewBox="0 0 20 20">
+<path d="M10 4C8 2 5 3 4 4v12c1-1 4-2 6 0V4zm0 0c2-2 5-1 6 0v12c-1-1-4-2-6 0V4z" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linejoin="round"/>
+</symbol>
+<symbol id="icon-refresh" viewBox="0 0 20 20">
+<path d="M14.5 6C12.5 4 9.5 3.5 7 5 4.5 6.5 3.5 9.5 3.5 12" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M10.5 9.5l4-4 2 3" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M5.5 14c2 2.5 5.5 3 8 1.5C16 14 17 11 16.5 8" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M9.5 11l-4 4-2-3" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+</symbol>
+</defs>
+</svg>
+<div class="layout-main">
+<div class="layers-column">
+<div class="layer" data-layer="ritual">
+<div class="layer-label"><svg viewBox="0 0 20 20"><use href="#icon-yao" /></svg>用户层 · 起卦仪式 <span class="badge">RITUAL</span></div>
+<div class="layer-modules">
+<div class="module" data-detail="user-yao"><svg viewBox="0 0 20 20"><use href="#icon-yao" /></svg>逐爻选择 <span class="tag tag-ritual">初爻→上爻</span></div>
+<div class="module" data-detail="user-dong"><svg viewBox="0 0 20 20"><use href="#icon-yao"/></svg>动爻标记 <span class="tag tag-ritual">0~6 动</span></div>
+<div class="module" data-detail="user-question"><svg viewBox="0 0 20 20"><use href="#icon-trigram"/></svg>问题输入 <span class="tag tag-ritual">选填</span></div>
+</div>
+</div>
+<div class="arrow-down" data-flow="爻组合处理">
+<svg viewBox="0 0 100 28"><line class="arrow-path" x1="50" y1="0" x2="50" y2="26" stroke="var(--chalk-dimmer)" stroke-width="1.5" marker-end="url(#arrowHead)" opacity=".5"/></svg>
+<div class="arrow-label">6 爻 → 卦象</div>
+</div>
+<div class="layer" data-layer="engine">
+<div class="layer-label"><svg viewBox="0 0 20 20"><use href="#icon-trigram" /></svg>核心层 · 起卦引擎 <span class="badge">ENGINE</span></div>
+<div class="layer-modules">
+<div class="module" data-detail="core-match"><svg viewBox="0 0 20 20"><use href="#icon-trigram"/></svg>卦象匹配器 <span class="tag tag-engine">64 卦</span></div>
+<div class="module" data-detail="core-change"><svg viewBox="0 0 20 20"><use href="#icon-trigram"/></svg>变卦引擎</div>
+<div class="module" data-detail="core-interp"><svg viewBox="0 0 20 20"><use href="#icon-reading"/></svg>解读生成器</div>
+</div>
+</div>
+<div class="arrow-down" data-flow="数据库查询">
+<svg viewBox="0 0 100 28"><line class="arrow-path" x1="50" y1="0" x2="50" y2="26" stroke="var(--chalk-dimmer)" stroke-width="1.5" marker-end="url(#arrowHead)" opacity=".5"/></svg>
+<div class="arrow-label">卦辞 · 爻辞</div>
+</div>
+<div class="layer" data-layer="library">
+<div class="layer-label"><svg viewBox="0 0 20 20"><use href="#icon-book" /></svg>数据层 · 卦辞库 <span class="badge">LIBRARY</span></div>
+<div class="layer-modules">
+<div class="module" data-detail="data-64"><svg viewBox="0 0 20 20"><use href="#icon-book"/></svg>六十四卦数据 <span class="tag tag-library">原典</span></div>
+<div class="module" data-detail="data-browse"><svg viewBox="0 0 20 20"><use href="#icon-book"/></svg>易经图鉴 <span class="tag tag-library">检索</span></div>
+</div>
+</div>
+<div class="arrow-down" data-flow="持久化">
+<svg viewBox="0 0 100 28"><line class="arrow-path" x1="50" y1="0" x2="50" y2="26" stroke="var(--chalk-dimmer)" stroke-width="1.5" marker-end="url(#arrowHead)" opacity=".5"/></svg>
+<div class="arrow-label">本地存储</div>
+</div>
+<div class="layer" data-layer="history">
+<div class="layer-label"><svg viewBox="0 0 20 20"><use href="#icon-refresh" /></svg>数据层 · 记录系统 <span class="badge">HISTORY</span></div>
+<div class="layer-modules">
+<div class="module" data-detail="data-history"><svg viewBox="0 0 20 20"><use href="#icon-refresh"/></svg>起卦记录</div>
+<div class="module" data-detail="data-pref"><svg viewBox="0 0 20 20"><use href="#icon-reading"/></svg>用户偏好</div>
+</div>
+</div>
+</div>
+<div class="side-column">
+<div class="side-module" data-detail="side-browse">
+<div class="layer-label"><svg viewBox="0 0 20 20"><use href="#icon-book" /></svg>易经图鉴模式</div>
+<div class="desc">不占卜时自由浏览 64 卦 · 卦序/八卦筛选/关键词搜索 · 卦象对比</div>
+</div>
+<div class="side-module" data-detail="side-share">
+<div class="layer-label"><svg viewBox="0 0 20 20"><use href="#icon-iching" /></svg>分享与导出</div>
+<div class="desc">生成卦象解读卡片 · 导出历次记录 · 截图分享</div>
+</div>
+</div>
+</div>
+<div class="user-flow">
+<div class="user-flow-header">
+<svg viewBox="0 0 20 20" style="width:16px;height:16px;flex-shrink:0"><use href="#icon-refresh"/></svg>
+用户流程路径
+<span style="font-size:7px;color:var(--chalk-dim);font-family:var(--font-mono)">[ 动画播放中 ]</span>
+</div>
+<div class="user-flow-steps" id="flowSteps">
+<div class="flow-step"><div class="dot">1</div><span class="label">输入问题</span><div class="conn"></div></div>
+<div class="flow-step"><div class="dot">2</div><span class="label">逐爻选阴阳</span><div class="conn"></div></div>
+<div class="flow-step"><div class="dot">3</div><span class="label">标记动爻</span><div class="conn"></div></div>
+<div class="flow-step"><div class="dot">4</div><span class="label">查看卦象解读</span><div class="conn"></div></div>
+<div class="flow-step"><div class="dot">5</div><span class="label">保存记录</span></div>
+</div>
+</div>
+</div>
+</div>
+<div class="detail-overlay">
+<div class="detail-card">
+<button class="close-btn">✕ CLOSE</button>
+<div id="detailContent"></div>
+</div>
+</div>
+<script>
+const DETAILS = {
+"user-yao":{title:'<svg viewBox="0 0 20 20" style="width:22px;height:22px;flex-shrink:0"><use href="#icon-yao"/></svg> 逐爻选择流程',items:['从初爻（第 1 爻）到上爻（第 6 爻），从下往上逐级选择阴阳爻','每爻点击选择阳爻 ⚊ 或阴爻 ⚋，自动推进到下一爻','已选爻位实心显示，当前爻位高亮闪烁，未选爻位虚线占位','支持点击已选爻位回退重新选择','底部 6 段进度条直观展示当前进度','前 3 爻为下卦（经卦），后 3 爻为上卦（经卦），两两相重组成六爻卦']},
+"user-dong":{title:'<svg viewBox="0 0 20 20"><use href="#icon-yao"/></svg> 动爻标记',items:['完成 6 爻选择后进入动爻标记阶段','点击任意爻位切换动爻状态 — 静爻 ↔ 动爻','动爻旁显示"○"（老阳变阴）或"×"（老阴变阳）','可选 0~6 个动爻，不同动爻数量决定不同解读规则','一键"全部为静爻"清除所有标记']},
+"user-question":{title:'<svg viewBox="0 0 20 20"><use href="#icon-trigram"/></svg> 起卦问题输入',items:['在起卦前可选填心中所问之事（日常决策参考/考试/工作等）','解读时会结合问题语境附加关联提示','不填则只显示卦辞爻辞的标准解读','支持快速体验模式：不输入问题 + 随机起卦']},
+"core-match":{title:'<svg viewBox="0 0 20 20"><use href="#icon-trigram"/></svg> 卦象匹配器',items:['接收 6 爻输入（阴阳排列）后映射到六十四卦数据库','自动判断上下经卦组合','返回匹配的卦名、卦序、卦符信息','静卦仅返回本卦，有动爻时额外生成变卦']},
+"core-change":{title:'<svg viewBox="0 0 20 20"><use href="#icon-trigram"/></svg> 变卦引擎',items:['根据用户标记的动爻翻转对应位置的阴阳','被标记的老阳 ⚊ 变老阴 ⚋，老阴 ⚋ 变老阳 ⚊','翻转后生成新的 6 爻组合，匹配变卦','不同动爻数量影响解读策略的头等多种规则']},
+"core-interp":{title:'<svg viewBox="0 0 20 20"><use href="#icon-reading"/></svg> 解读生成器',items:['根据本卦卦序 → 提取卦名、卦符、卦辞原文、白话释义','有动爻时提取动爻对应的爻辞原文与白话释义','有变卦时附加变卦卦名、卦符、卦辞','用户填写了问题时结合所问之事生成语境化提示','所有解读层级按固定顺序排列展示']},
+"data-64":{title:'<svg viewBox="0 0 20 20"><use href="#icon-book"/></svg> 六十四卦数据',items:['完整存储《周易》64 卦数据','每卦含：卦序 ID、卦名、上下卦、六爻符号数组','卦辞原文 + 白话释义 + 大象辞','6 条爻辞（位置/原文/白话释义）','数据来源：《周易》原典，白话释义参考王弼、朱熹、南怀瑾等多家注本']},
+"data-browse":{title:'<svg viewBox="0 0 20 20"><use href="#icon-book"/></svg> 易经图鉴',items:['按 1-64 卦序排列自由浏览全表','按下卦/上卦筛选（如只看"下乾上坤"的泰卦）','关键词搜索卦名或卦辞关键词','卦象对比功能：并排对比两个卦的卦辞和含义','点击任意卦可查看完整详情：卦辞+爻辞']},
+"data-history":{title:'<svg viewBox="0 0 20 20"><use href="#icon-refresh"/></svg> 起卦历史记录',items:['每次起卦自动保存：时间戳、所问之事、6 爻排列、动爻标记、本卦、变卦、解读摘要','历史列表以时间倒序排列展示','点击可展开完整解读详情','支持清空记录和导出记录功能','所有数据仅存储在本地']},
+"data-pref":{title:'<svg viewBox="0 0 20 20"><use href="#icon-reading"/></svg> 用户偏好',items:['常用起卦方式记忆：手动/时间/数字','显示偏好记忆：原文优先 / 白话优先','本地持久化，无需登录即可使用']},
+"side-browse":{title:'<svg viewBox="0 0 20 20"><use href="#icon-book"/></svg> 易经图鉴模式',items:['不占卜时可进入浏览模式','64 卦完整呈现，按卦序排列','支持八卦筛选、关键词搜索、卦象对比','适合学习易经的用户自由查阅']},
+"side-share":{title:'<svg viewBox="0 0 20 20"><use href="#icon-iching"/></svg> 分享与导出',items:['一键生成卦象解读分享卡片（含卦符+卦辞+白话）','支持导出历史记录','可截图分享到社交媒体']}
+};
+document.addEventListener("DOMContentLoaded",()=>{
+const layers=document.querySelectorAll(".layer");
+const arrows=document.querySelectorAll(".arrow-down");
+const flowSteps=document.querySelectorAll(".flow-step");
+const sideModules=document.querySelectorAll(".side-module");
+const userFlow=document.querySelector(".user-flow");
+const overlays=document.querySelector(".detail-overlay");
+const detailContent=document.querySelector("#detailContent");
+const closeBtn=document.querySelector(".close-btn");
+const mainTimeline=anime.timeline({easing:"easeOutCubic"});
+mainTimeline.add({targets:"#header",opacity:[0,1],translateY:[-10,0],duration:600});
+mainTimeline.add({targets:sideModules,opacity:[0,1],translateX:[15,0],duration:400,delay:anime.stagger(120)},"-=200");
+mainTimeline.add({targets:layers,opacity:[0,1],translateY:[20,0],duration:500,delay:anime.stagger(150)},"-=100");
+mainTimeline.add({targets:arrows,opacity:[0,1],duration:400,delay:anime.stagger(200)},"-=200");
+setTimeout(()=>{document.querySelectorAll(".arrow-path").forEach((p)=>{anime({targets:p,strokeDashoffset:[200,0],duration:800,delay:300,easing:"easeInOutCubic"});});},1500);
+mainTimeline.add({targets:userFlow,opacity:[0,1],duration:500},"-=100");
+mainTimeline.add({targets:flowSteps,opacity:[0,1],translateX:[-8,0],duration:350,delay:anime.stagger(120)},"-=200");
+let flowIndex=0;function pulseFlow(){flowSteps.forEach((s)=>s.querySelector(".dot").classList.remove("active"));flowSteps[flowIndex].querySelector(".dot").classList.add("active");flowIndex=(flowIndex+1)%flowSteps.length;}
+pulseFlow();setInterval(pulseFlow,2500);
+layers.forEach((l)=>{l.addEventListener("mouseenter",()=>{anime({targets:l,borderColor:"var(--accent-gold)",backgroundColor:"rgba(212,168,75,0.06)",duration:200});});l.addEventListener("mouseleave",()=>{anime({targets:l,borderColor:"var(--chalk-dimmer)",backgroundColor:"rgba(240,227,208,0.06)",duration:300});});});
+function openDetail(id){const data=DETAILS[id];if(!data)return;detailContent.innerHTML=`<h2>${data.title}</h2><ul>${data.items.map((i)=>`<li>${i}</li>`).join("")}</ul>`;overlays.classList.add("open");anime({targets:".detail-card",scale:[0.85,1],opacity:[0,1],duration:250,easing:"easeOutCubic"});}
+function closeDetail(){anime({targets:".detail-card",scale:[1,0.85],opacity:[1,0],duration:200,easing:"easeInCubic",complete:()=>{overlays.classList.remove("open");}});}
+document.querySelectorAll(".module[data-detail]").forEach((el)=>{el.addEventListener("click",()=>openDetail(el.dataset.detail));});
+document.querySelectorAll(".side-module[data-detail]").forEach((el)=>{el.addEventListener("click",()=>openDetail(el.dataset.detail));});
+closeBtn.addEventListener("click",closeDetail);
+overlays.addEventListener("click",(e)=>{if(e.target===overlays)closeDetail();});
+const board=document.getElementById("chalkboard");
+for(let i=0;i<20;i++){const dot=document.createElement("div");dot.className="chalk-glow";dot.style.left=Math.random()*100+"%";dot.style.top=Math.random()*100+"%";dot.style.width=dot.style.height=2+Math.random()*4+"px";dot.style.opacity=0.05+Math.random()*0.1;board.appendChild(dot);anime({targets:dot,translateX:[0,-10+Math.random()*20],translateY:[0,-10+Math.random()*20],opacity:[0.05,0.15,0.05],duration:3000+Math.random()*4000,direction:"alternate",loop:true,easing:"easeInOutSine"});}
+});
+</script>
+</body>
+</html>

@@ -14,6 +14,24 @@
   var debounceTimer = null;
   var DEBOUNCE_MS = 200;
 
+  function escapeHtml(s) {
+    return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+
+  function makeSnippet(text, query) {
+    if (!text) return '';
+    var raw = String(text);
+    var q = String(query).toLowerCase();
+    var idx = raw.toLowerCase().indexOf(q);
+    if (idx === -1) {
+      var t = raw.slice(0, 80);
+      return t + (raw.length > 80 ? 'бн' : '');
+    }
+    var start = Math.max(0, idx - 30);
+    var end = Math.min(raw.length, idx + q.length + 50);
+    return (start > 0 ? 'бн' : '') + raw.slice(start, end) + (end < raw.length ? 'бн' : '');
+  }
+
   /* Lazy-init MiniSearch when needed */
   function initMiniSearch() {
     if (miniSearch) return true;
@@ -21,7 +39,7 @@
       if (typeof MiniSearch !== 'undefined') {
         miniSearch = new MiniSearch({
           fields: ['title', 'content'],
-          storeFields: ['title', 'url', 'excerpt'],
+          storeFields: ['title', 'url', 'excerpt', 'content'],
           searchOptions: {
             boost: { title: 2 },
             fuzzy: 0.2,
@@ -97,11 +115,15 @@
     var html = '';
     results.slice(0, 10).forEach(function (r) {
       var title = r.title || 'Untitled';
-      var excerpt = r.excerpt || '';
+      var excerpt = '';
+      if (r.content && query) {
+        excerpt = makeSnippet(r.content, query);
+      }
+      if (!excerpt) excerpt = r.excerpt || '';
       var url = r.url || '#';
       html += '<a href="' + url + '" class="pm-search-result-item">' +
-        '<div class="pm-search-result-title">' + title + '</div>' +
-        (excerpt ? '<div class="pm-search-result-excerpt">' + excerpt + '</div>' : '') +
+        '<div class="pm-search-result-title">' + escapeHtml(title) + '</div>' +
+        (excerpt ? '<div class="pm-search-result-excerpt">' + escapeHtml(excerpt) + '</div>' : '') +
         '</a>';
     });
     searchResults.innerHTML = html;

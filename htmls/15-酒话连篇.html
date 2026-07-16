@@ -1,0 +1,331 @@
+﻿<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>酒话连篇</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;600;800&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root {
+--board:#2a1f14;--board-dark:#1a120a;
+--chalk:#f5e6d3;--chalk-dim:rgba(245,230,211,0.55);
+--chalk-dimmer:rgba(245,230,211,0.18);--chalk-translucent:rgba(245,230,211,0.06);
+--accent-amber:#f59e0b;--accent-rust:#d97706;--accent-gold:#fbbf24;
+--accent-bronze:#b45309;--accent-warm:#f97316;
+--scanline:rgba(0,0,0,0.06);--font-display:"Noto Sans SC","PingFang SC", "PingFang SC", "Microsoft YaHei", sans-serif;--font-mono:"IBM Plex Mono","SFMono-Regular", Menlo, Consolas, "SFMono-Regular", Menlo, Consolas, "Courier New", monospace;
+}
+html,body{height:100%;background:#0f0a06;font-family:var(--font-mono);color:var(--chalk);overflow-x:hidden}
+.screen-frame{position:relative;min-height:100vh;padding:28px 20px 20px;background:#111;border-radius:20px;box-shadow:inset 0 0 40px rgba(0,0,0,0.8),0 8px 40px rgba(0,0,0,0.6);max-width:1360px;margin:0 auto}
+.screen-frame::before{content:"";position:absolute;inset:0;border-radius:20px;background:repeating-linear-gradient(0deg,transparent,transparent 2px,var(--scanline) 2px,var(--scanline) 4px);pointer-events:none;z-index:100}
+.crt-curve{position:absolute;inset:0;border-radius:20px;background:radial-gradient(ellipse at center,transparent 65%,rgba(0,0,0,0.35) 100%);pointer-events:none;z-index:99}
+.power-led{position:absolute;top:8px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:8px;font-family:var(--font-display);font-size:10px;font-weight:600;color:var(--chalk-dim);letter-spacing:1.5px;z-index:101}
+.power-led span{display:inline-block;width:6px;height:6px;border-radius:50%;background:#4ade80;box-shadow:0 0 6px #4ade80;animation:led-pulse 2s ease-in-out infinite}
+@keyframes led-pulse{0%,100%{opacity:1;box-shadow:0 0 6px #4ade80}50%{opacity:0.5;box-shadow:0 0 2px #4ade80}}
+.chalkboard{position:relative;background:var(--board);border:3px solid #4a3520;border-radius:4px;padding:32px 28px 28px;box-shadow:inset 0 0 60px rgba(0,0,0,0.5),0 4px 0 #1f150c;min-height:calc(100vh - 80px)}
+.chalkboard::after{content:"";position:absolute;inset:0;background-image:radial-gradient(circle at 20% 30%,rgba(245,230,211,0.02) 0,transparent 60%),radial-gradient(circle at 80% 70%,rgba(245,230,211,0.015) 0,transparent 50%),radial-gradient(circle at 50% 50%,rgba(245,230,211,0.01) 0,transparent 70%);pointer-events:none;border-radius:2px}
+.header{text-align:center;margin-bottom:24px;position:relative;z-index:1}
+.header h1{font-family:var(--font-display);font-size:26px;font-weight:800;color:var(--accent-amber);text-shadow:0 0 8px rgba(245,158,11,0.3);letter-spacing:2px;margin-bottom:4px;display:flex;align-items:center;justify-content:center;gap:10px}
+.header .subtitle{font-size:14px;color:var(--chalk-dim);letter-spacing:0.5px}
+.header .subtitle em{font-style:normal;color:var(--accent-gold)}
+.layout-main{display:flex;gap:20px;position:relative;z-index:1}
+.layers-column{flex:1;min-width:0}
+.side-column{width:220px;flex-shrink:0;display:flex;flex-direction:column;gap:10px}
+.svg-connectors{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:0}
+.layer{position:relative;background:var(--chalk-translucent);border:1.5px solid var(--chalk-dimmer);border-radius:6px;padding:12px 14px 14px;margin-bottom:0;cursor:pointer;transition:border-color 0.3s,background 0.3s;opacity:0;transform:translateY(20px)}
+.layer:hover{border-color:var(--accent-gold);background:rgba(251,191,36,0.06)}
+.layer-label{font-family:var(--font-display);font-size:12px;font-weight:600;color:var(--chalk-dim);letter-spacing:1px;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.layer-label .badge{font-size:10px;font-weight:600;background:var(--chalk-dimmer);color:var(--board);padding:1px 7px;border-radius:3px;letter-spacing:0}
+.layer-modules{display:flex;flex-wrap:wrap;gap:6px}
+.module{background:rgba(245,230,211,0.06);border:1px solid var(--chalk-dimmer);border-radius:4px;padding:5px 10px;font-size:12px;line-height:1.5;color:var(--chalk);transition:all 0.25s;white-space:nowrap;cursor:pointer;display:inline-flex;align-items:center;gap:5px}
+.module:hover{background:rgba(245,230,211,0.12);border-color:var(--chalk);transform:translateY(-1px)}
+svg.icon,.module svg,.side-module svg,.dot svg{width:16px;height:16px;flex-shrink:0}
+.module svg{width:15px;height:15px}
+.dot svg{width:14px;height:14px}
+.layer-label>svg:first-child{width:18px;height:18px;flex-shrink:0}
+.header h1 svg{width:28px;height:28px;flex-shrink:0}
+.module .tag{font-size:10px;font-weight:600;padding:1px 6px;border-radius:3px;margin-left:4px;opacity:0.8}
+.tag-role{background:var(--accent-amber);color:var(--board)}
+.tag-mem{background:var(--accent-gold);color:var(--board)}
+.tag-llm{background:var(--accent-rust);color:var(--board)}
+.tag-rule{background:var(--accent-warm);color:var(--board)}
+.layer[data-layer="role"]{border-left:3px solid var(--accent-amber)}
+.layer[data-layer="rule"]{border-left:3px solid var(--accent-warm)}
+.layer[data-layer="memory"]{border-left:3px solid var(--accent-gold)}
+.layer[data-layer="llm"]{border-left:3px solid var(--accent-bronze)}
+.arrow-down{display:flex;align-items:center;justify-content:center;height:28px;position:relative;opacity:0}
+.arrow-down svg{width:100%;height:28px}
+.arrow-label{position:absolute;font-family:var(--font-display);font-size:10px;font-weight:600;color:var(--chalk-dim);letter-spacing:0.5px;background:var(--board);padding:0 8px;text-align:center;white-space:nowrap}
+.side-module{background:var(--chalk-translucent);border:1.5px solid var(--chalk-dimmer);border-left:3px solid var(--accent-gold);border-radius:6px;padding:10px 12px;cursor:pointer;opacity:0;transform:translateX(15px);transition:border-color 0.3s,background 0.3s}
+.side-module:hover{border-color:var(--accent-gold);background:rgba(251,191,36,0.08)}
+.side-module .layer-label{margin-bottom:4px}
+.side-module .desc{font-size:12px;color:var(--chalk-dim);line-height:1.5}
+.user-flow{margin-top:22px;padding:14px 16px;background:var(--chalk-translucent);border:1.5px solid var(--chalk-dimmer);border-radius:6px;position:relative;z-index:1;opacity:0}
+.user-flow-header{font-family:var(--font-display);font-size:12px;font-weight:600;color:var(--accent-amber);letter-spacing:0.5px;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.user-flow-steps{display:flex;align-items:center;flex-wrap:wrap;gap:0}
+.flow-step{display:flex;align-items:center;gap:0;opacity:0}
+.flow-step .dot{width:28px;height:28px;border-radius:50%;border:2px solid var(--chalk-dimmer);background:var(--board);display:flex;align-items:center;justify-content:center;font-size:13px;line-height:1;flex-shrink:0;transition:all 0.3s}
+.flow-step .dot.active{border-color:var(--accent-amber);background:rgba(245,158,11,0.12);box-shadow:0 0 10px rgba(245,158,11,0.2)}
+.flow-step .label{font-size:12px;color:var(--chalk-dim);white-space:nowrap;margin:0 8px 0 6px;line-height:1}
+.flow-step .conn{width:24px;height:2px;background:var(--chalk-dimmer);position:relative;flex-shrink:0}
+.flow-step .conn::after{content:"▸";position:absolute;right:-4px;top:-6px;font-size:10px;color:var(--chalk-dimmer)}
+.flow-step:last-child .conn{display:none}
+.detail-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:200;display:none;align-items:center;justify-content:center;backdrop-filter:blur(2px)}
+.detail-overlay.open{display:flex}
+.detail-card{background:var(--board-dark);border:2px solid var(--chalk-dimmer);border-radius:8px;padding:24px 28px;max-width:500px;width:90%;max-height:80vh;overflow-y:auto;position:relative;box-shadow:0 8px 40px rgba(0,0,0,0.6);will-change:transform,opacity;backface-visibility:hidden;-webkit-backface-visibility:hidden;transform:translateZ(0);-webkit-transform:translateZ(0)}
+.detail-card h2{margin-top: 0;font-family:var(--font-display);font-size:18px;font-weight:800;color:var(--accent-amber);margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid var(--chalk-dimmer);display:flex;align-items:center;gap:8px}
+.detail-card h2 svg{width:22px;height:22px;flex-shrink:0}
+.detail-card h3{font-family:var(--font-display);font-size:13px;font-weight:600;color:var(--chalk-dim);margin:14px 0 6px}
+.detail-card ul{list-style:none;padding:0}
+.detail-card li{font-size:13px;color:var(--chalk);padding:5px 0 5px 14px;border-left:2px solid var(--chalk-dimmer);margin-bottom:6px;line-height:1.6}
+.detail-card li .hl{color:var(--accent-gold);display:inline-flex;align-items:center;gap:4px}
+.detail-card li .hl-warn{color:var(--accent-warm)}
+.detail-card .close-btn{position:absolute;top:14px;right:16px;font-family:var(--font-display);font-size:13px;font-weight:600;color:var(--chalk-dimmer);background:none;border:1px solid var(--chalk-dimmer);border-radius:4px;padding:4px 12px;cursor:pointer;transition:all 0.2s}
+.detail-card .close-btn:hover{color:var(--accent-bronze);border-color:var(--accent-bronze)}
+@media (max-width:860px){
+.layout-main{flex-direction:column}
+.side-column{width:100%;flex-direction:row;flex-wrap:wrap}
+.side-module{flex:1;min-width:160px}
+.header h1{font-size:20px}
+.screen-frame{padding:24px 12px 12px}
+.chalkboard{padding:20px 14px 16px}
+.layer-modules{gap:4px}
+.module{font-size:11px;padding:4px 8px}
+.flow-step .label{font-size:10px}
+.flow-step .dot{width:24px;height:24px;font-size:11px}
+}
+@media (max-width:480px){
+.header h1{font-size:16px;letter-spacing:1px}
+.module{font-size:10px;padding:3px 6px;white-space:normal}
+.layer{padding:8px 8px 10px}
+.layer-label{font-size:10px}
+}
+.chalk-glow{position:absolute;pointer-events:none;width:4px;height:4px;border-radius:50%;background:rgba(245,230,211,0.15);filter:blur(6px)}
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:var(--board-dark)}
+::-webkit-scrollbar-thumb{background:var(--chalk-dimmer);border-radius:2px}
+.arrow-path{stroke-dasharray:200;stroke-dashoffset:200}
+.layer-label svg{width:16px;height:16px;flex-shrink:0}
+</style>
+</head>
+<body>
+<div class="screen-frame">
+<div class="crt-curve"></div>
+<div class="power-led"><span></span> SYSTEM · ONLINE</div>
+<div class="chalkboard" id="chalkboard">
+<div class="header" id="header">
+<h1><svg class="icon" viewBox="0 0 20 20"><use href="#icon-wine" /></svg>酒话连篇</h1>
+<div class="subtitle">一场酒局，每个人都有自己的记忆版本 · <em>清醒值越低，真话越多</em></div>
+</div>
+<svg class="svg-connectors" id="connectorSvg" preserveAspectRatio="none">
+<defs>
+<marker id="arrowHead" markerWidth="6" markerHeight="5" refX="6" refY="2.5" orient="auto"><polygon points="0 0, 6 2.5, 0 5" fill="var(--chalk-dimmer)" opacity=".6"/></marker>
+<marker id="arrowHeadFlow" markerWidth="6" markerHeight="5" refX="6" refY="2.5" orient="auto"><polygon points="0 0, 6 2.5, 0 5" fill="var(--accent-amber)"/></marker>
+<filter id="glow"><feGaussianBlur stdDeviation="1.5" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+<symbol id="icon-wine" viewBox="0 0 20 20">
+<path d="M6 3h8l-1 8c0 2-2 4-3 5-1-1-3-3-3-5L6 3z" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linejoin="round"/>
+<path d="M5 3h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+<path d="M10 16v2" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round"/>
+</symbol>
+<symbol id="icon-mask" viewBox="0 0 20 20">
+<circle cx="10" cy="10" r="7" stroke="currentColor" fill="none" stroke-width="1.5"/>
+<path d="M7 8c.5-1 2-1 2.5 0M10.5 8c.5-1 2-1 2.5 0M7 12c1 1 2 1.5 3 1.5s2-.5 3-1.5" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round"/>
+</symbol>
+<symbol id="icon-brain" viewBox="0 0 20 20">
+<path d="M14 4c2 0 3 1.5 3 3 0 1.5-1 2.5-2 3 1 1 1 3 0 4 1 1 0 3-1 3-1 2-3 2-4 2s-3 0-4-2c-1 0-2-2-1-3-1-1-1-3 0-4-1-.5-2-1.5-2-3 0-1.5 1-3 3-3 1 0 2 1 4 1s3-1 4-1z" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round"/>
+</symbol>
+<symbol id="icon-chat" viewBox="0 0 20 20">
+<path d="M3 4h14v10H7l-4 3V4z" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linejoin="round"/>
+<path d="M6 8h8M6 11h5" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round"/>
+</symbol>
+<symbol id="icon-user" viewBox="0 0 20 20">
+<circle cx="10" cy="6" r="3" stroke="currentColor" fill="none" stroke-width="1.5"/>
+<path d="M3 18c1-5 3-7 7-7s6 2 7 7" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round"/>
+</symbol>
+<symbol id="icon-clock" viewBox="0 0 20 20">
+<circle cx="10" cy="10" r="7" stroke="currentColor" fill="none" stroke-width="1.5"/>
+<path d="M10 6v4l3 2" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+</symbol>
+<symbol id="icon-bell" viewBox="0 0 20 20">
+<path d="M10 3c-3 0-4 2.5-4 5L5 11c0 1-1 2-1 3h12c0-1-1-2-1-3l-1-3c0-2.5-1-5-4-5z" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linejoin="round"/>
+<path d="M8 16c0 1.5 4 1.5 4 0" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round"/>
+</symbol>
+<symbol id="icon-target" viewBox="0 0 20 20">
+<circle cx="10" cy="10" r="7" stroke="currentColor" fill="none" stroke-width="1.5"/>
+<circle cx="10" cy="10" r="3" stroke="currentColor" fill="none" stroke-width="1.5"/>
+<path d="M10 1v3m0 12v3M1 10h3m12 0h3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+</symbol>
+<symbol id="icon-book" viewBox="0 0 20 20">
+<path d="M10 4C8 2 5 3 4 4v12c1-1 4-2 6 0V4zm0 0c2-2 5-1 6 0v12c-1-1-4-2-6 0V4z" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linejoin="round"/>
+</symbol>
+<symbol id="icon-grid" viewBox="0 0 20 20">
+<circle cx="6" cy="7" r="1.3" stroke="currentColor" fill="none" stroke-width="1.5"/>
+<circle cx="10" cy="7" r="1.3" stroke="currentColor" fill="none" stroke-width="1.5"/>
+<circle cx="14" cy="7" r="1.3" stroke="currentColor" fill="none" stroke-width="1.5"/>
+<circle cx="6" cy="11" r="1.3" stroke="currentColor" fill="none" stroke-width="1.5"/>
+<circle cx="10" cy="11" r="1.3" stroke="currentColor" fill="none" stroke-width="1.5"/>
+<circle cx="14" cy="11" r="1.3" stroke="currentColor" fill="none" stroke-width="1.5"/>
+<circle cx="6" cy="15" r="1.3" stroke="currentColor" fill="none" stroke-width="1.5"/>
+<circle cx="10" cy="15" r="1.3" stroke="currentColor" fill="none" stroke-width="1.5"/>
+<circle cx="14" cy="15" r="1.3" stroke="currentColor" fill="none" stroke-width="1.5"/>
+</symbol>
+<symbol id="icon-refresh" viewBox="0 0 20 20">
+<path d="M14.5 6C12.5 4 9.5 3.5 7 5 4.5 6.5 3.5 9.5 3.5 12" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M10.5 9.5l4-4 2 3" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M5.5 14c2 2.5 5.5 3 8 1.5C16 14 17 11 16.5 8" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M9.5 11l-4 4-2-3" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+</symbol>
+<symbol id="icon-users" viewBox="0 0 20 20">
+<circle cx="7.5" cy="6" r="3" stroke="currentColor" fill="none" stroke-width="1.5"/>
+<circle cx="14" cy="7" r="2.5" stroke="currentColor" fill="none" stroke-width="1.5"/>
+<path d="M3 18c1-4 4-5 9-5s5 1 6 5" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M11.5 14c2 0 3 .5 4 3" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round"/>
+</symbol>
+<symbol id="icon-mic" viewBox="0 0 20 20">
+<rect x="8" y="2" width="4" height="9" rx="2" stroke="currentColor" fill="none" stroke-width="1.5"/>
+<path d="M5 10c0 3 2.2 5 5 5s5-2 5-5M10 15v3" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round"/>
+</symbol>
+<symbol id="icon-trophy" viewBox="0 0 20 20">
+<path d="M6 3h8v2c0 3-2 5-4 6-2-1-4-3-4-6V3z" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linejoin="round"/>
+<path d="M10 11v3M7 17c1-1 2-1 3-1s2 0 3 1" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round"/>
+<path d="M4 5h2v2c0 2-1 3-2 3V5zm8 0h2v2c0 2 1 3 2 3V5z" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linejoin="round"/>
+</symbol>
+</defs>
+</svg>
+<div class="layout-main">
+<div class="layers-column" id="layersColumn">
+<div class="layer" data-layer="role" id="layer-role">
+<div class="layer-label"><svg viewBox="0 0 20 20"><use href="#icon-mask" /></svg> 角色选择层 <span class="badge">ROLE</span></div>
+<div class="layer-modules">
+<div class="module" data-detail="role-pick"><svg viewBox="0 0 20 20"><use href="#icon-user" /></svg> 身份选择</div>
+<div class="module" data-detail="role-obj"><svg viewBox="0 0 20 20"><use href="#icon-target" /></svg> 目标系统 <span class="tag tag-role">信息权限</span></div>
+<div class="module" data-detail="role-npc"><svg viewBox="0 0 20 20"><use href="#icon-users" /></svg> NPC 角色池</div>
+</div>
+</div>
+<div class="arrow-down" id="arrow1" data-flow="扮演入场">
+<svg viewBox="0 0 100 28"><line class="arrow-path" x1="50" y1="0" x2="50" y2="26" stroke="var(--chalk-dimmer)" stroke-width="1.5" marker-end="url(#arrowHead)" opacity=".5"/></svg>
+<div class="arrow-label">选择 · 入场</div>
+</div>
+<div class="layer" data-layer="rule" id="layer-rule">
+<div class="layer-label"><svg viewBox="0 0 20 20"><use href="#icon-book" /></svg> 酒局规则层 <span class="badge">RULE</span></div>
+<div class="layer-modules">
+<div class="module" data-detail="rule-turn"><svg viewBox="0 0 20 20"><use href="#icon-clock" /></svg> 回合制流程 <span class="tag tag-rule">5 阶段</span></div>
+<div class="module" data-detail="rule-etiquette"><svg viewBox="0 0 20 20"><use href="#icon-grid" /></svg> 地区礼仪 <span class="tag tag-rule">渐进解锁</span></div>
+<div class="module" data-detail="rule-event"><svg viewBox="0 0 20 20"><use href="#icon-bell" /></svg> 随机事件池</div>
+</div>
+</div>
+<div class="arrow-down" id="arrow2" data-flow="记忆驱动">
+<svg viewBox="0 0 100 28"><line class="arrow-path" x1="50" y1="0" x2="50" y2="26" stroke="var(--chalk-dimmer)" stroke-width="1.5" marker-end="url(#arrowHead)" opacity=".5"/></svg>
+<div class="arrow-label">清醒 · 衰减</div>
+</div>
+<div class="layer" data-layer="memory" id="layer-memory">
+<div class="layer-label"><svg viewBox="0 0 20 20"><use href="#icon-brain" /></svg> 老糊涂记忆引擎 <span class="badge">MEM</span></div>
+<div class="layer-modules">
+<div class="module" data-detail="mem-sober"><svg viewBox="0 0 20 20"><use href="#icon-mask" /></svg> 清醒值系统 <span class="tag tag-mem">核心</span></div>
+<div class="module" data-detail="mem-decay"><svg viewBox="0 0 20 20"><use href="#icon-clock" /></svg> 记忆衰减曲线</div>
+<div class="module" data-detail="mem-conf"><svg viewBox="0 0 20 20"><use href="#icon-target" /></svg> 置信度分级</div>
+<div class="module" data-detail="mem-distort"><svg viewBox="0 0 20 20"><use href="#icon-brain" /></svg> 错构触发器</div>
+</div>
+</div>
+<div class="arrow-down" id="arrow3" data-flow="文本生成">
+<svg viewBox="0 0 100 28"><line class="arrow-path" x1="50" y1="0" x2="50" y2="26" stroke="var(--chalk-dimmer)" stroke-width="1.5" marker-end="url(#arrowHead)" opacity=".5"/></svg>
+<div class="arrow-label">怎么说 · 不负责怎么错</div>
+</div>
+<div class="layer" data-layer="llm" id="layer-llm">
+<div class="layer-label"><svg viewBox="0 0 20 20"><use href="#icon-chat" /></svg> LLM 对话生成层 <span class="badge">LLM</span></div>
+<div class="layer-modules">
+<div class="module" data-detail="llm-offline"><svg viewBox="0 0 20 20"><use href="#icon-brain" /></svg> 内置离线 <span class="tag tag-llm">Qwen2.5-7B</span></div>
+<div class="module" data-detail="llm-api"><svg viewBox="0 0 20 20"><use href="#icon-chat" /></svg> 云端 API <span class="tag tag-llm">DeepSeek/OpenAI</span></div>
+<div class="module" data-detail="llm-custom"><svg viewBox="0 0 20 20"><use href="#icon-grid" /></svg> 自定义端点</div>
+</div>
+</div>
+</div>
+<div class="side-column" id="sideColumn">
+<div class="side-module" data-detail="side-npcpool">
+<div class="layer-label"><svg viewBox="0 0 20 20"><use href="#icon-users" /></svg> NPC 角色池</div>
+<div class="desc">主陪 · 副陪 · 主宾 · 随行 · 秘书 · 司机 固定 6 人配置</div>
+</div>
+<div class="side-module" data-detail="side-etiquette">
+<div class="layer-label"><svg viewBox="0 0 20 20"><use href="#icon-book" /></svg> 山东礼仪</div>
+<div class="desc">座位系统 · 敬酒顺序 · 杯沿礼仪 · 鱼头酒 渐进解锁</div>
+</div>
+<div class="side-module" data-detail="side-role">
+<div class="layer-label"><svg viewBox="0 0 20 20"><use href="#icon-mask" /></svg> 可选角色</div>
+<div class="desc">谈判代表 · 助理 · 老同学 · 中间人 · 卧底 · 记者 · 纪委 · 司机</div>
+</div>
+<div class="side-module" data-detail="side-event">
+<div class="layer-label"><svg viewBox="0 0 20 20"><use href="#icon-bell" /></svg> 随机事件</div>
+<div class="desc">入场事件 · 流程事件 · 老糊涂联动 · 收尾事件 每局 3-4 个</div>
+</div>
+</div>
+</div>
+<div class="user-flow" id="userFlow">
+<div class="user-flow-header">
+<svg viewBox="0 0 20 20" style="width:16px;height:16px;flex-shrink:0"><use href="#icon-refresh"/></svg>
+用户流程路径
+<span style="font-size:7px;color:var(--chalk-dim);font-family:var(--font-mono)">[ 动画播放中 ]</span>
+</div>
+<div class="user-flow-steps" id="flowSteps">
+<div class="flow-step" data-step="0"><div class="dot"><svg viewBox="0 0 20 20"><use href="#icon-user"/></svg></div><span class="label">选择角色</span><div class="conn"></div></div>
+<div class="flow-step" data-step="1"><div class="dot"><svg viewBox="0 0 20 20"><use href="#icon-mask"/></svg></div><span class="label">入座寒暄</span><div class="conn"></div></div>
+<div class="flow-step" data-step="2"><div class="dot"><svg viewBox="0 0 20 20"><use href="#icon-wine"/></svg></div><span class="label">主陪开场</span><div class="conn"></div></div>
+<div class="flow-step" data-step="3"><div class="dot"><svg viewBox="0 0 20 20"><use href="#icon-clock"/></svg></div><span class="label">副陪接力</span><div class="conn"></div></div>
+<div class="flow-step" data-step="4"><div class="dot"><svg viewBox="0 0 20 20"><use href="#icon-target"/></svg></div><span class="label">自由交战</span><div class="conn"></div></div>
+<div class="flow-step" data-step="5"><div class="dot"><svg viewBox="0 0 20 20"><use href="#icon-bell"/></svg></div><span class="label">随机事件</span><div class="conn"></div></div>
+<div class="flow-step" data-step="6"><div class="dot"><svg viewBox="0 0 20 20"><use href="#icon-trophy"/></svg></div><span class="label">收尾结算</span></div>
+</div>
+</div>
+</div>
+</div>
+<div class="detail-overlay" id="detailOverlay">
+<div class="detail-card" id="detailCard">
+<button class="close-btn" id="closeDetail">✕ CLOSE</button>
+<div id="detailContent"></div>
+</div>
+</div>
+<script>
+const DETAILS = {
+"role-pick":{title:'<svg viewBox="0 0 20 20" class="icon" style="width:22px;height:22px"><use href="#icon-user"/></svg> 身份选择',items:["可选角色决定目标、信息权限、对话切入点","谈判代表：完成签约，商务信息权限","助理：带回情报，细节信息权限","老同学：叙旧办事，私人关系权限"]},
+"role-obj":{title:'<svg viewBox="0 0 20 20" class="icon" style="width:22px;height:22px"><use href="#icon-target"/></svg> 目标系统',items:["每个角色有独立的隐藏目标","信息不对称本身就是可玩性","不同角色看同一场酒局，信息维度完全不同","目标达成/失败影响结局评价"]},
+"role-npc":{title:'<svg viewBox="0 0 20 20" class="icon" style="width:22px;height:22px"><use href="#icon-users"/></svg> NPC 角色池',items:["主陪张总：50岁，酒量极高，滴水不漏","副陪李主任：45岁，话多易漏嘴","主宾王局：55岁，沉默记忆精准","随行小刘：30岁，知道得多但职位低","秘书陈姐：35岁，不喝全程旁观","司机老赵：40岁，表面憨厚实际精明"]},
+"rule-turn":{title:'<svg viewBox="0 0 20 20" class="icon" style="width:22px;height:22px"><use href="#icon-clock"/></svg> 回合制流程',items:["每局固定 5 个阶段，每阶段 3-5 回合","① 入座寒暄 — 开局信息，座位分配","② 主陪开场 — 主陪三杯系统引导","③ 副陪接力 — 副陪两杯节奏加快","④ 自由交战 — 玩家自由操作核心阶段","⑤ 收尾定局 — 最后一轮+结算"]},
+"rule-etiquette":{title:'<svg viewBox="0 0 20 20" class="icon" style="width:22px;height:22px"><use href="#icon-grid"/></svg> 地区礼仪',items:["新手关：无规则，只敬酒聊天","完整局逐步解锁：座位系统、敬酒顺序、杯沿礼仪、鱼头酒","座位系统：坐对位置影响操作范围","敬酒顺序：顺时针不可跳位","杯沿礼仪：低于对方，单手/双手","鱼头酒：鱼头对准谁谁三杯"]},
+"rule-event":{title:'<svg viewBox="0 0 20 20" class="icon" style="width:22px;height:22px"><use href="#icon-bell"/></svg> 随机事件池',items:["每局从事件池抽取 3-4 个事件","1 个入场事件 + 2 个流程事件 + 1 个老糊涂联动","入场：迟到/缺席/诡异氛围/时间紧迫等","流程：敬酒插队/挡酒/话题引爆/突发状况"]},
+"mem-sober":{title:'<svg viewBox="0 0 20 20" class="icon" style="width:22px;height:22px"><use href="#icon-mask"/></svg> 清醒值系统',items:["清醒范围 100%（绝对清醒）→ 0%（断片）","山东商务局默认酒量大，衰减比普通局慢一半","80-100 清醒:场面话官腔，准确但不真","40-80 微醺:话变多开始交心，核心准确","10-40 醉了:说漏嘴吹牛，错构高发","0-10 断片:胡话睡倒，目标可能失败"]},
+"mem-decay":{title:'<svg viewBox="0 20 0 20" class="icon" style="width:22px;height:22px"><use href="#icon-clock"/></svg> 记忆衰减曲线',items:["每条记忆携带：内容/时间戳/情绪标签/重要性/关联记忆","刚写入 100% → 3回合后 85% → 6回合后 65%","10回合后 45% 核心保留细节模糊","重要性越高/回忆越多/情绪越强/关联越多 → 衰减越慢"]},
+"mem-conf":{title:'<svg viewBox="0 0 20 20" class="icon" style="width:22px;height:22px"><use href="#icon-target"/></svg> 置信度分级',items:["> 80% — '我记得是……精确描述'","50%-80% — '好像是在……应该是……'","20%-50% — '有点印象，但不太确定了……'","< 20% — '我不记得了' 或 触发错构"]},
+"mem-distort":{title:'<svg viewBox="0 0 20 20" class="icon" style="width:22px;height:22px"><use href="#icon-brain"/></svg> 错构触发器',items:["张冠李戴 — 把 A 做的事安到 B 身上","时间混淆 — 把不同时间的事拼在一起","情绪染色 — 情绪扭曲记忆细节","虚假记忆 — 脑补出从未发生的事","遗忘重叠 — 忘了自己说过的话重复讲","身份错认 — 把玩家认成另一个人"]},
+"llm-offline":{title:'<svg viewBox="0 0 20 20" class="icon" style="width:22px;height:22px"><use href="#icon-brain"/></svg> 内置离线方案',items:["Qwen2.5-7B via llama.cpp","首次启动自动下载，覆盖 90% 用户","老糊涂管'怎么错'，LLM 管'怎么说'","输入：角色/性格/清醒值/被问内容/记忆状态"]},
+"llm-api":{title:'<svg viewBox="0 0 20 20" class="icon" style="width:22px;height:22px"><use href="#icon-chat"/></svg> 云端 API 方案',items:["DeepSeek / OpenAI / 兼容接口","覆盖 9% 用户","设置里可切换","通过存档级随机种子保证一致性"]},
+"llm-custom":{title:'<svg viewBox="0 0 20 20" class="icon" style="width:22px;height:22px"><use href="#icon-grid"/></svg> 自定义端点',items:["自定义端点 + 提示词模板","面向 1% MOD 社区","开发者模式开启","完全控制对话生成行为"]},
+"side-npcpool":{title:'<svg viewBox="0 0 20 20" class="icon" style="width:22px;height:22px"><use href="#icon-users"/></svg> NPC 角色池',items:["固定 6 人配置：主陪/副陪/主宾/随行/秘书/司机","每个人独立性格、酒量、记忆特征","新手关仅 3 个 NPC 简化教学","完整局 6 人全上场"]},
+"side-etiquette":{title:'<svg viewBox="0 0 20 20" class="icon" style="width:22px;height:22px"><use href="#icon-book"/></svg> 山东商务礼仪',items:["新手关零规则，只敬酒聊天","座位系统：坐对位置影响操作范围","敬酒顺序：顺时针不可跳位","杯沿礼仪：低于对方单手/双手","鱼头酒：鱼头对准谁谁三杯"]},
+"side-role":{title:'<svg viewBox="0 0 20 20" class="icon" style="width:22px;height:22px"><use href="#icon-mask"/></svg> 可选角色',items:["首发：谈判代表、助理、老同学","后续解锁：中间人、卧底、记者、纪委、司机","每个角色看同一场酒局，信息维度完全不同","通关解锁更多角色，增加重玩性"]},
+"side-event":{title:'<svg viewBox="0 0 20 20" class="icon" style="width:22px;height:22px"><use href="#icon-bell"/></svg> 随机事件系统',items:["入场事件 13 种：迟到/缺席/撞衫/身份误会等","流程事件 26 种：敬酒/话题/突发三大类","老糊涂联动 24 种：错构/情绪/信息三大类","收尾事件 10 种：延长/反转/新线索等"]},
+};
+document.addEventListener("DOMContentLoaded",()=>{
+const layers=document.querySelectorAll(".layer");const arrows=document.querySelectorAll(".arrow-down");const flowSteps=document.querySelectorAll(".flow-step");const sideModules=document.querySelectorAll(".side-module");const userFlow=document.querySelector(".user-flow");const overlays=document.querySelector("#detailOverlay");const detailContent=document.querySelector("#detailContent");const closeBtn=document.querySelector("#closeDetail");
+const mainTimeline=anime.timeline({easing:"easeOutCubic"});
+mainTimeline.add({targets:"#header",opacity:[0,1],translateY:[-10,0],duration:600});
+mainTimeline.add({targets:sideModules,opacity:[0,1],translateX:[15,0],duration:400,delay:anime.stagger(120)},"-=200");
+mainTimeline.add({targets:layers,opacity:[0,1],translateY:[20,0],duration:500,delay:anime.stagger(150)},"-=100");
+mainTimeline.add({targets:arrows,opacity:[0,1],duration:400,delay:anime.stagger(200)},"-=200");
+setTimeout(()=>{document.querySelectorAll(".arrow-path").forEach((p)=>{anime({targets:p,strokeDashoffset:[200,0],duration:800,delay:300,easing:"easeInOutCubic"});});},1500);
+mainTimeline.add({targets:userFlow,opacity:[0,1],duration:500},"-=100");
+mainTimeline.add({targets:flowSteps,opacity:[0,1],translateX:[-8,0],duration:350,delay:anime.stagger(120)},"-=200");
+let flowIndex=0;function pulseFlow(){flowSteps.forEach((s)=>s.querySelector(".dot").classList.remove("active"));flowSteps[flowIndex].querySelector(".dot").classList.add("active");flowIndex=(flowIndex+1)%flowSteps.length;}
+pulseFlow();setInterval(pulseFlow,2500);
+layers.forEach((l)=>{l.addEventListener("mouseenter",()=>{anime({targets:l,borderColor:"var(--accent-gold)",backgroundColor:"rgba(251,191,36,0.06)",duration:200});});l.addEventListener("mouseleave",()=>{anime({targets:l,borderColor:"var(--chalk-dimmer)",backgroundColor:"rgba(245,230,211,0.06)",duration:300});});});
+function openDetail(id){const data=DETAILS[id];if(!data)return;detailContent.innerHTML=`<h2>${data.title}</h2><ul>${data.items.map((i)=>`<li>${i}</li>`).join("")}</ul>`;overlays.classList.add("open");anime({targets:"#detailCard",scale:[0.85,1],opacity:[0,1],duration:250,easing:"easeOutCubic"});}
+function closeDetail(){anime({targets:"#detailCard",scale:[1,0.85],opacity:[1,0],duration:200,easing:"easeInCubic",complete:()=>{overlays.classList.remove("open");}});}
+document.querySelectorAll(".module[data-detail]").forEach((el)=>{el.addEventListener("click",()=>openDetail(el.dataset.detail));});
+document.querySelectorAll(".side-module[data-detail]").forEach((el)=>{el.addEventListener("click",()=>openDetail(el.dataset.detail));});
+closeBtn.addEventListener("click",closeDetail);overlays.addEventListener("click",(e)=>{if(e.target===overlays)closeDetail();});
+const board=document.getElementById("chalkboard");
+for(let i=0;i<20;i++){const dot=document.createElement("div");dot.className="chalk-glow";dot.style.left=Math.random()*100+"%";dot.style.top=Math.random()*100+"%";dot.style.width=dot.style.height=2+Math.random()*4+"px";dot.style.opacity=0.05+Math.random()*0.1;board.appendChild(dot);anime({targets:dot,translateX:[0,-10+Math.random()*20],translateY:[0,-10+Math.random()*20],opacity:[0.05,0.15,0.05],duration:3000+Math.random()*4000,direction:"alternate",loop:true,easing:"easeInOutSine"});}
+});
+</script>
+</body>
+</html>

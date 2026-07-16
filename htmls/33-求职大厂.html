@@ -1,0 +1,573 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>求职大厂</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;600;800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#0a0e17;--bg-light:#111827;--panel:#131b2e;--surface:#1a2540;--surface-light:#233054;--accent:#60a5fa;--accent-dim:rgba(96,165,250,0.2);--accent-gold:#fbbf24;--accent-green:#34d399;--accent-rose:#fb7185;--accent-purple:#a78bfa;--accent-cyan:#22d3ee;--text:#e2e8f0;--text-dim:rgba(226,232,240,0.55);--text-dimmer:rgba(226,232,240,0.18);--grid:rgba(96,165,250,0.03);--font-display:"Noto Sans SC","PingFang SC","Microsoft YaHei",sans-serif;--font-mono:"JetBrains Mono","SFMono-Regular",Menlo,Consolas,"Courier New",monospace}
+html,body{height:100%;background:var(--bg);font-family:var(--font-display);color:var(--text);overflow-x:hidden}
+.screen-frame{position:relative;min-height:100vh;padding:24px 20px 20px;background:radial-gradient(ellipse at 50% 0%,rgba(96,165,250,0.03) 0%,var(--bg) 70%);border-radius:20px;box-shadow:inset 0 0 80px rgba(0,0,0,0.8),0 8px 40px rgba(0,0,0,0.5);max-width:1440px;margin:0 auto}
+.screen-frame::before{content:"";position:absolute;inset:0;border-radius:20px;background:repeating-linear-gradient(0deg,transparent,transparent 2px,var(--grid) 2px,var(--grid) 4px);pointer-events:none;z-index:100}
+.crt-curve{position:absolute;inset:0;border-radius:20px;background:radial-gradient(ellipse at center,transparent 50%,rgba(0,0,0,0.5) 100%);pointer-events:none;z-index:99}
+.status-bar{position:absolute;top:10px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:12px;font-size:9px;font-weight:500;color:var(--text-dim);letter-spacing:2px;z-index:101;background:rgba(10,14,23,0.85);padding:3px 16px;border-radius:20px;border:1px solid var(--accent-dim);backdrop-filter:blur(4px);text-transform:uppercase;font-family:var(--font-mono)}
+.status-bar .dot{display:inline-block;width:5px;height:5px;border-radius:50%;background:var(--accent);box-shadow:0 0 8px var(--accent);animation:pulse-sym 2.5s ease-in-out infinite}
+@keyframes pulse-sym{0%,100%{opacity:1;box-shadow:0 0 8px var(--accent)}50%{opacity:0.3;box-shadow:0 0 2px var(--accent)}}
+.panel{position:relative;background:var(--panel);border:1.5px solid var(--surface-light);border-radius:8px;padding:24px 24px 20px;box-shadow:inset 0 0 40px rgba(0,0,0,0.4),0 4px 0 var(--bg-light);min-height:calc(100vh - 80px);overflow:hidden;z-index:2}
+.panel::after{content:"";position:absolute;inset:0;background-image:radial-gradient(circle at 70% 10%,rgba(96,165,250,0.015) 0,transparent 60%),radial-gradient(circle at 30% 90%,rgba(251,191,36,0.01) 0,transparent 50%);pointer-events:none}
+.header{text-align:center;margin-bottom:20px;position:relative;z-index:1}
+.header h1{font-family:var(--font-display);font-size:28px;font-weight:800;color:var(--accent);text-shadow:0 0 30px rgba(96,165,250,0.2);letter-spacing:3px;margin-bottom:2px;display:flex;align-items:center;justify-content:center;gap:12px}
+.header h1 svg{width:32px;height:32px;flex-shrink:0;filter:drop-shadow(0 0 8px rgba(96,165,250,0.3))}
+.header .subtitle{font-size:13px;font-weight:300;color:var(--text-dim);letter-spacing:0.5px;max-width:700px;margin:0 auto;line-height:1.8}
+.header .subtitle em{font-style:normal;color:var(--accent-gold);font-weight:500}
+.layout-main{display:flex;gap:16px;position:relative;z-index:1}
+.layers-column{flex:1;min-width:0}
+.side-column{width:210px;flex-shrink:0;display:flex;flex-direction:column;gap:8px}
+.layer{position:relative;background:rgba(26,37,64,0.4);border:1.5px solid var(--surface-light);border-radius:6px;padding:10px 12px 12px;margin-bottom:0;cursor:pointer;transition:border-color 0.3s,background 0.3s;opacity:0;transform:translateY(20px)}
+.layer:hover{border-color:var(--accent);background:rgba(96,165,250,0.05)}
+.layer-label{font-family:var(--font-display);font-size:12px;font-weight:600;color:var(--text-dim);letter-spacing:1px;margin-bottom:6px;display:flex;align-items:center;gap:6px}
+.layer-label .badge{font-size:9px;font-weight:600;background:var(--surface-light);color:var(--text-dim);padding:1px 7px;border-radius:3px;letter-spacing:0}
+.layer-modules{display:flex;flex-wrap:wrap;gap:5px}
+.module{background:rgba(226,232,240,0.04);border:1px solid var(--surface-light);border-radius:4px;padding:4px 10px;font-size:12px;line-height:1.5;color:var(--text);transition:all 0.25s;white-space:nowrap;cursor:pointer;display:inline-flex;align-items:center;gap:5px}
+.module:hover{background:rgba(96,165,250,0.1);border-color:var(--accent);transform:translateY(-1px);box-shadow:0 0 12px rgba(96,165,250,0.1)}
+.module .tag{font-size:9px;font-weight:600;padding:1px 6px;border-radius:3px;margin-left:3px;opacity:0.8}
+.tag-strat{background:var(--accent-dim);color:var(--bg)}
+.tag-exec{background:var(--accent-green);color:var(--bg)}
+.tag-decision{background:var(--accent-gold);color:var(--bg)}
+.tag-data{background:var(--accent-purple);color:var(--bg)}
+.layer[data-layer="strat"]{border-left:3px solid var(--accent)}
+.layer[data-layer="exec"]{border-left:3px solid var(--accent-green)}
+.layer[data-layer="decision"]{border-left:3px solid var(--accent-gold)}
+.layer[data-layer="data"]{border-left:3px solid var(--accent-purple)}
+svg.icon,.module svg,.side-module svg{width:16px;height:16px;flex-shrink:0}
+.module svg{width:14px;height:14px}
+.layer-label>svg:first-child{width:18px;height:18px;flex-shrink:0}
+.header h1 svg{width:32px;height:32px;flex-shrink:0}
+.arrow-down{display:flex;align-items:center;justify-content:center;height:24px;position:relative;opacity:0}
+.arrow-down svg{width:100%;height:24px}
+.arrow-label{position:absolute;font-family:var(--font-mono);font-size:9px;font-weight:500;color:var(--text-dim);background:var(--panel);padding:0 10px;text-align:center;white-space:nowrap;letter-spacing:0.5px}
+.side-module{background:rgba(26,37,64,0.4);border:1.5px solid var(--surface-light);border-left:3px solid var(--accent-gold);border-radius:6px;padding:8px 10px;cursor:pointer;opacity:0;transform:translateX(15px);transition:border-color 0.3s,background 0.3s}
+.side-module:hover{border-color:var(--accent-gold);background:rgba(251,191,36,0.05)}
+.side-module .layer-label{margin-bottom:3px}
+.side-module .desc{font-size:11px;color:var(--text-dim);line-height:1.5}
+.user-flow{margin-top:18px;padding:12px 14px;background:rgba(26,37,64,0.4);border:1.5px solid var(--surface-light);border-radius:6px;position:relative;z-index:1;opacity:0}
+.user-flow-header{font-family:var(--font-display);font-size:11px;font-weight:600;color:var(--accent-gold);letter-spacing:0.5px;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.user-flow-steps{display:flex;align-items:center;flex-wrap:wrap;gap:0}
+.flow-step{display:flex;align-items:center;gap:0;opacity:0}
+.flow-step .dot{width:26px;height:26px;border-radius:50%;border:2px solid var(--surface-light);background:var(--bg);display:flex;align-items:center;justify-content:center;font-size:10px;line-height:1;flex-shrink:0;transition:all 0.3s;font-family:var(--font-mono);font-weight:600;color:var(--text-dim)}
+.flow-step .dot.active{border-color:var(--accent-gold);background:rgba(251,191,36,0.1);box-shadow:0 0 12px rgba(251,191,36,0.15);color:var(--accent-gold)}
+.flow-step .label{font-size:10px;color:var(--text-dim);white-space:nowrap;margin:0 6px 0 4px;line-height:1}
+.flow-step .conn{width:22px;height:2px;background:var(--surface-light);position:relative;flex-shrink:0}
+.flow-step .conn::after{content:"▶";position:absolute;right:-4px;top:-7px;font-size:8px;color:var(--surface-light)}
+.flow-step:last-child .conn{display:none}
+.branch-bar{margin-top:14px;padding:12px 14px;background:rgba(26,37,64,0.4);border:1.5px solid var(--surface-light);border-radius:6px;position:relative;z-index:1;opacity:0}
+.branch-bar-header{font-family:var(--font-display);font-size:11px;font-weight:600;color:var(--accent-cyan);letter-spacing:0.5px;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.branch-steps{display:flex;align-items:center;gap:0;flex-wrap:wrap}
+.branch-step{display:flex;align-items:center;opacity:0}
+.branch-step .dot-b{width:28px;height:28px;border-radius:50%;border:2px solid var(--surface-light);background:var(--bg);display:flex;align-items:center;justify-content:center;font-size:9px;line-height:1;flex-shrink:0;font-family:var(--font-mono);font-weight:700;color:var(--text-dim);transition:all 0.3s}
+.branch-step .dot-b.off{opacity:0.4}
+.branch-step .dot-b.b1{border-color:var(--accent);color:var(--accent)}
+.branch-step .dot-b.b2{border-color:var(--accent-green);color:var(--accent-green)}
+.branch-step .dot-b.b3{border-color:var(--accent-rose);color:var(--accent-rose)}
+.branch-step .dot-b.b4{border-color:var(--accent-purple);color:var(--accent-purple)}
+.branch-step .dot-b.b5{border-color:var(--accent-cyan);color:var(--accent-cyan)}
+.branch-step .dot-b.b6{border-color:var(--accent-gold);color:var(--accent-gold)}
+.branch-step .label-b{font-size:10px;color:var(--text-dim);white-space:nowrap;margin:0 5px;line-height:1.2}
+.branch-step .label-b .s{display:block;font-size:8px;color:var(--text-dimmer)}
+.branch-step .conn-b{width:12px;height:1.5px;background:var(--surface-light);position:relative;flex-shrink:0}
+.branch-step .conn-b::after{content:"▸";position:absolute;right:-3px;top:-6px;font-size:7px;color:var(--surface-light)}
+.branch-step:last-child .conn-b{display:none}
+.detail-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:200;display:none;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
+.detail-overlay.open{display:flex}
+.detail-card{background:var(--surface);border:2px solid var(--accent-dim);border-radius:8px;padding:22px 24px;max-width:520px;width:90%;max-height:80vh;overflow-y:auto;position:relative;box-shadow:0 8px 50px rgba(0,0,0,0.7),0 0 30px rgba(96,165,250,0.05);will-change:transform,opacity;backface-visibility:hidden;-webkit-backface-visibility:hidden;transform:translateZ(0);-webkit-transform:translateZ(0)}
+.detail-card h2{margin-top:0;font-family:var(--font-display);font-size:17px;font-weight:700;color:var(--accent);margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--surface-light);display:flex;align-items:center;gap:8px}
+.detail-card h2 svg{width:20px;height:20px;flex-shrink:0}
+.detail-card h3{font-size:12px;font-weight:600;color:var(--text-dim);margin:12px 0 6px}
+.detail-card ul{list-style:none;padding:0}
+.detail-card li{font-size:13px;color:var(--text);padding:4px 0 4px 14px;border-left:2px solid var(--surface-light);margin-bottom:5px;line-height:1.6}
+.detail-card li .hl{color:var(--accent);display:inline-flex;align-items:center;gap:4px}
+.detail-card li .hl-gold{color:var(--accent-gold)}
+.detail-card li .hl-green{color:var(--accent-green)}
+.detail-card li .hl-rose{color:var(--accent-rose)}
+.detail-card .close-btn{position:absolute;top:12px;right:14px;font-family:var(--font-mono);font-size:11px;font-weight:600;color:var(--text-dimmer);background:none;border:1px solid var(--surface-light);border-radius:4px;padding:3px 10px;cursor:pointer;transition:all 0.2s}
+.detail-card .close-btn:hover{color:var(--accent-rose);border-color:var(--accent-rose)}
+@media (max-width:860px){
+.layout-main{flex-direction:column}
+.side-column{width:100%;flex-direction:row;flex-wrap:wrap}
+.side-module{flex:1;min-width:150px}
+.header h1{font-size:22px}
+.layer{padding:8px 8px 10px}
+.layer-label{font-size:10px}
+.module{padding:3px 8px;font-size:11px}
+.flow-step .label{font-size:9px}
+.flow-step .dot{width:22px;height:22px;font-size:9px}
+.detail-card{padding:16px 18px;max-width:90%}
+}
+@media (max-width:480px){
+.header h1{font-size:18px;letter-spacing:1px}
+.module{font-size:10px;padding:3px 6px;white-space:normal}
+.layer{padding:6px 6px 8px}
+.layer-modules{gap:3px}
+.flow-step .label{font-size:8px}
+.flow-step .conn{width:14px}
+.branch-step .label-b{font-size:8px}
+.branch-step .conn-b{width:8px}
+}
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:var(--bg-light)}
+::-webkit-scrollbar-thumb{background:var(--surface-light);border-radius:2px}
+.arrow-path{stroke-dasharray:200;stroke-dashoffset:200}
+.chalk-glow{position:absolute;pointer-events:none;width:4px;height:4px;border-radius:50%;background:rgba(96,165,250,0.1);filter:blur(6px)}
+</style>
+</head>
+<body>
+<div class="screen-frame">
+<div class="crt-curve"></div>
+<div class="status-bar"><span class="dot"></span> JOB HUNT · COMMAND CENTER</div>
+<div class="panel" id="panel">
+<div class="header" id="header">
+<h1>
+<svg viewBox="0 0 20 20" class="icon"><use href="#icon-rocket" /></svg>
+求职大厂
+</h1>
+<div class="subtitle">系统性备战大厂求职 · <em>想清楚去哪、怎么去、选哪个</em></div>
+</div>
+<svg style="display:none">
+<defs>
+<symbol id="icon-rocket" viewBox="0 0 20 20"><path d="M10 2l3 6 5 1-4 4 1 6-5-3-5 3 1-6-4-4 5-1 3-6z" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linejoin="round"/></symbol>
+<symbol id="icon-strategy" viewBox="0 0 20 20"><circle cx="10" cy="10" r="7" stroke="currentColor" fill="none" stroke-width="1.5"/><path d="M10 7v3l2 2" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round"/></symbol>
+<symbol id="icon-target" viewBox="0 0 20 20"><circle cx="10" cy="10" r="7" stroke="currentColor" fill="none" stroke-width="1.5"/><circle cx="10" cy="10" r="4" stroke="currentColor" fill="none" stroke-width="1.5"/><circle cx="10" cy="10" r="1.5" fill="currentColor"/></symbol>
+<symbol id="icon-branch" viewBox="0 0 20 20"><path d="M4 4v12M4 4h12M4 8h8M4 12h4" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round"/><circle cx="16" cy="4" r="2" stroke="currentColor" fill="none" stroke-width="1.5"/></symbol>
+<symbol id="icon-diagnose" viewBox="0 0 20 20"><path d="M3 10a7 7 0 1114 0" stroke="currentColor" fill="none" stroke-width="1.5"/><path d="M6 10h2l1-2 2 4 1-2h2" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+<symbol id="icon-resume" viewBox="0 0 20 20"><rect x="4" y="2" width="12" height="16" rx="1" stroke="currentColor" fill="none" stroke-width="1.5"/><line x1="6" y1="6" x2="14" y2="6" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round"/><line x1="6" y1="9" x2="14" y2="9" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round"/><line x1="6" y1="12" x2="10" y2="12" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round"/></symbol>
+<symbol id="icon-job" viewBox="0 0 20 20"><rect x="3" y="7" width="14" height="10" rx="1.5" stroke="currentColor" fill="none" stroke-width="1.5"/><path d="M7 7V5a2 2 0 012-2h2a2 2 0 012 2v2" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round"/></symbol>
+<symbol id="icon-interview" viewBox="0 0 20 20"><circle cx="10" cy="6" r="2.5" stroke="currentColor" fill="none" stroke-width="1.5"/><path d="M4 16c0-3 2.5-5 6-5s6 2 6 5" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round"/><path d="M14 3l3-1-1 3" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+<symbol id="icon-referral" viewBox="0 0 20 20"><path d="M7 11l-3 3 3 3" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 14h8a4 4 0 004-4V6" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round"/></symbol>
+<symbol id="icon-gap" viewBox="0 0 20 20"><circle cx="10" cy="10" r="7" stroke="currentColor" fill="none" stroke-width="1.5"/><path d="M6 10h2l1-2 2 4 1-2h2" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+<symbol id="icon-knowledge" viewBox="0 0 20 20"><path d="M4 4h12v12H4V4z" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linejoin="round"/><path d="M8 2v4l2-1 2 1V2" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+<symbol id="icon-offer" viewBox="0 0 20 20"><path d="M5 10l3 3 7-7" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><rect x="3" y="4" width="14" height="12" rx="2" stroke="currentColor" fill="none" stroke-width="1.5"/></symbol>
+<symbol id="icon-pipeline" viewBox="0 0 20 20"><path d="M3 10h4l2-3 2 6 2-3 2 3h2" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="3" cy="10" r="1.5" fill="currentColor"/><circle cx="17" cy="10" r="1.5" fill="currentColor"/></symbol>
+<symbol id="icon-deepseek" viewBox="0 0 20 20"><rect x="4" y="4" width="12" height="12" rx="2" stroke="currentColor" fill="none" stroke-width="1.5"/><path d="M8 7v6M12 7v6M7 10h6" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round"/></symbol>
+<symbol id="icon-coin" viewBox="0 0 20 20"><circle cx="10" cy="10" r="7" stroke="currentColor" fill="none" stroke-width="1.5"/><path d="M10 6v8M7 8.5c0-1 1.5-2 3-2s3 1 3 2-1.5 2-3 2-3 1-3 2 1.5 2 3 2 3-1 3-2" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round"/></symbol>
+<symbol id="icon-calendar" viewBox="0 0 20 20"><rect x="3" y="4" width="14" height="13" rx="1.5" stroke="currentColor" fill="none" stroke-width="1.5"/><line x1="3" y1="8" x2="17" y2="8" stroke="currentColor" fill="none" stroke-width="1.5"/><line x1="7" y1="2" x2="7" y2="5" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round"/><line x1="13" y1="2" x2="13" y2="5" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round"/><circle cx="8" cy="11" r=".8" fill="currentColor"/><circle cx="12" cy="11" r=".8" fill="currentColor"/></symbol>
+</defs>
+</svg>
+<div class="layout-main">
+<div class="layers-column" id="layersColumn">
+<!-- LAYER: Strategy -->
+<div class="layer" data-layer="strat" id="layer-strat">
+<div class="layer-label">
+<svg viewBox="0 0 20 20"><use href="#icon-strategy" /></svg>
+策略层
+<span class="badge">2 模块</span>
+</div>
+<div class="layer-modules">
+<div class="module" data-detail="strat-target">
+<svg viewBox="0 0 20 20"><use href="#icon-target"/></svg>
+目标定位
+<span class="tag tag-strat">核心</span>
+</div>
+<div class="module" data-detail="strat-branch">
+<svg viewBox="0 0 20 20"><use href="#icon-branch"/></svg>
+公司分支引擎
+<span class="tag tag-strat">爆点</span>
+</div>
+</div>
+</div>
+<div class="arrow-down">
+<svg viewBox="0 0 100 24"><path class="arrow-path" d="M50 0v16M42 8l8 8 8-8" stroke="var(--text-dimmer)" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrowHead)"/></svg>
+<div class="arrow-label">诊断 → 分支</div>
+</div>
+<!-- LAYER: Execution -->
+<div class="layer" data-layer="exec" id="layer-exec">
+<div class="layer-label">
+<svg viewBox="0 0 20 20"><use href="#icon-diagnose" /></svg>
+执行层
+<span class="badge">6 模块</span>
+</div>
+<div class="layer-modules">
+<div class="module" data-detail="exec-resume">
+<svg viewBox="0 0 20 20"><use href="#icon-resume"/></svg>
+简历工坊
+</div>
+<div class="module" data-detail="exec-job">
+<svg viewBox="0 0 20 20"><use href="#icon-job"/></svg>
+职位雷达
+</div>
+<div class="module" data-detail="exec-interview">
+<svg viewBox="0 0 20 20"><use href="#icon-interview"/></svg>
+面试实验室
+<span class="tag tag-exec">核心</span>
+</div>
+<div class="module" data-detail="exec-referral">
+<svg viewBox="0 0 20 20"><use href="#icon-referral"/></svg>
+内推桥
+</div>
+<div class="module" data-detail="exec-gap">
+<svg viewBox="0 0 20 20"><use href="#icon-gap"/></svg>
+能力透镜
+</div>
+<div class="module" data-detail="exec-knowledge">
+<svg viewBox="0 0 20 20"><use href="#icon-knowledge"/></svg>
+面经智库
+</div>
+</div>
+</div>
+<div class="arrow-down">
+<svg viewBox="0 0 100 24"><path class="arrow-path" d="M50 0v16M42 8l8 8 8-8" stroke="var(--text-dimmer)" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrowHead)"/></svg>
+<div class="arrow-label">投递 → 面试</div>
+</div>
+<!-- LAYER: Decision -->
+<div class="layer" data-layer="decision" id="layer-decision">
+<div class="layer-label">
+<svg viewBox="0 0 20 20"><use href="#icon-offer" /></svg>
+决策层
+<span class="badge">2 模块</span>
+</div>
+<div class="layer-modules">
+<div class="module" data-detail="deci-pipeline">
+<svg viewBox="0 0 20 20"><use href="#icon-pipeline"/></svg>
+投递管线
+</div>
+<div class="module" data-detail="deci-offer">
+<svg viewBox="0 0 20 20"><use href="#icon-offer"/></svg>
+Offer 决策台
+<span class="tag tag-decision">核心</span>
+</div>
+</div>
+</div>
+<div class="arrow-down">
+<svg viewBox="0 0 100 24"><path class="arrow-path" d="M50 0v16M42 8l8 8 8-8" stroke="var(--text-dimmer)" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrowHead)"/></svg>
+<div class="arrow-label">数据支撑</div>
+</div>
+<!-- LAYER: Data -->
+<div class="layer" data-layer="data" id="layer-data">
+<div class="layer-label">
+<svg viewBox="0 0 20 20"><use href="#icon-knowledge" /></svg>
+数据层
+<span class="badge">4 库</span>
+</div>
+<div class="layer-modules">
+<div class="module" data-detail="data-bank">
+<svg viewBox="0 0 20 20"><use href="#icon-deepseek"/></svg>
+面试数据库
+<span class="tag tag-data">分支</span>
+</div>
+<div class="module" data-detail="data-salary">
+<svg viewBox="0 0 20 20"><use href="#icon-coin"/></svg>
+薪酬职级库
+</div>
+<div class="module" data-detail="data-job">
+<svg viewBox="0 0 20 20"><use href="#icon-job"/></svg>
+招聘信息库
+</div>
+<div class="module" data-detail="data-progress">
+<svg viewBox="0 0 20 20"><use href="#icon-calendar"/></svg>
+用户进度库
+</div>
+</div>
+</div>
+</div>
+<div class="side-column">
+<div class="side-module" data-detail="side-branch">
+<div class="layer-label">
+<svg viewBox="0 0 20 20"><use href="#icon-branch"/></svg>
+公司分支引擎
+</div>
+<div class="desc">每个大厂独立备战路径</div>
+</div>
+<div class="side-module" data-detail="side-interview">
+<div class="layer-label">
+<svg viewBox="0 0 20 20"><use href="#icon-interview"/></svg>
+面试实验室
+</div>
+<div class="desc">分公司 × 分岗位 × 分轮次模拟</div>
+</div>
+<div class="side-module" data-detail="side-offer">
+<div class="layer-label">
+<svg viewBox="0 0 20 20"><use href="#icon-offer"/></svg>
+Offer 决策台
+</div>
+<div class="desc">多 Offer 横向对比分析</div>
+</div>
+</div>
+</div>
+<div class="branch-bar" id="branchBar">
+<div class="branch-bar-header">
+<svg viewBox="0 0 20 20" style="width:16px;height:16px"><use href="#icon-branch"/></svg>
+预设公司分支
+</div>
+<div class="branch-steps">
+<div class="branch-step">
+<div class="dot-b b1">DS</div>
+<div class="label-b">DeepSeek<span class="s">算法+数学+论文</span></div>
+<div class="conn-b"></div>
+</div>
+<div class="branch-step">
+<div class="dot-b b2">字节</div>
+<div class="label-b">字节跳动<span class="s">八股深追+算法Hard</span></div>
+<div class="conn-b"></div>
+</div>
+<div class="branch-step">
+<div class="dot-b b3">腾讯</div>
+<div class="label-b">腾讯<span class="s">基础+项目+综合素质</span></div>
+<div class="conn-b"></div>
+</div>
+<div class="branch-step">
+<div class="dot-b b4">阿里</div>
+<div class="label-b">阿里巴巴<span class="s">源码级八股+高并发</span></div>
+<div class="conn-b"></div>
+</div>
+<div class="branch-step">
+<div class="dot-b b5">美团</div>
+<div class="label-b">美团<span class="s">业务理解+技术落地</span></div>
+<div class="conn-b"></div>
+</div>
+<div class="branch-step">
+<div class="dot-b b6">自定</div>
+<div class="label-b">自定义分支<span class="s">用户专属备战路径</span></div>
+</div>
+</div>
+</div>
+<div class="user-flow" id="userFlow">
+<div class="user-flow-header">
+<svg viewBox="0 0 20 20" style="width:16px;height:16px"><use href="#icon-rocket"/></svg>
+完整求职管线
+</div>
+<div class="user-flow-steps">
+<div class="flow-step"><div class="dot">1</div><div class="label">背景诊断</div><div class="conn"></div></div>
+<div class="flow-step"><div class="dot">2</div><div class="label">目标定位</div><div class="conn"></div></div>
+<div class="flow-step"><div class="dot">3</div><div class="label">能力扫描</div><div class="conn"></div></div>
+<div class="flow-step"><div class="dot">4</div><div class="label">简历优化</div><div class="conn"></div></div>
+<div class="flow-step"><div class="dot">5</div><div class="label">投递追踪</div><div class="conn"></div></div>
+<div class="flow-step"><div class="dot">6</div><div class="label">模拟面试</div><div class="conn"></div></div>
+<div class="flow-step"><div class="dot">7</div><div class="label">Offer对比</div></div>
+</div>
+</div>
+</div>
+</div>
+<div class="detail-overlay" id="detailOverlay">
+<div class="detail-card" id="detailCard">
+<button class="close-btn" id="closeDetail">✕ 关闭</button>
+<div id="detailContent"></div>
+</div>
+</div>
+<script>
+const DETAILS = {
+"strat-target": {
+title: '<svg viewBox="0 0 20 20" class="icon" style="width:22px;height:22px"><use href="#icon-target"/></svg> 目标定位',
+items: [
+'<span class="hl">背景诊断</span>：收集教育背景、工作经历、技术栈、项目亮点',
+'<span class="hl">公司匹配</span>：基于背景生成各公司匹配度评分和推荐理由',
+'评分维度：学历门槛 / 技能栈 / 经验方向 / 竞争激烈度',
+'<span class="hl">路径规划</span>：建议投递顺序和时间节奏',
+'如"优先投字节，同时准备阿里，腾讯作为次选"',
+],
+},
+"strat-branch": {
+title: '<svg viewBox="0 0 20 20" class="icon" style="width:22px;height:22px"><use href="#icon-branch"/></svg> 公司分支引擎 <span class="hl-gold">★ 核心差异化</span>',
+items: [
+'<span class="hl">分支选择</span>：选定目标公司后加载独立备战路径',
+'内置 DeepSeek / 字节 / 腾讯 / 阿里 / 美团 预设分支',
+'每个分支独立管理：<span class="hl-green">面试流程模板</span> / <span class="hl">高频考点库</span> / <span class="hl-gold">公司文化题库</span> / <span class="hl-rose">职级薪酬对照</span>',
+'<span class="hl">面试风格差异</span>：DeepSeek 重算法数学，字节重八股深追，腾讯重综合素质',
+'支持用户自定义分支，满足小众目标公司',
+],
+},
+"exec-resume": {
+title: '<svg viewBox="0 0 20 20" class="icon" style="width:22px;height:22px"><use href="#icon-resume"/></svg> 简历工坊',
+items: [
+'<span class="hl">JD 解析</span>：粘贴目标岗位 JD，自动提取技能关键词和隐性要求',
+'<span class="hl">关键词匹配</span>：逐条比对简历与 JD 匹配度，标注缺失或弱化技能',
+'<span class="hl-gold">优化建议</span>：对每条经历给出量化建议和表达优化方向',
+'遵循 STAR 法则，不虚构经历',
+'<span class="hl">版本管理</span>：每个目标岗位维护独立简历版本，可横向对比',
+],
+},
+"exec-job": {
+title: '<svg viewBox="0 0 20 20" class="icon" style="width:22px;height:22px"><use href="#icon-job"/></svg> 职位雷达',
+items: [
+'<span class="hl">多平台聚合</span>：聚合主流招聘平台的大厂岗位信息',
+'筛选维度：公司 / 职级 / 岗位类型 / 工作地点',
+'<span class="hl-gold">新发预警</span>：目标公司出现新岗位时即时推送',
+'仅基于公开信息，不接入封闭 API',
+],
+},
+"exec-interview": {
+title: '<svg viewBox="0 0 20 20" class="icon" style="width:22px;height:22px"><use href="#icon-interview"/></svg> 面试实验室',
+items: [
+'<span class="hl">公司风格模拟</span>：AI 面试官按目标公司风格出题和追问',
+'<span class="hl-green">轮次匹配</span>：一面偏基础，二面偏深挖，交叉面偏综合',
+'<span class="hl">追问机制</span>：根据回答动态生成追问，模拟真实节奏',
+'<span class="hl-gold">复盘报告</span>：回答质量 / 知识盲区 / 表达逻辑 / 改进建议',
+'支持岗位定制：后端 / 前端 / 算法 / 产品 / 运营 各题型差异',
+],
+},
+"exec-referral": {
+title: '<svg viewBox="0 0 20 20" class="icon" style="width:22px;height:22px"><use href="#icon-referral"/></svg> 内推桥',
+items: [
+'<span class="hl">校友匹配</span>：基于教育背景发现目标公司校友',
+'<span class="hl">人脉链</span>：手动记录和扩展目标公司的弱连接关系',
+'纯手动维护，不读取通讯录，不接入社交平台',
+'<span class="hl-gold">内推请求引导</span>：结构化模板 + 发送时机建议',
+'内推进度追踪：已请求 → 已投递 → 已面试 → 已结果',
+],
+},
+"exec-gap": {
+title: '<svg viewBox="0 0 20 20" class="icon" style="width:22px;height:22px"><use href="#icon-gap"/></svg> 能力透镜',
+items: [
+'<span class="hl">技能雷达图</span>：按岗位要求维度展示当前覆盖度',
+'维度：算法 / 系统设计 / 业务理解 / 项目经验 / 软技能',
+'<span class="hl">差距分析</span>：自动对比用户技能和目标岗位要求',
+'基于用户自评和模拟面试数据综合判断',
+'<span class="hl-green">补强推荐</span>：为每个差距项推荐公开学习资源和练习计划',
+],
+},
+"exec-knowledge": {
+title: '<svg viewBox="0 0 20 20" class="icon" style="width:22px;height:22px"><use href="#icon-knowledge"/></svg> 面经智库',
+items: [
+'按公司 + 岗位 + 年份结构化收录面经',
+'<span class="hl">AI 提炼</span>：从面经中提取高频考点和面试风格特征',
+'<span class="hl">时间线视图</span>：按时间倒序展示面经变化趋势',
+'内容经 AI 去重审核，不保留可识别个人身份信息',
+'帮助用户感知面试重点的演变',
+],
+},
+"deci-pipeline": {
+title: '<svg viewBox="0 0 20 20" class="icon" style="width:22px;height:22px"><use href="#icon-pipeline"/></svg> 投递管线',
+items: [
+'每一条投递的完整状态追踪',
+'<span class="hl">状态流</span>：已投递 → 简历筛选 → 笔试 → 一面 → 二面 → HR 面 → Offer / 拒绝',
+'<span class="hl">面试日历</span>：日历化展示所有面试安排和准备清单',
+'每个面试节点可添加笔记和面经链接',
+],
+},
+"deci-offer": {
+title: '<svg viewBox="0 0 20 20" class="icon" style="width:22px;height:22px"><use href="#icon-offer"/></svg> Offer 决策台',
+items: [
+'<span class="hl">总包计算器</span>：薪资 + 股票 + 补贴 自动计算年总包',
+'<span class="hl">职级对照</span>：跨公司职级体系横向对照',
+'<span class="hl-gold">决策维度评分</span>：用户自定义权重的多维度评分表',
+'维度：薪资 / 成长 / 业务前景 / 团队 / 地点',
+'最终决策由用户自行做出，系统不做推荐',
+],
+},
+"data-bank": {
+title: '<svg viewBox="0 0 20 20" class="icon" style="width:22px;height:22px"><use href="#icon-deepseek"/></svg> 面试数据库',
+items: [
+'<span class="hl">各分支独立</span>：每个公司维护独立的面试知识库',
+'流程模板 / 考题库 / 风格特征 / 文化题库',
+'基于真实面经持续更新，定期验证准确度',
+],
+},
+"data-salary": {
+title: '<svg viewBox="0 0 20 20" class="icon" style="width:22px;height:22px"><use href="#icon-coin"/></svg> 薪酬职级数据库',
+items: [
+'跨公司职级对照表：P4/P5/P6 ↔ 2-1/2-2 ↔ T4/T5/T6 等',
+'各职级薪资范围，仅展示公开可查数据',
+'不做期权价值估算和估值预测',
+'薪资数据仅供参考，不保证完全准确',
+],
+},
+"data-job": {
+title: '<svg viewBox="0 0 20 20" class="icon" style="width:22px;height:22px"><use href="#icon-job"/></svg> 招聘信息数据库',
+items: [
+'实时聚合主流招聘平台的大厂岗位',
+'按公司 / 职级 / 岗位类型 / 地点 多维度索引',
+'数据更新频率：每日一次',
+],
+},
+"data-progress": {
+title: '<svg viewBox="0 0 20 20" class="icon" style="width:22px;height:22px"><use href="#icon-calendar"/></svg> 用户进度数据库',
+items: [
+'投递记录 / 面试日历 / 技能图谱',
+'仅储存在用户设备或用户授权云端',
+'用户数据不做商业化利用',
+],
+},
+"side-branch": {
+title: '<svg viewBox="0 0 20 20" class="icon" style="width:22px;height:22px"><use href="#icon-branch"/></svg> 公司分支引擎 <span class="hl-gold">★ 核心差异化</span>',
+items: [
+'<span class="hl-gold">市场上唯一的分公司备战工具</span>',
+'传统求职工具给统一题库，求职大厂给 <span class="hl">独立分支路径</span>',
+'每个分支含：面试流程模板 / 高频考点库 / 公司文化题库 / 职级薪酬对照',
+'分支间共享底层引擎（AI 模拟、简历优化），但知识库完全独立',
+'预设 DeepSeek / 字节 / 腾讯 / 阿里 / 美团 五大分支',
+'支持用户自定义分支，满足小众目标公司需求',
+],
+},
+"side-interview": {
+title: '<svg viewBox="0 0 20 20" class="icon" style="width:22px;height:22px"><use href="#icon-interview"/></svg> 面试实验室',
+items: [
+'<span class="hl">分公司模拟</span>：DeepSeek 侧重算法深挖 + 数学推理',
+'字节侧重八股深追 + 代码边界案例 + 直播场景系统设计',
+'腾讯侧重项目深挖 + 综合素质 + 开放题',
+'阿里侧重源码级八股 + 高并发场景',
+'美团侧重业务理解 + 技术落地',
+'<span class="hl">分岗位</span>：后端 / 前端 / 算法 / 产品 / 运营 题型差异',
+'<span class="hl">分轮次</span>：一面基础 → 二面深挖 → 交叉面综合',
+],
+},
+"side-offer": {
+title: '<svg viewBox="0 0 20 20" class="icon" style="width:22px;height:22px"><use href="#icon-offer"/></svg> Offer 决策台',
+items: [
+'<span class="hl">总包计算器</span>：输入薪资 / 股票 / 补贴 自动算年收入',
+'<span class="hl">职级对照</span>：跨公司（DS / 字节 / 腾讯 / 阿里）职级对标',
+'<span class="hl-gold">决策维度评分</span>：用户自定义权重，理性比较',
+'维度：成长空间 / 总包 / 团队氛围 / 地点',
+'系统辅助信息呈现，最终选哪个由你决定',
+],
+},
+};
+document.addEventListener("DOMContentLoaded", () => {
+const layers = document.querySelectorAll(".layer");
+const arrows = document.querySelectorAll(".arrow-down");
+const flowSteps = document.querySelectorAll(".flow-step");
+const sideModules = document.querySelectorAll(".side-module");
+const userFlow = document.querySelector(".user-flow");
+const branchBar = document.querySelector(".branch-bar");
+const branchSteps = document.querySelectorAll(".branch-step");
+const overlays = document.querySelector("#detailOverlay");
+const detailContent = document.querySelector("#detailContent");
+const closeBtn = document.querySelector("#closeDetail");
+const mainTimeline = anime.timeline({ easing: "easeOutCubic" });
+mainTimeline.add({ targets: "#header", opacity: [0, 1], translateY: [-10, 0], duration: 600 });
+mainTimeline.add({ targets: sideModules, opacity: [0, 1], translateX: [15, 0], duration: 400, delay: anime.stagger(120) }, "-=200");
+mainTimeline.add({ targets: layers, opacity: [0, 1], translateY: [20, 0], duration: 500, delay: anime.stagger(150) }, "-=100");
+mainTimeline.add({ targets: arrows, opacity: [0, 1], duration: 400, delay: anime.stagger(200) }, "-=200");
+setTimeout(() => { document.querySelectorAll(".arrow-path").forEach((p) => { anime({ targets: p, strokeDashoffset: [200, 0], duration: 800, delay: 300, easing: "easeInOutCubic" }); }); }, 1500);
+mainTimeline.add({ targets: userFlow, opacity: [0, 1], duration: 500 }, "-=100");
+mainTimeline.add({ targets: flowSteps, opacity: [0, 1], translateX: [-8, 0], duration: 350, delay: anime.stagger(120) }, "-=200");
+mainTimeline.add({ targets: branchBar, opacity: [0, 1], duration: 500 }, "-=100");
+mainTimeline.add({ targets: branchSteps, opacity: [0, 1], translateY: [6, 0], duration: 300, delay: anime.stagger(100) }, "-=200");
+let flowIndex = 0;
+function pulseFlow() { flowSteps.forEach((s) => s.querySelector(".dot").classList.remove("active")); flowSteps[flowIndex].querySelector(".dot").classList.add("active"); flowIndex = (flowIndex + 1) % flowSteps.length; }
+pulseFlow(); setInterval(pulseFlow, 2500);
+layers.forEach((l) => { l.addEventListener("mouseenter", () => { anime({ targets: l, borderColor: "var(--accent)", backgroundColor: "rgba(96,165,250,0.05)", duration: 200 }); }); l.addEventListener("mouseleave", () => { anime({ targets: l, borderColor: "var(--surface-light)", backgroundColor: "rgba(26,37,64,0.4)", duration: 300 }); }); });
+function openDetail(id) {
+const data = DETAILS[id]; if (!data) return;
+detailContent.innerHTML = `<h2>${data.title}</h2><ul>${data.items.map((i) => `<li>${i}</li>`).join("")}</ul>`;
+overlays.classList.add("open");
+anime({ targets: "#detailCard", scale: [0.85, 1], opacity: [0, 1], duration: 250, easing: "easeOutCubic" });
+}
+function closeDetail() { anime({ targets: "#detailCard", scale: [1, 0.85], opacity: [1, 0], duration: 200, easing: "easeInCubic", complete: () => { overlays.classList.remove("open"); } }); }
+document.querySelectorAll(".module[data-detail]").forEach((el) => { el.addEventListener("click", () => openDetail(el.dataset.detail)); });
+document.querySelectorAll(".side-module[data-detail]").forEach((el) => { el.addEventListener("click", () => openDetail(el.dataset.detail)); });
+closeBtn.addEventListener("click", closeDetail);
+overlays.addEventListener("click", (e) => { if (e.target === overlays) closeDetail(); });
+const panel = document.getElementById("panel");
+for (let i = 0; i < 20; i++) {
+const dot = document.createElement("div"); dot.className = "chalk-glow";
+dot.style.left = Math.random() * 100 + "%"; dot.style.top = Math.random() * 100 + "%";
+dot.style.width = dot.style.height = 2 + Math.random() * 4 + "px"; dot.style.opacity = 0.04 + Math.random() * 0.08;
+panel.appendChild(dot);
+anime({ targets: dot, translateX: [0, -10 + Math.random() * 20], translateY: [0, -10 + Math.random() * 20], opacity: [0.04, 0.12, 0.04], duration: 3000 + Math.random() * 4000, direction: "alternate", loop: true, easing: "easeInOutSine" });
+}
+});
+</script>
+</body>
+</html>

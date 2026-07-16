@@ -8,6 +8,7 @@ const DIST_DIR = path.join(ROOT, 'dist');
 const SRC_CSS_DIR = path.join(ROOT, 'src', 'css');
 const SRC_JS_DIR = path.join(ROOT, 'src', 'js');
 const TEMPLATES_DIR = path.join(ROOT, 'templates');
+const HTMLS_DIR = path.join(ROOT, 'htmls');
 
 const BASE_PATH = '/product-manuals';
 const SITE_URL = 'https://ng-nest-moon.github.io';
@@ -15,8 +16,8 @@ const DEFAULT_OG_IMAGE = 'https://raw.githubusercontent.com/ng-nest-moon/product
 
 function fullUrl(p) { return SITE_URL + p; }
 
-const CAT_NAMES = { game: '游戏', tool: '工具' };
-const CAT_KEYS = { '游戏': 'game', '工具': 'tool' };
+const CAT_NAMES = { game: '游戏', tool: '工具', setting: '设定', future: '未来' };
+const CAT_KEYS = { '游戏': 'game', '工具': 'tool', '设定': 'setting', '未来': 'future' };
 
 /* Parse product list from README.md table */
 const README_PATH = path.join(ROOT, 'README.md');
@@ -381,6 +382,7 @@ function buildHomepage() {
   const baseTemplate = readFile(path.join(TEMPLATES_DIR, 'base.html'));
 
   /* Stats */
+  const catCount = new Set(PRODUCTS.map(p => p[2])).size;
   const statsHtml = `
 <div class="pm-stats pm-fade-in">
   <div class="pm-stat-item">
@@ -388,7 +390,7 @@ function buildHomepage() {
     <div class="pm-stat-label">产品说明书</div>
   </div>
   <div class="pm-stat-item">
-    <div class="pm-stat-number">2</div>
+    <div class="pm-stat-number">${catCount}</div>
     <div class="pm-stat-label">产品分类</div>
   </div>
   <div class="pm-stat-item">
@@ -401,9 +403,9 @@ function buildHomepage() {
   const cards = PRODUCTS.map(p => {
     const [num, name, cat, desc] = p;
     const url = getProductUrl(num, name);
-    const badgeClass = cat === 'game' ? 'pm-category-badge--game' : 'pm-category-badge--tool';
-    return `<div class="pm-product-card pm-fade-in">
-  <div class="pm-card-header">
+    const badgeClass = `pm-category-badge--${cat}`;
+    return `<div class="pm-product-card pm-fade-in" data-category="${cat}">
+   <div class="pm-card-header">
     <div class="pm-card-number">${String(num).padStart(2, '0')}</div>
     <h3 class="pm-card-title">${name}</h3>
     <span class="pm-category-badge ${badgeClass}">${CAT_NAMES[cat]}</span>
@@ -414,6 +416,15 @@ function buildHomepage() {
   </div>
 </div>`;
   }).join('\n');
+
+  const filterHtml = `
+<div class="pm-filter-bar" id="pm-filter-bar">
+  <button class="pm-filter-chip active" data-filter="all">全部</button>
+  <button class="pm-filter-chip" data-filter="game">游戏</button>
+  <button class="pm-filter-chip" data-filter="tool">工具</button>
+  <button class="pm-filter-chip" data-filter="setting">设定</button>
+  <button class="pm-filter-chip" data-filter="future">未来</button>
+</div>`;
 
   const gridHtml = `<div class="pm-product-grid">\n${cards}\n</div>`;
 
@@ -470,7 +481,7 @@ function buildHomepage() {
   </div>
 </div>`;
 
-  const content = heroHtml + statsHtml + `<div class="pm-section" id="产品说明书">\n<h2 class="pm-section-title pm-section-title-underline" style="text-align:center;">产品说明书</h2>\n` + gridHtml + `\n</div>` + featuresHtml + ctaHtml;
+  const content = heroHtml + statsHtml + `<div class="pm-section" id="产品说明书">\n<h2 class="pm-section-title pm-section-title-underline" style="text-align:center;">产品说明书</h2>\n` + filterHtml + gridHtml + `\n</div>` + featuresHtml + ctaHtml;
 
   const desc = '产品功能说明书合集 — AI 驱动的产品定义文档';
   const homeUrl = fullUrl(BASE_PATH + '/');
@@ -534,23 +545,79 @@ function buildManualPages() {
     /* Extract headings for TOC */
     const tocItems = extractToc(htmlContent);
 
-    /* Strip the h1 from content (it's shown in the product header) */
-    const bodyContent = htmlContent.replace(/<h1>.*?<\/h1>/, '');
+    /* Check for interactive architecture diagram */
+    const htmlsFile = path.join(HTMLS_DIR, `${numberedName}.html`);
+    let interactiveDiagram = '';
+    if (fs.existsSync(htmlsFile)) {
+      let html = readFile(htmlsFile);
+      html = html
+        .replace(/<!doctype[^>]*>/gi, '')
+        .replace(/<\/?html[^>]*>/gi, '')
+        .replace(/<\/?head[^>]*>/gi, '')
+        .replace(/<\/?body[^>]*>/gi, '')
+        .replace(/<title>.*?<\/title>/gi, '');
+      html = html
+        .replace(/:root\s*\{/g, '.pm-interactive-embed {')
+        .replace(/html\s*,\s*body\s*\{/g, '.pm-interactive-embed {');
+      interactiveDiagram = `<section class="pm-interactive-section">
+  <div class="pm-interactive-embed">\n${html}\n</div>
+</section>`;
+      console.log(`  ✓ interactive diagram embedded for ${numberedName}`);
+    }
+
+    /* Build body content */
+    let bodyContent = htmlContent.replace(/<h1>.*?<\/h1>/, '');
+
+    /* Product header HTML */
+    const productHeaderHtml = `<div class="pm-product-header" data-category="${cat}">
+      <div class="pm-product-header-meta">
+        <span class="pm-card-number">${String(num).padStart(2, '0')}</span>
+        <span class="pm-category-badge pm-category-badge--${cat}">${CAT_NAMES[cat]}</span>
+      </div>
+      <h1>${name}</h1>
+      <p class="pm-product-desc">${desc}</p>
+      <a href="${BASE_PATH}/" class="pm-back-link">← 返回全部产品</a>
+    </div>`;
+
+    /* Sidebar HTML */
+    const sidebarHtml = `<div class="pm-sidebar-section">
+      <div class="pm-sidebar-title">本页目录</div>
+      <nav class="pm-toc-nav" id="pm-toc-nav">
+        ${tocItems}
+      </nav>
+    </div>`;
+
+    /* When an interactive diagram exists, keep the full readable spec and surface a download link */
+    let productHeader = productHeaderHtml;
+    let sidebarContent = sidebarHtml;
+    let layoutModifier = '';
+    if (interactiveDiagram) {
+      bodyContent = `<div class="pm-manual-download">
+  <p>本产品另提供交互式架构图（页面上方），下方为完整文字版说明书；也可下载 Markdown 源文件离线阅读。</p>
+  <a href="${BASE_PATH}/manuals/${numberedName}/${numberedName}.md" class="pm-btn pm-btn-outline" download>📄 下载 Markdown 源文件</a>
+</div>\n` + bodyContent;
+      /* Copy .md source for download */
+      const mdOutDir = path.join(DIST_DIR, 'manuals', numberedName);
+      writeFile(path.join(mdOutDir, `${numberedName}.md`), readFile(filePath));
+    }
 
     const manualContentHtml = manualTemplate
-      .replace(/{sidebarItems}/g, sidebarItems)
-      .replace(/{tocItems}/g, tocItems)
       .replace(/{basePath}/g, BASE_PATH)
       .replace(/{productName}/g, name)
-      .replace(/{productNum}/g, String(num).padStart(2, '0'))
-      .replace(/{productCat}/g, cat)
-      .replace(/{productCatName}/g, CAT_NAMES[cat])
-      .replace(/{productDesc}/g, desc)
-      .replace(/{manualContent}/g, bodyContent);
+      .replace(/{manualContent}/g, bodyContent)
+      .replace(/{interactiveDiagram}/g, interactiveDiagram)
+      .replace(/{productHeader}/g, productHeader)
+      .replace(/{sidebarContent}/g, sidebarContent)
+      .replace(/{layoutModifier}/g, layoutModifier);
 
     /* Extract better description from first paragraph of content */
-    const pMatch = bodyContent.match(/<p>(.+?)<\/p>/);
-    const pageDesc = pMatch ? truncate(stripHtml(pMatch[1]), 150) : `${name} — 产品功能说明书`;
+    let pageDesc;
+    if (interactiveDiagram) {
+      pageDesc = desc;
+    } else {
+      const pMatch = bodyContent.match(/<p>(.+?)<\/p>/);
+      pageDesc = pMatch ? truncate(stripHtml(pMatch[1]), 150) : desc;
+    }
 
     const title = `${name} — 产品功能说明书`;
     const pageUrl = fullUrl(getProductUrl(num, name));
@@ -630,11 +697,23 @@ function extractToc(html) {
 function buildSearchIndex() {
   const index = PRODUCTS.map(p => {
     const [num, name, , desc] = p;
+    const filePath = path.join(DOCS_DIR, `${getNumberedName(num, name)}.md`);
+    let content = desc;
+    if (fs.existsSync(filePath)) {
+      try {
+        const html = marked.parse(readFile(filePath));
+        const text = stripHtml(html).replace(/\s+/g, ' ').trim();
+        if (text) content = text;
+      } catch (e) {
+        console.warn(`  ⚠ search index content failed for ${name}:`, e.message);
+      }
+    }
     return {
+      id: num,
       title: `${num}. ${name}`,
       url: getProductUrl(num, name),
       excerpt: desc,
-      content: desc
+      content: content
     };
   });
 

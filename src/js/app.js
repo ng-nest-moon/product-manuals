@@ -74,6 +74,28 @@
     });
   });
 
+  /* ------ Category Filter (homepage) ------ */
+  var filterBar = document.getElementById('pm-filter-bar');
+  if (filterBar) {
+    var chips = filterBar.querySelectorAll('.pm-filter-chip');
+    var gridCards = document.querySelectorAll('.pm-product-grid .pm-product-card');
+    chips.forEach(function (chip) {
+      chip.addEventListener('click', function () {
+        chips.forEach(function (c) { c.classList.remove('active'); });
+        chip.classList.add('active');
+        var f = chip.getAttribute('data-filter');
+        gridCards.forEach(function (card) {
+          var cat = card.getAttribute('data-category');
+          if (f === 'all' || cat === f) {
+            card.classList.remove('is-hidden');
+          } else {
+            card.classList.add('is-hidden');
+          }
+        });
+      });
+    });
+  }
+
   /* ------ Mobile Nav Toggle (if exists) ------ */
   var mobileToggle = document.getElementById('pm-mobile-nav-toggle');
   var navEl = document.querySelector('.pm-nav');
@@ -113,8 +135,8 @@
   /* ------ Back to top button ------ */
   var backToTop = document.createElement('button');
   backToTop.className = 'pm-back-to-top';
-  backToTop.setAttribute('aria-label', '·µ»Ø¶¥²¿');
-  backToTop.setAttribute('title', '·µ»Ø¶¥²¿');
+  backToTop.setAttribute('aria-label', 'ï¿½ï¿½ï¿½Ø¶ï¿½ï¿½ï¿½');
+  backToTop.setAttribute('title', 'ï¿½ï¿½ï¿½Ø¶ï¿½ï¿½ï¿½');
   document.body.appendChild(backToTop);
 
   var scrollTimer = null;

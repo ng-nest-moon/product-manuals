@@ -1,0 +1,350 @@
+﻿<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>共生体</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;500;700;900&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#0b0f14;--bg-panel:#10171e;--surface:#162028;--surface-light:#1e2a36;--accent:#4fc3f7;--accent-dim:rgba(79,195,247,0.25);--accent-gold:#ffd54f;--accent-green:#66bb6a;--accent-pulse:#f06292;--text-primary:#e0e8ef;--text-dim:rgba(224,232,239,0.6);--text-dimmer:rgba(224,232,239,0.25);--grid:rgba(79,195,247,0.04);--font-display:"Noto Sans SC","PingFang SC", "PingFang SC", "Microsoft YaHei", sans-serif;--font-mono:"JetBrains Mono","SFMono-Regular", Menlo, Consolas, "SFMono-Regular", Menlo, Consolas, "Courier New", monospace}
+html,body{height:100%;background:var(--bg);font-family:var(--font-display);color:var(--text-primary);overflow-x:hidden}
+.screen-frame{position:relative;min-height:100vh;padding:24px 20px 20px;background:var(--bg-panel);border-radius:20px;box-shadow:inset 0 0 60px rgba(0,0,0,0.6),0 8px 40px rgba(0,0,0,0.5);max-width:1440px;margin:0 auto}
+.screen-frame::before{content:"";position:absolute;inset:0;border-radius:20px;background:repeating-linear-gradient(0deg,transparent,transparent 2px,var(--grid) 2px,var(--grid) 4px);pointer-events:none;z-index:100}
+.crt-curve{position:absolute;inset:0;border-radius:20px;background:radial-gradient(ellipse at center,transparent 60%,rgba(0,0,0,0.4) 100%);pointer-events:none;z-index:99}
+.status-bar{position:absolute;top:10px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:12px;font-size:9px;font-weight:500;color:var(--text-dim);letter-spacing:2px;z-index:101;background:rgba(16,23,30,0.7);padding:3px 16px;border-radius:20px;border:1px solid var(--accent-dim);backdrop-filter:blur(4px);text-transform:uppercase;font-family:var(--font-mono)}
+.status-bar .dot{display:inline-block;width:5px;height:5px;border-radius:50%;background:var(--accent-green);box-shadow:0 0 8px var(--accent-green);animation:pulse-sym 2.5s ease-in-out infinite}
+@keyframes pulse-sym{0%,100%{opacity:1;box-shadow:0 0 8px var(--accent-green)}50%{opacity:0.4;box-shadow:0 0 2px var(--accent-green)}}
+.panel{position:relative;background:var(--surface);border:1.5px solid var(--surface-light);border-radius:8px;padding:24px 24px 20px;box-shadow:inset 0 0 30px rgba(0,0,0,0.3),0 4px 0 #0a0f14;min-height:calc(100vh - 80px);overflow:hidden}
+.panel::after{content:"";position:absolute;inset:0;background-image:radial-gradient(circle at 70% 20%,rgba(79,195,247,0.02) 0,transparent 60%),radial-gradient(circle at 30% 80%,rgba(102,187,106,0.015) 0,transparent 50%);pointer-events:none}
+.header{text-align:center;margin-bottom:20px;position:relative;z-index:1}
+.header h1{font-family:var(--font-display);font-size:28px;font-weight:900;color:var(--accent);text-shadow:0 0 20px rgba(79,195,247,0.15);letter-spacing:3px;margin-bottom:2px;display:flex;align-items:center;justify-content:center;gap:12px}
+.header h1 svg{width:30px;height:30px;flex-shrink:0;filter:drop-shadow(0 0 6px rgba(79,195,247,0.3))}
+.header .subtitle{font-size:14px;font-weight:300;color:var(--text-dim);letter-spacing:0.5px}
+.header .subtitle em{font-style:normal;color:var(--accent-gold);font-weight:500}
+.layout-main{display:flex;gap:16px;position:relative;z-index:1}
+.layers-column{flex:1;min-width:0}
+.side-column{width:210px;flex-shrink:0;display:flex;flex-direction:column;gap:8px}
+.layer{position:relative;background:rgba(30,42,54,0.5);border:1.5px solid var(--surface-light);border-radius:6px;padding:10px 12px 12px;margin-bottom:0;cursor:pointer;transition:border-color 0.3s,background 0.3s;opacity:0;transform:translateY(20px)}
+.layer:hover{border-color:var(--accent);background:rgba(79,195,247,0.05)}
+.layer-label{font-family:var(--font-display);font-size:12px;font-weight:600;color:var(--text-dim);letter-spacing:1px;margin-bottom:6px;display:flex;align-items:center;gap:6px}
+.layer-label .badge{font-size:9px;font-weight:600;background:var(--surface-light);color:var(--text-dim);padding:1px 7px;border-radius:3px;letter-spacing:0}
+.layer-modules{display:flex;flex-wrap:wrap;gap:5px}
+.module{background:rgba(224,232,239,0.04);border:1px solid var(--surface-light);border-radius:4px;padding:4px 10px;font-size:12px;line-height:1.5;color:var(--text-primary);transition:all 0.25s;white-space:nowrap;cursor:pointer;display:inline-flex;align-items:center;gap:5px}
+.module:hover{background:rgba(79,195,247,0.1);border-color:var(--accent);transform:translateY(-1px)}
+.module .tag{font-size:9px;font-weight:600;padding:1px 6px;border-radius:3px;margin-left:3px;opacity:0.8}
+.tag-gen0{background:var(--accent-dim);color:var(--bg)}
+.tag-gen1{background:var(--accent);color:var(--bg)}
+.tag-gen2{background:var(--accent-green);color:var(--bg)}
+.tag-gen3{background:var(--accent-pulse);color:var(--bg)}
+.tag-engine{background:rgba(255,213,79,0.2);color:var(--accent-gold)}
+.tag-asset{background:rgba(102,187,106,0.15);color:var(--accent-green)}
+.layer[data-layer="access"]{border-left:3px solid var(--accent)}
+.layer[data-layer="engine"]{border-left:3px solid var(--accent-gold)}
+.layer[data-layer="asset"]{border-left:3px solid var(--accent-green)}
+svg.icon,.module svg,.side-module svg{width:16px;height:16px;flex-shrink:0}
+.module svg{width:14px;height:14px}
+.layer-label>svg:first-child{width:18px;height:18px;flex-shrink:0}
+.header h1 svg{width:30px;height:30px;flex-shrink:0}
+.arrow-down{display:flex;align-items:center;justify-content:center;height:24px;position:relative;opacity:0}
+.arrow-down svg{width:100%;height:24px}
+.arrow-label{position:absolute;font-family:var(--font-mono);font-size:9px;font-weight:500;color:var(--text-dim);background:var(--surface);padding:0 10px;text-align:center;white-space:nowrap;letter-spacing:0.5px}
+.side-module{background:rgba(30,42,54,0.5);border:1.5px solid var(--surface-light);border-left:3px solid var(--accent-green);border-radius:6px;padding:8px 10px;cursor:pointer;opacity:0;transform:translateX(15px);transition:border-color 0.3s,background 0.3s}
+.side-module:hover{border-color:var(--accent-green);background:rgba(102,187,106,0.06)}
+.side-module .layer-label{margin-bottom:3px}
+.side-module .desc{font-size:11px;color:var(--text-dim);line-height:1.5}
+.user-flow{margin-top:18px;padding:12px 14px;background:rgba(30,42,54,0.5);border:1.5px solid var(--surface-light);border-radius:6px;position:relative;z-index:1;opacity:0}
+.user-flow-header{font-family:var(--font-display);font-size:11px;font-weight:600;color:var(--accent-gold);letter-spacing:0.5px;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.user-flow-steps{display:flex;align-items:center;flex-wrap:wrap;gap:0}
+.flow-step{display:flex;align-items:center;gap:0;opacity:0}
+.flow-step .dot{width:26px;height:26px;border-radius:50%;border:2px solid var(--surface-light);background:var(--bg);display:flex;align-items:center;justify-content:center;font-size:12px;line-height:1;flex-shrink:0;transition:all 0.3s;font-family:var(--font-mono);font-weight:600}
+.flow-step .dot.active{border-color:var(--accent-gold);background:rgba(255,213,79,0.1);box-shadow:0 0 12px rgba(255,213,79,0.15)}
+.flow-step .label{font-size:11px;color:var(--text-dim);white-space:nowrap;margin:0 6px 0 4px;line-height:1}
+.flow-step .conn{width:22px;height:2px;background:var(--surface-light);position:relative;flex-shrink:0}
+.flow-step .conn::after{content:"▶";position:absolute;right:-4px;top:-7px;font-size:8px;color:var(--surface-light)}
+.flow-step:last-child .conn{display:none}
+.detail-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:200;display:none;align-items:center;justify-content:center;backdrop-filter:blur(3px)}
+.detail-overlay.open{display:flex}
+.detail-card{background:var(--surface);border:2px solid var(--surface-light);border-radius:8px;padding:22px 24px;max-width:500px;width:90%;max-height:80vh;overflow-y:auto;position:relative;box-shadow:0 8px 40px rgba(0,0,0,0.6);will-change:transform,opacity;backface-visibility:hidden;-webkit-backface-visibility:hidden;transform:translateZ(0);-webkit-transform:translateZ(0)}
+.detail-card h2{margin-top:0;font-family:var(--font-display);font-size:17px;font-weight:700;color:var(--accent);margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--surface-light);display:flex;align-items:center;gap:8px}
+.detail-card h2 svg{width:20px;height:20px;flex-shrink:0}
+.detail-card ul{list-style:none;padding:0}
+.detail-card li{font-size:13px;color:var(--text-primary);padding:4px 0 4px 14px;border-left:2px solid var(--surface-light);margin-bottom:5px;line-height:1.6}
+.detail-card li .hl{color:var(--accent-green);display:inline-flex;align-items:center;gap:4px}
+.detail-card li .hl-warn{color:var(--accent-pulse)}
+.detail-card .close-btn{position:absolute;top:12px;right:14px;font-family:var(--font-mono);font-size:11px;font-weight:600;color:var(--text-dimmer);background:none;border:1px solid var(--surface-light);border-radius:4px;padding:3px 10px;cursor:pointer;transition:all 0.2s}
+.detail-card .close-btn:hover{color:var(--accent-pulse);border-color:var(--accent-pulse)}
+.gen-bar{margin-top:16px;padding:10px 12px;background:rgba(30,42,54,0.5);border:1.5px solid var(--surface-light);border-radius:6px;position:relative;z-index:1;opacity:0}
+.gen-bar-header{font-family:var(--font-display);font-size:11px;font-weight:600;color:var(--text-dim);letter-spacing:0.5px;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.gen-steps{display:flex;align-items:center;gap:0}
+.gen-step{display:flex;align-items:center;opacity:0}
+.gen-step .dot-g{width:22px;height:22px;border-radius:50%;border:2px solid var(--surface-light);background:var(--bg);display:flex;align-items:center;justify-content:center;font-size:9px;line-height:1;flex-shrink:0;font-family:var(--font-mono);font-weight:700;color:var(--text-dim);transition:all 0.3s}
+.gen-step .dot-g.g0{border-color:var(--accent-dim);color:var(--accent-dim)}
+.gen-step .dot-g.g1{border-color:var(--accent);color:var(--accent)}
+.gen-step .dot-g.g2{border-color:var(--accent-green);color:var(--accent-green)}
+.gen-step .dot-g.g3{border-color:var(--accent-pulse);color:var(--accent-pulse)}
+.gen-step .label-g{font-size:10px;color:var(--text-dim);white-space:nowrap;margin:0 5px;line-height:1}
+.gen-step .conn-g{width:18px;height:1.5px;background:var(--surface-light);position:relative;flex-shrink:0}
+.gen-step .conn-g::after{content:"▸";position:absolute;right:-4px;top:-6px;font-size:8px;color:var(--surface-light)}
+.gen-step:last-child .conn-g{display:none}
+@media (max-width:860px){
+.layout-main{flex-direction:column}
+.side-column{width:100%;flex-direction:row;flex-wrap:wrap}
+.side-module{flex:1;min-width:150px}
+.header h1{font-size:22px}
+.header h1 svg{width:24px;height:24px}
+.screen-frame{padding:20px 10px 10px}
+.panel{padding:16px 12px 14px}
+.layer-modules{gap:3px}
+.module{font-size:11px;padding:3px 7px}
+.flow-step .label{font-size:10px}
+.flow-step .dot{width:22px;height:22px;font-size:10px}
+.gen-step .label-g{font-size:9px}
+}
+@media (max-width:480px){
+.header h1{font-size:18px;letter-spacing:1px}
+.module{font-size:10px;padding:2px 5px;white-space:normal}
+.layer{padding:6px 6px 8px}
+.layer-label{font-size:10px}
+}
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--surface-light);border-radius:2px}
+.arrow-path{stroke-dasharray:200;stroke-dashoffset:200}
+.layer-label svg{width:16px;height:16px;flex-shrink:0}
+.svg-connectors{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:0}
+</style>
+</head>
+<body>
+<div class="screen-frame">
+<div class="crt-curve"></div>
+<div class="status-bar"><span class="dot"></span> Symbiont · Biocomputing System <span style="opacity:.5">|</span> GEN 0–3 <span style="opacity:.5">|</span> ONLINE</div>
+<div class="panel" id="panel">
+<div class="header" id="header">
+<h1>
+<svg viewBox="0 0 30 30"><use href="#icon-sym" /></svg>
+共生体
+</h1>
+<div class="subtitle">个人健康数字孪生系统 · <em>在你感觉到症状之前预警健康偏离</em></div>
+</div>
+<svg class="svg-connectors" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:0" preserveAspectRatio="none">
+<defs>
+<marker id="arrowHead" markerWidth="6" markerHeight="5" refX="6" refY="2.5" orient="auto"><polygon points="0 0, 6 2.5, 0 5" fill="var(--surface-light)" opacity=".5"/></marker>
+<marker id="arrowHeadFlow" markerWidth="6" markerHeight="5" refX="6" refY="2.5" orient="auto"><polygon points="0 0, 6 2.5, 0 5" fill="var(--accent-gold)"/></marker>
+<filter id="glow"><feGaussianBlur stdDeviation="1.5" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+<symbol id="icon-sym" viewBox="0 0 30 30">
+<circle cx="15" cy="15" r="10" stroke="currentColor" fill="none" stroke-width="1.8" stroke-dasharray="4 3" opacity="0.6"/>
+<circle cx="15" cy="15" r="5" stroke="currentColor" fill="none" stroke-width="1.5" opacity="0.4"/>
+<path d="M15 5v3M15 22v3M5 15h3M22 15h3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" opacity="0.5"/>
+<path d="M11 14a1 1 0 1 0 2 0 1 1 0 0 0-2 0zm6 0a1 1 0 1 0 2 0 1 1 0 0 0-2 0z" fill="currentColor" opacity="0.8"/>
+<path d="M10.5 18c2 2 7 2 9 0" stroke="currentColor" fill="none" stroke-width="1.2" stroke-linecap="round" opacity="0.6"/>
+</symbol>
+<symbol id="icon-watch" viewBox="0 0 20 20">
+<rect x="4" y="2" width="12" height="16" rx="2" stroke="currentColor" fill="none" stroke-width="1.5"/>
+<circle cx="10" cy="8" r="2" stroke="currentColor" fill="none" stroke-width="1.2"/>
+<path d="M10 10v3" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+</symbol>
+<symbol id="icon-chip" viewBox="0 0 20 20">
+<path d="M6 6h8v8H6z" stroke="currentColor" fill="none" stroke-width="1.2"/>
+<path d="M2 10h4M14 10h4M10 2v4M10 14v4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" opacity="0.6"/>
+<circle cx="10" cy="10" r="2" stroke="currentColor" fill="none" stroke-width="1.2" opacity="0.5"/>
+</symbol>
+<symbol id="icon-brain" viewBox="0 0 20 20">
+<path d="M10 4c-2 0-4 1-4 3 0 1.5.8 2.5 2 3-.5 1-1.5 2-3 2-1.5 0-3-1-3-3s1-2 1-3C3 5 4 3 6 3c1 0 2 .5 2 .5" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round"/>
+<path d="M10 4c2 0 4 1 4 3 0 1.5-.8 2.5-2 3 .5 1 1.5 2 3 2 1.5 0 3-1 3-3s-1-2-1-3c0-2-1-4-3-4-1 0-2 .5-2 .5" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round"/>
+<path d="M10 12v5M10 12l-2 3M10 12l2 3" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round"/>
+</symbol>
+<symbol id="icon-pulse" viewBox="0 0 20 20">
+<polyline points="2,12 6,12 8,6 10,14 12,8 14,12 18,12" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="10" cy="10" r="8" stroke="currentColor" fill="none" stroke-width="1.2" opacity="0.3"/>
+</symbol>
+<symbol id="icon-shield" viewBox="0 0 20 20">
+<path d="M10 2l7 3v5c0 4-3.5 7-7 8-3.5-1-7-4-7-8V5l7-3z" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linejoin="round"/>
+<path d="M8 11l1.5 1.5L13 9" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+</symbol>
+<symbol id="icon-graph" viewBox="0 0 20 20">
+<path d="M2 16h16M4 14l4-6 3 2 5-5" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="8" cy="10" r="1" fill="currentColor" opacity="0.4"/>
+<circle cx="16" cy="5" r="1" fill="currentColor" opacity="0.4"/>
+</symbol>
+<symbol id="icon-band" viewBox="0 0 20 20">
+<path d="M4 8a8 8 0 0 1 16 0v5a3 3 0 0 1-3 3H7a3 3 0 0 1-3-3V8z" stroke="currentColor" fill="none" stroke-width="1.5"/>
+<path d="M4 13h16" stroke="currentColor" fill="none" stroke-width="1.5" opacity="0.4"/>
+</symbol>
+<symbol id="icon-clock" viewBox="0 0 20 20">
+<circle cx="10" cy="10" r="7" stroke="currentColor" fill="none" stroke-width="1.5"/>
+<path d="M10 6v4l3 2" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round"/>
+</symbol>
+<symbol id="icon-cross" viewBox="0 0 20 20">
+<circle cx="10" cy="10" r="8" stroke="currentColor" fill="none" stroke-width="1.2" opacity="0.3"/>
+<path d="M7 10h6M10 7v6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+</symbol>
+<symbol id="icon-dna" viewBox="0 0 20 20">
+<path d="M6 4c2 2 2 6 0 8s-2 4 0 6" stroke="currentColor" fill="none" stroke-width="1.2" stroke-linecap="round"/>
+<path d="M14 4c-2 2-2 6 0 8s2 4 0 6" stroke="currentColor" fill="none" stroke-width="1.2" stroke-linecap="round"/>
+<line x1="6" y1="8" x2="14" y2="8" stroke="currentColor" stroke-width="1" opacity="0.3"/>
+<line x1="6" y1="12" x2="14" y2="12" stroke="currentColor" stroke-width="1" opacity="0.3"/>
+</symbol>
+<symbol id="icon-calibrate" viewBox="0 0 20 20">
+<path d="M4 10h.01M10 10h.01M16 10h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+<circle cx="10" cy="10" r="8" stroke="currentColor" fill="none" stroke-width="1.2" opacity="0.3"/>
+</symbol>
+<symbol id="icon-eye" viewBox="0 0 20 20">
+<path d="M10 4c-4 0-7 3-8 6 1 3 4 6 8 6s7-3 8-6c-1-3-4-6-8-6z" stroke="currentColor" fill="none" stroke-width="1.5"/>
+<circle cx="10" cy="10" r="2" stroke="currentColor" fill="none" stroke-width="1.2"/>
+</symbol>
+<symbol id="icon-log" viewBox="0 0 20 20">
+<path d="M4 3h12v14H4z" stroke="currentColor" fill="none" stroke-width="1.5" rx="1"/>
+<path d="M7 7h6M7 10h4" stroke="currentColor" fill="none" stroke-width="1.2" stroke-linecap="round" opacity="0.6"/>
+</symbol>
+</defs>
+</svg>
+<div class="layout-main">
+<div class="layers-column">
+<div class="layer" data-layer="access">
+<div class="layer-label"><svg viewBox="0 0 20 20"><use href="#icon-watch" /></svg>用户接入层 <span class="badge">ACCESS</span></div>
+<div class="layer-modules">
+<div class="module" data-detail="watch"><svg viewBox="0 0 20 20"><use href="#icon-watch" /></svg>穿戴设备接入 <span class="tag tag-gen0">Gen 0</span></div>
+<div class="module" data-detail="ring"><svg viewBox="0 0 20 20"><use href="#icon-band" /></svg>健康指环 <span class="tag tag-gen1">Gen 1</span></div>
+<div class="module" data-detail="patch"><svg viewBox="0 0 20 20"><use href="#icon-chip" /></svg>微针生化贴片 <span class="tag tag-gen2">Gen 2</span></div>
+<div class="module" data-detail="implant"><svg viewBox="0 0 20 20"><use href="#icon-brain" /></svg>皮下生物基站 <span class="tag tag-gen3">Gen 3</span></div>
+</div>
+</div>
+<div class="arrow-down" data-flow="数据汇聚">
+<svg viewBox="0 0 100 24"><line class="arrow-path" x1="50" y1="0" x2="50" y2="22" stroke="var(--surface-light)" stroke-width="1.5" marker-end="url(#arrowHead)" opacity=".5"/></svg>
+<div class="arrow-label">多源数据聚合</div>
+</div>
+<div class="layer" data-layer="engine">
+<div class="layer-label"><svg viewBox="0 0 20 20"><use href="#icon-brain" /></svg>核心引擎 <span class="badge">ENGINE</span></div>
+<div class="layer-modules">
+<div class="module" data-detail="baseline"><svg viewBox="0 0 20 20"><use href="#icon-calibrate" /></svg>个人基线引擎 <span class="tag tag-engine">14 天</span></div>
+<div class="module" data-detail="deviation"><svg viewBox="0 0 20 20"><use href="#icon-pulse" /></svg>多模态偏差检测</div>
+<div class="module" data-detail="early"><svg viewBox="0 0 20 20"><use href="#icon-shield" /></svg>早期预警引擎 <span class="tag tag-engine">12–48h</span></div>
+<div class="module" data-detail="twin"><svg viewBox="0 0 20 20"><use href="#icon-dna" /></svg>数字孪生模型</div>
+<div class="module" data-detail="sim"><svg viewBox="0 0 20 20"><use href="#icon-graph" /></svg>反事实模拟器</div>
+</div>
+</div>
+<div class="arrow-down" data-flow="特征存储">
+<svg viewBox="0 0 100 24"><line class="arrow-path" x1="50" y1="0" x2="50" y2="22" stroke="var(--surface-light)" stroke-width="1.5" marker-end="url(#arrowHead)" opacity=".5"/></svg>
+<div class="arrow-label">个人数据资产</div>
+</div>
+<div class="layer" data-layer="asset">
+<div class="layer-label"><svg viewBox="0 0 20 20"><use href="#icon-graph" /></svg>数据资产层 <span class="badge">ASSETS</span></div>
+<div class="layer-modules">
+<div class="module" data-detail="hrv"><svg viewBox="0 0 20 20"><use href="#icon-pulse" /></svg>HRV 时序 <span class="tag tag-asset">核心</span></div>
+<div class="module" data-detail="heart"><svg viewBox="0 0 20 20"><use href="#icon-cross" /></svg>静息心率</div>
+<div class="module" data-detail="temp"><svg viewBox="0 0 20 20"><use href="#icon-pulse" /></svg>体温趋势</div>
+<div class="module" data-detail="sleep"><svg viewBox="0 0 20 20"><use href="#icon-clock" /></svg>睡眠结构</div>
+<div class="module" data-detail="activity"><svg viewBox="0 0 20 20"><use href="#icon-watch" /></svg>活动量</div>
+<div class="module" data-detail="biochem"><svg viewBox="0 0 20 20"><use href="#icon-dna" /></svg>生化指标 <span class="tag tag-asset">Gen 2+</span></div>
+</div>
+</div>
+</div>
+<div class="side-column">
+<div class="side-module" data-detail="trend">
+<div class="layer-label"><svg viewBox="0 0 20 20"><use href="#icon-graph" /></svg>趋势看板</div>
+<div class="desc">日 / 周 / 月健康波动曲线 · 关键指标变化 · 偏离事件汇总</div>
+</div>
+<div class="side-module" data-detail="journal">
+<div class="layer-label"><svg viewBox="0 0 20 20"><use href="#icon-log" /></svg>健康日志</div>
+<div class="desc">记录饮食 / 情绪 / 症状 · 关联数据波动 · 反馈纳入模型</div>
+</div>
+<div class="side-module" data-detail="report">
+<div class="layer-label"><svg viewBox="0 0 20 20"><use href="#icon-eye" /></svg>趋势报告</div>
+<div class="desc">30 天趋势 · 90 天偏差汇总 · 年度基线演变回顾</div>
+</div>
+</div>
+</div>
+<div class="user-flow">
+<div class="user-flow-header">
+<svg viewBox="0 0 20 20" style="width:14px;height:14px;flex-shrink:0"><use href="#icon-pulse"/></svg>
+用户流程路径
+<span style="font-size:7px;color:var(--text-dim);font-family:var(--font-mono)">[ 动画播放中 ]</span>
+</div>
+<div class="user-flow-steps" id="flowSteps">
+<div class="flow-step"><div class="dot">1</div><span class="label">接入设备</span><div class="conn"></div></div>
+<div class="flow-step"><div class="dot">2</div><span class="label">14 天基线学习</span><div class="conn"></div></div>
+<div class="flow-step"><div class="dot">3</div><span class="label">日常监测</span><div class="conn"></div></div>
+<div class="flow-step"><div class="dot">4</div><span class="label">偏差预警</span><div class="conn"></div></div>
+<div class="flow-step"><div class="dot">5</div><span class="label">反事实模拟</span></div>
+</div>
+</div>
+<div class="gen-bar">
+<div class="gen-bar-header">
+<svg viewBox="0 0 20 20" style="width:14px;height:14px;flex-shrink:0"><use href="#icon-chip"/></svg>
+硬件演进路线
+</div>
+<div class="gen-steps" id="genSteps">
+<div class="gen-step"><div class="dot-g g0">0</div><span class="label-g">已有设备</span><div class="conn-g"></div></div>
+<div class="gen-step"><div class="dot-g g1">1</div><span class="label-g">健康指环</span><div class="conn-g"></div></div>
+<div class="gen-step"><div class="dot-g g2">2</div><span class="label-g">微针贴片</span><div class="conn-g"></div></div>
+<div class="gen-step"><div class="dot-g g3">3</div><span class="label-g">皮下基站</span></div>
+</div>
+</div>
+</div>
+</div>
+<div class="detail-overlay">
+<div class="detail-card">
+<button class="close-btn">✕ CLOSE</button>
+<div id="detailContent"></div>
+</div>
+</div>
+<script>
+const DETAILS = {
+"watch":{title:'<svg viewBox="0 0 20 20"><use href="#icon-watch"/></svg> 穿戴设备接入 (Gen 0)',items:['接入 Apple Watch / Garmin / Oura / 华为 / 小米等已有设备','采集 HRV / 静息心率 / 体温 / 睡眠结构 / 活动量','用户零额外成本，仅需授权数据共享','Gen 0 阶段无法监测生化指标（乳酸 / 皮质醇 / 葡萄糖）','HRV 精度受限于各品牌 PPG 传感器质量']},
+"ring":{title:'<svg viewBox="0 0 20 20"><use href="#icon-band"/></svg> 健康指环 (Gen 1)',items:['自研光学传感器指环，优化 PPG 信号质量','体温连续追踪精度达到 ±0.1°C','续航 7 天，IP68 防水，洗澡游泳不摘','比 Oura 更小更轻（< 4g），适合长期佩戴','支持实时 HRV 片上计算，减少蓝牙传输功耗']},
+"patch":{title:'<svg viewBox="0 0 20 20"><use href="#icon-chip"/></svg> 微针生化贴片 (Gen 2)',items:['无痛微针刺入表皮 0.3mm，采集皮下组织液','连续监测乳酸 → 运动疲劳与恢复状态','连续监测皮质醇 → 心理压力客观量化','连续监测葡萄糖 → 代谢与饮食反馈','7–14 天更换一片，操作像创可贴一样简单','首次实现体内化学信号的可穿戴连续感知']},
+"implant":{title:'<svg viewBox="0 0 20 20"><use href="#icon-brain"/></svg> 皮下生物基站 (Gen 3)',items:['永久共生体内，不需要摘、不需要充电','体内葡萄糖生物燃料电池自我供电','双向通信：监测全部指标 + 精准微量干预','皮下基站 → 手机端自动同步，完全无感','自动释放抗炎因子 / 调节激素 / 修复信号','终极形态：身体传感器 → 数字孪生 → 自动干预的完整闭环']},
+"baseline":{title:'<svg viewBox="0 0 20 20"><use href="#icon-calibrate"/></svg> 个人基线引擎',items:['新用户前 14 天仅采集数据，不触发预警','各维度取均值 ± 2σ 作为正常区间范围','逐日滚动更新，近期数据加权更高','自动区分工作日 / 周末 / 昼夜节律差异','长期用户的基线随季节缓慢自适应调整','变化斜率超过阈值则视为事件而非基线漂移']},
+"deviation":{title:'<svg viewBox="0 0 20 20"><use href="#icon-pulse"/></svg> 多模态偏差检测',items:['HRV：夜间 RMSSD 均值 vs 过去 14 天同期区间','静息心率：睡眠最低点 vs 基线均值 ±10%','体温：夜间最低点 vs 基线均值 ±0.5°C','睡眠：深睡比例 / 效率 vs 基线均值 ±15%','活动量：日步数 / 运动时长 vs 同期预测值','各维度标准化后加权求和生成综合偏离指数']},
+"early":{title:'<svg viewBox="0 0 20 20"><use href="#icon-shield"/></svg> 早期预警引擎',items:['综合指数超过 1.5σ 触发黄色预警，超过 2.5σ 触发红色预警','HRV 权重 0.4、体温 0.25、静息心率 0.2、睡眠 0.1、活动 0.05','用户可调节灵敏度：保守 / 标准 / 敏感 三档','同一事件 24h 内最多推送 1 次，避免预警疲劳','各维度回归基线范围持续 48 小时自动解除','预警不声称具体疾病名称，仅提示偏离事实']},
+"twin":{title:'<svg viewBox="0 0 20 20"><use href="#icon-dna"/></svg> 数字孪生模型',items:['基于已知生理动力学方程作为骨架（HRV-恢复模型 / 体温节律模型）','用 30 天以上的个人数据学习残差修正项，补齐个体差异','每日新数据自动微调模型参数，无需用户参与','新用户从群体匿名先验起步，个人数据逐步替代','模型确保输出始终在生理合理范围内','作为反事实模拟和趋势预测的基础引擎']},
+"sim":{title:'<svg viewBox="0 0 20 20"><use href="#icon-graph"/></svg> 反事实模拟器',items:['睡眠模拟："今晚少睡 1 小时，明早恢复评分会怎样"','运动模拟："明天跑 10 公里，后天恢复状态如何"','饮食模拟："晚餐改低碳饮食，明早 HRV 会怎样"','多因素组合模拟：同时调整睡眠 + 运动 + 饮食','模拟结果随变量增加标注置信度','用你的数字孪生体分别推演不同方案并对比']},
+"hrv":{title:'<svg viewBox="0 0 20 20"><use href="#icon-pulse"/></svg> HRV 时序',items:['夜间 RMSSD 均值：副交感神经活性的核心指标','LF/HF 比值：交感 / 副交感平衡','逐夜滚动统计，剔除异常片段（体动、饮酒等）','Gen 0 来源 PPG，Gen 1+ 来源优化光学传感器','偏差检测中的最高权重维度（0.4）']},
+"heart":{title:'<svg viewBox="0 0 20 20"><use href="#icon-cross"/></svg> 静息心率趋势',items:['取睡眠期间最低心率作为基准值','短期升高（+8% 以上）预示感染或炎症反应','长期升高（持续数周）暗示过度疲劳或慢性压力','与 HRV 结合分析：心率升高 + HRV 下降 = 强预警信号']},
+"temp":{title:'<svg viewBox="0 0 20 20"><use href="#icon-pulse"/></svg> 体温趋势',items:['夜间睡眠最低体温作为当日基准值','偏离基线 +0.5°C 以上为显著异常','连续偏离 2 天以上触发关注','戒指 / 贴片测量精度优于手腕设备','体温升高 + HRV 下降是最强感染预警组合']},
+"sleep":{title:'<svg viewBox="0 0 20 20"><use href="#icon-clock"/></svg> 睡眠结构',items:['深睡比例：恢复性睡眠的关键指标','睡眠效率：实际睡眠时间 / 卧床时间','入睡潜伏期：从上床到入睡的时间','连续多日深睡比例下降 15%+ 视为恢复不足','结合 HRV 共同评估夜间恢复质量']},
+"activity":{title:'<svg viewBox="0 0 20 20"><use href="#icon-watch"/></svg> 活动量与步态',items:['日步数 / 运动时长 / 活动强度分布','活动量骤降（低于基线 40%）可能是疾病前兆','长期活动量下降趋势暗示慢性疲劳','步态稳定性分析（Gen 2+ 支持）']},
+"biochem":{title:'<svg viewBox="0 0 20 20"><use href="#icon-dna"/></svg> 生化指标',items:['Gen 2（微针贴片）起支持：乳酸 / 皮质醇 / 葡萄糖','乳酸：量化运动疲劳与恢复状态','皮质醇：客观衡量心理压力水平','葡萄糖：代谢健康与饮食反馈','Gen 3（皮下基站）扩展至细胞因子 / 激素 / 电解质']},
+"trend":{title:'<svg viewBox="0 0 20 20"><use href="#icon-graph"/></svg> 趋势看板',items:['日 / 周 / 月维度的健康波动曲线展示','各维度偏离指数可视化（雷达图 / 热力图）','偏离事件时间线标注（何时触发 / 持续多久 / 何时解除）','环比趋势：本周 vs 上周 各指标变化','一键切换时间粒度和维度显示']},
+"journal":{title:'<svg viewBox="0 0 20 20"><use href="#icon-log"/></svg> 健康日志',items:['手动记录饮食 / 情绪 / 症状 / 生活事件','日志与数据波动自动关联对齐','系统从中提取模式：某种食物后 HRV 变化？','反馈信息纳入数字孪生模型修正参数','不记录可识别的个人身份信息']},
+"report":{title:'<svg viewBox="0 0 20 20"><use href="#icon-eye"/></svg> 趋势报告',items:['30 天趋势报告：各维度变化趋势与总体评分','90 天偏差事件汇总：频次 / 严重程度 / 模式','年度基线演变回顾：你的健康基线一年来的变化','报告可导出为 PDF 供参考','所有报告仅基于你个人的数据生成']}
+};
+document.addEventListener("DOMContentLoaded",()=>{
+const layers=document.querySelectorAll(".layer");
+const arrows=document.querySelectorAll(".arrow-down");
+const flowSteps=document.querySelectorAll(".flow-step");
+const sideModules=document.querySelectorAll(".side-module");
+const userFlow=document.querySelector(".user-flow");
+const genBar=document.querySelector(".gen-bar");
+const genSteps=document.querySelectorAll(".gen-step");
+const overlays=document.querySelector(".detail-overlay");
+const detailContent=document.querySelector("#detailContent");
+const closeBtn=document.querySelector(".close-btn");
+const mainTimeline=anime.timeline({easing:"easeOutCubic"});
+mainTimeline.add({targets:"#header",opacity:[0,1],translateY:[-10,0],duration:600});
+mainTimeline.add({targets:sideModules,opacity:[0,1],translateX:[15,0],duration:400,delay:anime.stagger(100)},"-=200");
+mainTimeline.add({targets:layers,opacity:[0,1],translateY:[20,0],duration:450,delay:anime.stagger(130)},"-=100");
+mainTimeline.add({targets:arrows,opacity:[0,1],duration:350,delay:anime.stagger(180)},"-=200");
+setTimeout(()=>{document.querySelectorAll(".arrow-path").forEach((p)=>{anime({targets:p,strokeDashoffset:[200,0],duration:700,delay:300,easing:"easeInOutCubic"});});},1400);
+mainTimeline.add({targets:userFlow,opacity:[0,1],duration:400},"-=100");
+mainTimeline.add({targets:flowSteps,opacity:[0,1],translateX:[-8,0],duration:300,delay:anime.stagger(100)},"-=200");
+mainTimeline.add({targets:genBar,opacity:[0,1],duration:400},"-=100");
+mainTimeline.add({targets:genSteps,opacity:[0,1],translateX:[-6,0],duration:250,delay:anime.stagger(100)},"-=200");
+let flowIndex=0;function pulseFlow(){flowSteps.forEach((s)=>s.querySelector(".dot").classList.remove("active"));flowSteps[flowIndex].querySelector(".dot").classList.add("active");flowIndex=(flowIndex+1)%flowSteps.length;}
+pulseFlow();setInterval(pulseFlow,2500);
+layers.forEach((l)=>{l.addEventListener("mouseenter",()=>{anime({targets:l,borderColor:"var(--accent)",backgroundColor:"rgba(79,195,247,0.05)",duration:200});});l.addEventListener("mouseleave",()=>{anime({targets:l,borderColor:"var(--surface-light)",backgroundColor:"rgba(30,42,54,0.5)",duration:300});});});
+function openDetail(id){const data=DETAILS[id];if(!data)return;detailContent.innerHTML=`<h2>${data.title}</h2><ul>${data.items.map((i)=>`<li>${i}</li>`).join("")}</ul>`;overlays.classList.add("open");anime({targets:".detail-card",scale:[0.85,1],opacity:[0,1],duration:250,easing:"easeOutCubic"});}
+function closeDetail(){anime({targets:".detail-card",scale:[1,0.85],opacity:[1,0],duration:200,easing:"easeInCubic",complete:()=>{overlays.classList.remove("open");}});}
+document.querySelectorAll(".module[data-detail]").forEach((el)=>{el.addEventListener("click",()=>openDetail(el.dataset.detail));});
+document.querySelectorAll(".side-module[data-detail]").forEach((el)=>{el.addEventListener("click",()=>openDetail(el.dataset.detail));});
+closeBtn.addEventListener("click",closeDetail);
+overlays.addEventListener("click",(e)=>{if(e.target===overlays)closeDetail();});
+const board=document.getElementById("panel");
+for(let i=0;i<15;i++){const dot=document.createElement("div");dot.style.cssText=`position:absolute;pointer-events:none;width:${2+Math.random()*3}px;height:${2+Math.random()*3}px;border-radius:50%;background:rgba(79,195,247,0.12);filter:blur(4px);left:${Math.random()*100}%;top:${Math.random()*100}%;opacity:${0.03+Math.random()*0.08}`;board.appendChild(dot);anime({targets:dot,translateX:[0,-8+Math.random()*16],translateY:[0,-8+Math.random()*16],opacity:[0.03,0.12,0.03],duration:4000+Math.random()*5000,direction:"alternate",loop:true,easing:"easeInOutSine"});}
+});
+</script>
+</body>
+</html>

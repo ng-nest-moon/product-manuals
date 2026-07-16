@@ -1,0 +1,368 @@
+﻿<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>地震救援</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;600;800&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <style>
+      *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+      :root {
+        --board: #2a1a1a;
+        --board-dark: #1a0f0f;
+        --chalk: #f0e0d0;
+        --chalk-dim: rgba(240, 224, 208, 0.55);
+        --chalk-dimmer: rgba(240, 224, 208, 0.18);
+        --chalk-translucent: rgba(240, 224, 208, 0.07);
+        --accent-orange: #d4875a;
+        --accent-red: #c97060;
+        --accent-blue: #70a0b8;
+        --accent-green: #7a9e7e;
+        --accent-gold: #e8c080;
+        --accent-lavender: #a898c0;
+        --scanline: rgba(0, 0, 0, 0.05);
+        --font-display: "Noto Sans SC", -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+        --font-mono: "IBM Plex Mono", "SFMono-Regular", Menlo, Consolas, "Courier New", monospace;
+      }
+      html, body { height: 100%; background: #1a1010; font-family: var(--font-mono); color: var(--chalk); overflow-x: hidden; }
+      .screen-frame { position: relative; min-height: 100vh; padding: 28px 20px 20px; background: #1a1010; border-radius: 20px; box-shadow: inset 0 0 40px rgba(0,0,0,0.8), 0 8px 40px rgba(0,0,0,0.6); max-width: 1360px; margin: 0 auto; }
+      .screen-frame::before { content: ""; position: absolute; inset: 0; border-radius: 20px; background: repeating-linear-gradient(0deg, transparent, transparent 2px, var(--scanline) 2px, var(--scanline) 4px); pointer-events: none; z-index: 100; }
+      .crt-curve { position: absolute; inset: 0; border-radius: 20px; background: radial-gradient(ellipse at center, transparent 65%, rgba(0,0,0,0.35) 100%); pointer-events: none; z-index: 99; }
+      .power-led { position: absolute; top: 8px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 8px; font-family: var(--font-display); font-size: 10px; font-weight: 600; color: var(--chalk-dim); letter-spacing: 1.5px; z-index: 101; }
+      .power-led span { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #ef4444; box-shadow: 0 0 6px #ef4444; animation: led-pulse 2s ease-in-out infinite; }
+      @keyframes led-pulse { 0%,100% { opacity: 1; box-shadow: 0 0 6px #ef4444; } 50% { opacity: 0.5; box-shadow: 0 0 2px #ef4444; } }
+      .chalkboard { position: relative; background: var(--board); border: 3px solid #3a2a1a; border-radius: 4px; padding: 32px 28px 28px; box-shadow: inset 0 0 60px rgba(0,0,0,0.5), 0 4px 0 #2a1a10; min-height: calc(100vh - 80px); }
+      .chalkboard::after { content: ""; position: absolute; inset: 0; background-image: radial-gradient(circle at 20% 30%, rgba(240,224,208,0.02) 0, transparent 60%), radial-gradient(circle at 80% 70%, rgba(240,224,208,0.015) 0, transparent 50%), radial-gradient(circle at 50% 50%, rgba(240,224,208,0.01) 0, transparent 70%); pointer-events: none; border-radius: 2px; }
+      .header { text-align: center; margin-bottom: 20px; position: relative; z-index: 1; }
+      .header .siren-icon { width: 32px; height: 32px; color: var(--accent-red); margin-bottom: 2px; }
+      .header h1 { font-family: var(--font-display); font-size: 28px; font-weight: 800; color: var(--accent-gold); text-shadow: 0 0 8px rgba(232,192,128,0.25); letter-spacing: 4px; margin-bottom: 6px; display: flex; align-items: center; justify-content: center; gap: 10px; }
+      .header .subtitle { font-size: 13px; color: var(--chalk-dim); letter-spacing: 0.5px; line-height: 1.7; }
+      .header .subtitle em { font-style: normal; color: var(--accent-orange); }
+      .header .tagline { font-size: 14px; color: var(--accent-blue); max-width: 600px; margin: 10px auto 0; padding: 10px 16px; border-left: 2px solid var(--accent-blue); line-height: 1.5; background: rgba(112,160,184,0.05); border-radius: 2px; }
+      .layout-main { display: flex; gap: 20px; position: relative; z-index: 1; }
+      .layers-column { flex: 1; min-width: 0; }
+      .side-column { width: 220px; flex-shrink: 0; display: flex; flex-direction: column; gap: 10px; }
+      .svg-connectors { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; }
+      .layer { position: relative; background: var(--chalk-translucent); border: 1.5px solid var(--chalk-dimmer); border-radius: 6px; padding: 12px 14px 14px; transition: border-color 0.3s, background 0.3s; opacity: 0; transform: translateY(20px); }
+      .layer:hover { border-color: var(--accent-gold); background: rgba(232,192,128,0.06); }
+      .layer-label { font-family: var(--font-display); font-size: 12px; font-weight: 600; color: var(--chalk-dim); letter-spacing: 1px; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+      .layer-label .badge { font-size: 10px; font-weight: 600; background: var(--chalk-dimmer); color: var(--board); padding: 1px 7px; border-radius: 3px; letter-spacing: 0; }
+      .layer-modules { display: flex; flex-wrap: wrap; gap: 6px; }
+      .module { background: rgba(240,224,208,0.06); border: 1px solid var(--chalk-dimmer); border-radius: 4px; padding: 5px 10px; font-size: 12px; line-height: 1.5; color: var(--chalk); transition: all 0.25s; white-space: nowrap; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; }
+      .module:hover { background: rgba(240,224,208,0.12); border-color: var(--chalk); transform: translateY(-1px); }
+      svg.icon, .module svg, .side-module svg, .dot svg { width: 16px; height: 16px; flex-shrink: 0; }
+      .module svg { width: 15px; height: 15px; }
+      .dot svg { width: 14px; height: 14px; }
+      .layer-label > svg:first-child { width: 18px; height: 18px; flex-shrink: 0; }
+      .module .tag { font-size: 10px; font-weight: 600; padding: 1px 6px; border-radius: 3px; margin-left: 4px; opacity: 0.8; }
+      .tag-fire { background: var(--accent-red); color: var(--board); }
+      .tag-med { background: var(--accent-green); color: var(--board); }
+      .tag-tech { background: var(--accent-blue); color: var(--board); }
+      .tag-gold { background: var(--accent-gold); color: var(--board); }
+      .layer[data-layer="present"] { border-left: 3px solid var(--accent-gold); }
+      .layer[data-layer="core"] { border-left: 3px solid var(--accent-orange); }
+      .layer[data-layer="data"] { border-left: 3px solid var(--accent-blue); }
+      .layer[data-layer="mode"] { border-left: 3px solid var(--accent-green); }
+      .arrow-down { display: flex; align-items: center; justify-content: center; height: 28px; position: relative; opacity: 0; }
+      .arrow-down svg { width: 100%; height: 28px; }
+      .arrow-label { position: absolute; font-family: var(--font-display); font-size: 12px; font-weight: 600; color: var(--chalk-dim); letter-spacing: 0.5px; background: var(--board); padding: 0 10px; text-align: center; white-space: nowrap; }
+      .side-module { background: var(--chalk-translucent); border: 1.5px solid var(--chalk-dimmer); border-left: 3px solid var(--accent-lavender); border-radius: 6px; padding: 10px 12px; cursor: pointer; opacity: 0; transform: translateX(15px); transition: border-color 0.3s, background 0.3s; }
+      .side-module:hover { border-color: var(--accent-lavender); background: rgba(168,152,192,0.08); }
+      .side-module .layer-label { margin-bottom: 4px; }
+      .side-module .desc { font-size: 11px; color: var(--chalk-dim); line-height: 1.5; }
+      .user-flow { margin-top: 22px; padding: 14px 16px; background: var(--chalk-translucent); border: 1.5px solid var(--chalk-dimmer); border-radius: 6px; position: relative; z-index: 1; opacity: 0; }
+      .user-flow-header { font-family: var(--font-display); font-size: 12px; font-weight: 600; color: var(--accent-gold); letter-spacing: 0.5px; margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
+      .user-flow-steps { display: flex; align-items: center; flex-wrap: wrap; gap: 0; }
+      .flow-step { display: flex; align-items: center; gap: 0; opacity: 0; }
+      .flow-step .dot { width: 28px; height: 28px; border-radius: 50%; border: 2px solid var(--chalk-dimmer); background: var(--board); display: flex; align-items: center; justify-content: center; font-size: 13px; line-height: 1; flex-shrink: 0; transition: all 0.3s; }
+      .flow-step .dot.active { border-color: var(--accent-gold); background: rgba(232,192,128,0.12); box-shadow: 0 0 10px rgba(232,192,128,0.2); }
+      .flow-step .label { font-size: 11px; color: var(--chalk-dim); white-space: nowrap; margin: 0 6px 0 5px; line-height: 1; }
+      .flow-step .conn { width: 20px; height: 2px; background: var(--chalk-dimmer); position: relative; flex-shrink: 0; }
+      .flow-step .conn::after { content: "▸"; position: absolute; right: -4px; top: -6px; font-size: 10px; color: var(--chalk-dimmer); }
+      .flow-step:last-child .conn { display: none; }
+      .detail-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 200; display: none; align-items: center; justify-content: center; backdrop-filter: blur(2px); }
+      .detail-overlay.open { display: flex; }
+      .detail-card { background: var(--board-dark); border: 2px solid var(--chalk-dimmer); border-radius: 8px; padding: 24px 28px; max-width: 520px; width: 90%; max-height: 80vh; overflow-y: auto; position: relative; box-shadow: 0 8px 40px rgba(0,0,0,0.6); will-change: transform, opacity; backface-visibility: hidden; transform: translateZ(0); }
+      .detail-card h2 { margin-top: 0; font-family: var(--font-display); font-size: 17px; font-weight: 800; color: var(--accent-gold); margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px solid var(--chalk-dimmer); display: flex; align-items: center; gap: 8px; }
+      .detail-card h2 svg { width: 22px; height: 22px; flex-shrink: 0; }
+      .detail-card h3 { font-family: var(--font-display); font-size: 13px; font-weight: 600; color: var(--chalk-dim); margin: 14px 0 6px; }
+      .detail-card ul { list-style: none; padding: 0; }
+      .detail-card li { font-size: 13px; color: var(--chalk); padding: 5px 0 5px 14px; border-left: 2px solid var(--chalk-dimmer); margin-bottom: 6px; line-height: 1.6; }
+      .detail-card li .hl { color: var(--accent-orange); font-weight: 600; }
+      .detail-card li .hl-w { color: var(--accent-gold); font-weight: 600; }
+      .detail-card .close-btn { position: absolute; top: 14px; right: 16px; font-family: var(--font-display); font-size: 13px; font-weight: 600; color: var(--chalk-dimmer); background: none; border: 1px solid var(--chalk-dimmer); border-radius: 4px; padding: 4px 12px; cursor: pointer; transition: all 0.2s; z-index: 1; }
+      .detail-card .close-btn:hover { color: var(--accent-red); border-color: var(--accent-red); }
+      .detail-card::-webkit-scrollbar { width: 4px; }
+      .detail-card::-webkit-scrollbar-track { background: var(--board-dark); }
+      .detail-card::-webkit-scrollbar-thumb { background: var(--chalk-dimmer); border-radius: 2px; }
+      .chalk-glow { position: absolute; pointer-events: none; width: 4px; height: 4px; border-radius: 50%; background: rgba(240,224,208,0.15); filter: blur(6px); }
+      ::-webkit-scrollbar { width: 4px; }
+      ::-webkit-scrollbar-track { background: var(--board-dark); }
+      ::-webkit-scrollbar-thumb { background: var(--chalk-dimmer); border-radius: 2px; }
+      .arrow-path { stroke-dasharray: 200; stroke-dashoffset: 200; }
+      .bg-embers-wrap { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; pointer-events: none; z-index: 0; overflow: hidden; }
+      .bg-ember { width: 300px; height: 300px; opacity: 0.03; color: var(--accent-orange); filter: blur(3px); }
+      .ember-particle { position: absolute; pointer-events: none; border-radius: 50%; will-change: transform, opacity; mix-blend-mode: screen; }
+      @media (max-width: 860px) { .layout-main { flex-direction: column; } .side-column { width: 100%; flex-direction: row; flex-wrap: wrap; } .side-module { flex: 1; min-width: 160px; } .header h1 { font-size: 22px; } .screen-frame { padding: 24px 12px 12px; } .chalkboard { padding: 20px 14px 16px; } .module { font-size: 11px; padding: 4px 8px; } .flow-step .label { font-size: 10px; } .flow-step .dot { width: 24px; height: 24px; font-size: 11px; } }
+      @media (max-width: 480px) { .header h1 { font-size: 18px; letter-spacing: 2px; } .module { font-size: 10px; padding: 3px 6px; white-space: normal; } .layer { padding: 8px 8px 10px; } .layer-label { font-size: 10px; } }
+    .layer-label svg{width:16px;height:16px;flex-shrink:0}
+</style>
+  </head>
+  <body>
+    <div class="screen-frame">
+      <div class="crt-curve"></div>
+      <div class="power-led"><span></span> RESCUE · COMMAND · MODE</div>
+      <div class="chalkboard" id="chalkboard">
+        <div class="bg-embers-wrap">
+          <svg class="bg-ember" viewBox="0 0 100 100"><path d="M50 10L35 40h10L40 90l10-25 10 25-5-50h10L50 10z" fill="currentColor"/><circle cx="50" cy="25" r="3" fill="currentColor" opacity="0.5"/><circle cx="42" cy="45" r="2" fill="currentColor" opacity="0.3"/><circle cx="58" cy="50" r="2.5" fill="currentColor" opacity="0.4"/></svg>
+        </div>
+        <div class="header">
+          <svg class="siren-icon" viewBox="0 0 24 24"><path d="M12 2L2 7v10l10 5 10-5V7l-10-5z" stroke="currentColor" fill="none" stroke-width="1.6"/><circle cx="12" cy="14" r="3" stroke="currentColor" fill="none" stroke-width="1.5"/><path d="M12 5v3M12 17v2M6 9l2 2M16 11l2-2M6 15l2-2M16 15l2-2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+          <h1>地震救援</h1>
+          <div class="subtitle">俯视图即时策略救援模拟 —— <em>在废墟之上，每一次选择都是生命</em></div>
+          <div class="tagline">指挥官，时间紧迫。调派力量，处理连锁灾害，做出艰难取舍。</div>
+        </div>
+        <svg class="svg-connectors" id="connectorSvg" preserveAspectRatio="none">
+          <defs>
+            <marker id="arrowHead" markerWidth="6" markerHeight="5" refX="6" refY="2.5" orient="auto"><polygon points="0 0, 6 2.5, 0 5" fill="var(--chalk-dimmer)" opacity=".6"/></marker>
+            <symbol id="icon-target" viewBox="0 0 20 20"><circle cx="10" cy="10" r="7" stroke="currentColor" fill="none" stroke-width="1.5"/><circle cx="10" cy="10" r="3" stroke="currentColor" fill="none" stroke-width="1.5"/><path d="M10 1v3m0 12v3M1 10h3m12 0h3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></symbol>
+            <symbol id="icon-grid" viewBox="0 0 20 20"><rect x="3" y="3" width="14" height="14" rx="1.5" stroke="currentColor" fill="none" stroke-width="1.5"/><path d="M3 10h14M10 3v14" stroke="currentColor" fill="none" stroke-width="1.2"/></symbol>
+            <symbol id="icon-users" viewBox="0 0 20 20"><circle cx="7.5" cy="6" r="3" stroke="currentColor" fill="none" stroke-width="1.5"/><circle cx="14" cy="7" r="2.5" stroke="currentColor" fill="none" stroke-width="1.5"/><path d="M3 18c1-4 4-5 9-5s5 1 6 5" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round"/></symbol>
+            <symbol id="icon-heart" viewBox="0 0 20 20"><path d="M10 17c-6-4-8-7-8-10 0-2.5 2-4 4-4 2 0 4 1.5 4 3 0-1.5 2-3 4-3s4 1.5 4 4c0 3-2 6-8 10z" stroke="currentColor" fill="none" stroke-width="1.5"/></symbol>
+            <symbol id="icon-fire" viewBox="0 0 20 20"><path d="M10 2S7 6 7 9c0 2 1.5 3 3 3s3-1 3-3c0-3-3-7-3-7z" stroke="currentColor" fill="none" stroke-width="1.5"/><path d="M10 12v2M8 16c0 1.5 1 2 2 2s2-.5 2-2" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round"/></symbol>
+            <symbol id="icon-db" viewBox="0 0 20 20"><ellipse cx="10" cy="5.5" rx="6" ry="2.5" stroke="currentColor" fill="none" stroke-width="1.5"/><path d="M4 5.5v9c0 1.4 2.7 2.5 6 2.5s6-1.1 6-2.5v-9" stroke="currentColor" fill="none" stroke-width="1.5"/><path d="M4 10c0 1.4 2.7 2.5 6 2.5s6-1.1 6-2.5" stroke="currentColor" fill="none" stroke-width="1.5"/></symbol>
+            <symbol id="icon-gear" viewBox="0 0 20 20"><circle cx="10" cy="10" r="4" stroke="currentColor" fill="none" stroke-width="1.5"/><path d="M10 2l1 2h2l1-1 2 2-1 1v2l2 1v2l-2 1v2l1 1-2 2-1-1h-2l-1 2h-2l-1-2H7l-1 1-2-2 1-1v-2l-2-1v-2l2-1V7l-1-1 2-2 1 1h2l1-2z" stroke="currentColor" fill="none" stroke-width="1.3"/></symbol>
+            <symbol id="icon-clock" viewBox="0 0 20 20"><circle cx="10" cy="10" r="7" stroke="currentColor" fill="none" stroke-width="1.5"/><path d="M10 6v4l3 2" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round"/></symbol>
+            <symbol id="icon-shield" viewBox="0 0 20 20"><path d="M10 2l7 3v5c0 3.5-3 7-7 8-4-1-7-4.5-7-8V5l7-3z" stroke="currentColor" fill="none" stroke-width="1.5"/></symbol>
+            <symbol id="icon-map" viewBox="0 0 20 20"><path d="M3 5l5-2 4 2 5-2v12l-5 2-4-2-5 2V5z" stroke="currentColor" fill="none" stroke-width="1.5"/><path d="M8 3v12M12 5v12" stroke="currentColor" fill="none" stroke-width="1.2"/></symbol>
+            <symbol id="icon-med" viewBox="0 0 20 20"><rect x="7" y="3" width="6" height="14" rx="1" stroke="currentColor" fill="none" stroke-width="1.5"/><path d="M3 10h14" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round"/></symbol>
+            <symbol id="icon-truck" viewBox="0 0 20 20"><rect x="1" y="8" width="14" height="6" rx="1" stroke="currentColor" fill="none" stroke-width="1.5"/><circle cx="5" cy="16" r="2" stroke="currentColor" fill="none" stroke-width="1.5"/><circle cx="12" cy="16" r="2" stroke="currentColor" fill="none" stroke-width="1.5"/><path d="M15 10l3-2v6h-3" stroke="currentColor" fill="none" stroke-width="1.5"/></symbol>
+            <symbol id="icon-trophy" viewBox="0 0 24 24"><path d="M6 3h12v5c0 4-3 7-6 7s-6-3-6-7V3z" stroke="currentColor" fill="none" stroke-width="1.5"/><path d="M6 8H4c0 3 1 5 2 6M18 8h2c0 3-1 5-2 6M9 15l3 3 3-3M12 18v5" stroke="currentColor" fill="none" stroke-width="1.5"/></symbol>
+            <symbol id="icon-bell" viewBox="0 0 20 20"><path d="M5 8c0-3 2-5 5-5s5 2 5 5v3l2 2v1H3v-1l2-2V8z" stroke="currentColor" fill="none" stroke-width="1.5"/><path d="M8 16c0 1.5 1 2 2 2s2-.5 2-2" stroke="currentColor" fill="none" stroke-width="1.5"/></symbol>
+            <symbol id="icon-activity" viewBox="0 0 20 20"><path d="M3 17h14M5 12V8M9 14V5M13 13V9M17 12V7" stroke="currentColor" fill="none" stroke-width="1.5"/></symbol>
+            <symbol id="icon-star" viewBox="0 0 20 20"><path d="M10 2l2 4 4 .5-3 3 1 4.5-4-2-4 2 1-4.5-3-3L8 6l2-4z" stroke="currentColor" fill="none" stroke-width="1.5"/></symbol>
+            <symbol id="icon-route" viewBox="0 0 20 20"><path d="M3 17l5-8 4 2 5-8" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round"/></symbol>
+            <symbol id="icon-x" viewBox="0 0 20 20"><path d="M5 5l10 10M15 5L5 15" stroke="currentColor" fill="none" stroke-width="1.8" stroke-linecap="round"/></symbol>
+          </defs>
+        </svg>
+        <div class="layout-main">
+          <div class="layers-column" id="layersColumn">
+            <div class="layer" data-layer="present" id="layer-present">
+              <div class="layer-label"><svg viewBox="0 0 20 20"><use href="#icon-target"/></svg> 表现层 <span class="badge">VIEW</span></div>
+              <div class="layer-modules">
+                <div class="module" data-detail="map-view"><svg viewBox="0 0 20 20"><use href="#icon-grid"/></svg> 俯视图地图</div>
+                <div class="module" data-detail="command"><svg viewBox="0 0 20 20"><use href="#icon-target"/></svg> 指令面板</div>
+                <div class="module" data-detail="events"><svg viewBox="0 0 20 20"><use href="#icon-bell"/></svg> 事件弹窗</div>
+                <div class="module" data-detail="hud"><svg viewBox="0 0 20 20"><use href="#icon-activity"/></svg> 状态 HUD</div>
+                <div class="module" data-detail="report"><svg viewBox="0 0 20 20"><use href="#icon-trophy"/></svg> 战报系统</div>
+              </div>
+            </div>
+            <div class="arrow-down" id="arrow1" data-flow="指令·反馈">
+              <svg viewBox="0 0 100 28"><line class="arrow-path" x1="50" y1="0" x2="50" y2="26" stroke="var(--chalk-dimmer)" stroke-width="1.5" marker-end="url(#arrowHead)" opacity=".5"/></svg>
+              <div class="arrow-label">指令 · 反馈</div>
+            </div>
+            <div class="layer" data-layer="core" id="layer-core">
+              <div class="layer-label"><svg viewBox="0 0 20 20"><use href="#icon-gear"/></svg> 核心系统 <span class="badge">CORE</span></div>
+              <div class="layer-modules">
+                <div class="module" data-detail="map-sys"><svg viewBox="0 0 20 20"><use href="#icon-map"/></svg> 地图系统 <span class="tag tag-tech">多层</span></div>
+                <div class="module" data-detail="unit"><svg viewBox="0 0 20 20"><use href="#icon-users"/></svg> 单位系统 <span class="tag tag-gold">20+</span></div>
+                <div class="module" data-detail="disaster"><svg viewBox="0 0 20 20"><use href="#icon-fire"/></svg> 灾害引擎</div>
+                <div class="module" data-detail="event-engine"><svg viewBox="0 0 20 20"><use href="#icon-bell"/></svg> 事件引擎</div>
+                <div class="module" data-detail="resource"><svg viewBox="0 0 20 20"><use href="#icon-truck"/></svg> 资源系统 <span class="tag tag-med">7类</span></div>
+                <div class="module" data-detail="time"><svg viewBox="0 0 20 20"><use href="#icon-clock"/></svg> 时间压力</div>
+              </div>
+            </div>
+            <div class="arrow-down" id="arrow2" data-flow="读写·存储">
+              <svg viewBox="0 0 100 28"><line class="arrow-path" x1="50" y1="0" x2="50" y2="26" stroke="var(--chalk-dimmer)" stroke-width="1.5" marker-end="url(#arrowHead)" opacity=".5"/></svg>
+              <div class="arrow-label">读写 · 存储</div>
+            </div>
+            <div class="layer" data-layer="data" id="layer-data">
+              <div class="layer-label"><svg viewBox="0 0 20 20"><use href="#icon-db"/></svg> 数据层 <span class="badge">DATA</span></div>
+              <div class="layer-modules">
+                <div class="module" data-detail="city-data"><svg viewBox="0 0 20 20"><use href="#icon-map"/></svg> 城市数据</div>
+                <div class="module" data-detail="unit-archive"><svg viewBox="0 0 20 20"><use href="#icon-users"/></svg> 单位档案</div>
+                <div class="module" data-detail="disaster-state"><svg viewBox="0 0 20 20"><use href="#icon-fire"/></svg> 灾害状态</div>
+                <div class="module" data-detail="event-log"><svg viewBox="0 0 20 20"><use href="#icon-activity"/></svg> 事件日志</div>
+                <div class="module" data-detail="score"><svg viewBox="0 0 20 20"><use href="#icon-star"/></svg> 评分数据</div>
+              </div>
+            </div>
+            <div class="arrow-down" id="arrow3" data-flow="模式·选择">
+              <svg viewBox="0 0 100 28"><line class="arrow-path" x1="50" y1="0" x2="50" y2="26" stroke="var(--chalk-dimmer)" stroke-width="1.5" marker-end="url(#arrowHead)" opacity=".5"/></svg>
+              <div class="arrow-label">模式 · 选择</div>
+            </div>
+            <div class="layer" data-layer="mode" id="layer-mode">
+              <div class="layer-label"><svg viewBox="0 0 20 20"><use href="#icon-shield"/></svg> 模式层 <span class="badge">MODE</span></div>
+              <div class="layer-modules">
+                <div class="module" data-detail="campaign"><svg viewBox="0 0 20 20"><use href="#icon-trophy"/></svg> 单人战役</div>
+                <div class="module" data-detail="free-mode"><svg viewBox="0 0 20 20"><use href="#icon-star"/></svg> 自由模式</div>
+                <div class="module" data-detail="challenge"><svg viewBox="0 0 20 20"><use href="#icon-fire"/></svg> 挑战模式</div>
+                <div class="module" data-detail="growth"><svg viewBox="0 0 20 20"><use href="#icon-route"/></svg> 局外成长</div>
+              </div>
+            </div>
+          </div>
+          <div class="side-column" id="sideColumn">
+            <div class="side-module" data-detail="boundaries">
+              <div class="layer-label"><svg viewBox="0 0 20 20"><use href="#icon-shield"/></svg> 边界声明</div>
+              <div class="desc">3D 画面 · 多人在线 · 内购抽卡 · 真实地图</div>
+            </div>
+            <div class="side-module" data-detail="difficulty">
+              <div class="layer-label"><svg viewBox="0 0 20 20"><use href="#icon-gear"/></svg> 难度系统</div>
+              <div class="desc">简单 → 普通 → 困难 → 专家 · 逐项独立调节</div>
+            </div>
+            <div class="side-module" data-detail="depth">
+              <div class="layer-label"><svg viewBox="0 0 20 20"><use href="#icon-route"/></svg> 垂直深度</div>
+              <div class="desc">一键救援 · 五阶段破拆 · 三层迷雾 · 个体化受困者</div>
+            </div>
+          </div>
+        </div>
+        <div class="user-flow" id="userFlow">
+          <div class="user-flow-header">
+            <svg viewBox="0 0 20 20" style="width:16px;height:16px;flex-shrink:0"><use href="#icon-route"/></svg>
+            指挥阶段演进
+            <span style="font-size:7px;color:var(--chalk-dim)">[ 动画播放中 ]</span>
+          </div>
+          <div class="user-flow-steps" id="flowSteps">
+            <div class="flow-step" data-step="0"><div class="dot"><svg viewBox="0 0 20 20"><use href="#icon-bell"/></svg></div><span class="label">灾情简报</span><div class="conn"></div></div>
+            <div class="flow-step" data-step="1"><div class="dot"><svg viewBox="0 0 20 20"><use href="#icon-map"/></svg></div><span class="label">初始部署</span><div class="conn"></div></div>
+            <div class="flow-step" data-step="2"><div class="dot"><svg viewBox="0 0 20 20"><use href="#icon-fire"/></svg></div><span class="label">黄金救援</span><div class="conn"></div></div>
+            <div class="flow-step" data-step="3"><div class="dot"><svg viewBox="0 0 20 20"><use href="#icon-clock"/></svg></div><span class="label">攻坚期</span><div class="conn"></div></div>
+            <div class="flow-step" data-step="4"><div class="dot"><svg viewBox="0 0 20 20"><use href="#icon-heart"/></svg></div><span class="label">灾后收尾</span><div class="conn"></div></div>
+            <div class="flow-step" data-step="5"><div class="dot"><svg viewBox="0 0 24 24"><use href="#icon-trophy"/></svg></div><span class="label">综合评分</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="detail-overlay" id="detailOverlay">
+      <div class="detail-card" id="detailCard">
+        <button class="close-btn" id="closeDetail">✕ CLOSE</button>
+        <div id="detailContent"></div>
+      </div>
+    </div>
+    <script>
+      var DETAILS = {
+        "map-view": { title: '<svg viewBox="0 0 20 20" style="width:22px;height:22px"><use href="#icon-grid"/></svg> 俯视图地图', items: ['<span class="hl">城市区域</span>：多区域划分，建筑状态实时更新','<span class="hl">单位位置</span>：各单位在地图上的实时位置与状态','<span class="hl">灾害扩散</span>：火灾、积水、污染等灾害动态可视化','<span class="hl">多层切换</span>：地表/地下/基础设施三层地图'] },
+        command: { title: '<svg viewBox="0 0 20 20" style="width:22px;height:22px"><use href="#icon-target"/></svg> 指令面板', items: ['<span class="hl">核心指令</span>：派遣/侦察/救援/灭火/救治/运输','<span class="hl">框选操作</span>：框选多个单位批量下达指令','<span class="hl">右键交互</span>：选中单位 → 右键目标位置执行任务','<span class="hl">快捷键</span>：1/2/3/4 选中编队，空格跳转事件'] },
+        events: { title: '<svg viewBox="0 0 20 20" style="width:22px;height:22px"><use href="#icon-bell"/></svg> 事件弹窗', items: ['<span class="hl">条件触发</span>：时间/状态/连锁/随机四种触发方式','<span class="hl">多层分支</span>：同一事件的不同选择导向不同后续','<span class="hl">道德困境</span>：救 5 个轻伤还是 1 个重伤？','<span class="hl">外部势力</span>：上级指令/媒体舆论/国际援助'] },
+        hud: { title: '<svg viewBox="0 0 20 20" style="width:22px;height:22px"><use href="#icon-activity"/></svg> 状态 HUD', items: ['<span class="hl">全局倒计时</span>：救援总时间限制','<span class="hl">幸存者统计</span>：已救出/待救援/伤亡人数实时更新','<span class="hl">资源概览</span>：7 类物资存量与消耗','<span class="hl">评级预估</span>：基于当前表现的 S/A/B/C/D/E 动态评级'] },
+        report: { title: '<svg viewBox="0 0 24 24" style="width:22px;height:22px"><use href="#icon-trophy"/></svg> 战报系统', items: ['<span class="hl">综合评分</span>：S/A/B/C/D/E 六级评级','<span class="hl">时间线复盘</span>：关键决策节点回放','<span class="hl">幸存者统计</span>：每人有名字有结局','<span class="hl">决策回顾</span>：每个事件的选择与影响分析'] },
+        "map-sys": { title: '<svg viewBox="0 0 20 20" style="width:22px;height:22px"><use href="#icon-map"/></svg> 地图系统', items: ['<span class="hl">多城市主题</span>：沿海城市/山城/平原都会/工业城市/古城','<span class="hl">多层次地图</span>：地表建筑+道路、地下空间、基础设施三层联动','<span class="hl">建筑体系</span>：砖混/框架/钢结构/老宅，每种倒塌模式不同','<span class="hl">土壤液化</span>：砂土地震后液化，建筑倾斜下沉'] },
+        unit: { title: '<svg viewBox="0 0 20 20" style="width:22px;height:22px"><use href="#icon-users"/></svg> 单位系统', items: ['<span class="hl">5 大类 20+ 单位</span>：搜救/医疗/消防/工程/后勤','<span class="hl">经验成长</span>：Lv.1-10，解锁技能树','<span class="hl">士气疲劳</span>：>70 效率降 50%，>90 强制休息','<span class="hl">永久伤亡</span>：阵亡永久损失，装备回收，士气大幅下降'] },
+        disaster: { title: '<svg viewBox="0 0 20 20" style="width:22px;height:22px"><use href="#icon-fire"/></svg> 灾害引擎', items: ['<span class="hl">地震破坏</span>：建筑结构完整性逐步下降','<span class="hl">余震序列</span>：概率模型，可预测不可精确预报','<span class="hl">次生灾害链</span>：火灾蔓延/燃气爆炸/危化品泄漏/水淹','<span class="hl">动态扩散</span>：无人处理的灾害持续恶化'] },
+        "event-engine": { title: '<svg viewBox="0 0 20 20" style="width:22px;height:22px"><use href="#icon-bell"/></svg> 事件引擎', items: ['<span class="hl">六大类型</span>：灾害链/人物故事/道德困境/上级/媒体/国际援助','<span class="hl">条件触发</span>：时间+状态+连锁+随机组合判定','<span class="hl">低频率高质量</span>：每局 5-8 次关键事件','<span class="hl">外部影响</span>：上级/媒体/国际援助三元互动'] },
+        resource: { title: '<svg viewBox="0 0 20 20" style="width:22px;height:22px"><use href="#icon-truck"/></svg> 资源系统', items: ['<span class="hl">7 类物资</span>：医疗/破拆/工程/燃油/防疫/生活/通信','<span class="hl">质量等级</span>：不同品质影响使用效率','<span class="hl">多维经济</span>：拨款/捐赠/保险/国际援助四元收入','<span class="hl">补给链</span>：外部→仓库→前线，需运输队护送'] },
+        time: { title: '<svg viewBox="0 0 20 20" style="width:22px;height:22px"><use href="#icon-clock"/></svg> 时间压力', items: ['<span class="hl">全局倒计时</span>：总时间限制制造紧迫感','<span class="hl">幸存者倒计时</span>：每个受困者独立存活时间','<span class="hl">行动耗时</span>：单位移动/救援/破拆都需要时间','<span class="hl">三管齐下</span>：时间、物资、信息三重压力同步施压'] },
+        "city-data": { title: '<svg viewBox="0 0 20 20" style="width:22px;height:22px"><use href="#icon-map"/></svg> 城市数据', items: ['<span class="hl">城区布局</span>：区域划分与道路网络','<span class="hl">建筑数据库</span>：每栋建筑的结构/层数/用途','<span class="hl">基础设施网络</span>：电力/供水/通信/燃气四网联动'] },
+        "unit-archive": { title: '<svg viewBox="0 0 20 20" style="width:22px;height:22px"><use href="#icon-users"/></svg> 单位档案', items: ['<span class="hl">战史记录</span>：每个单位的救援统计','<span class="hl">技能状态</span>：已解锁技能与专精方向','<span class="hl">士气状态</span>：士气/疲劳/经验实时数据'] },
+        "disaster-state": { title: '<svg viewBox="0 0 20 20" style="width:22px;height:22px"><use href="#icon-fire"/></svg> 灾害状态', items: ['<span class="hl">建筑完整性</span>：每栋建筑的结构损伤百分比','<span class="hl">火势/积水/污染</span>：三类次生灾害扩散状态','<span class="hl">动态更新</span>：灾害随时间和处理情况持续变化'] },
+        "event-log": { title: '<svg viewBox="0 0 20 20" style="width:22px;height:22px"><use href="#icon-activity"/></svg> 事件日志', items: ['<span class="hl">已触发事件</span>：完整事件记录与时间戳','<span class="hl">玩家选择</span>：每个事件的决策存档','<span class="hl">后果追踪</span>：选择的后置影响持续记录'] },
+        score: { title: '<svg viewBox="0 0 20 20" style="width:22px;height:22px"><use href="#icon-star"/></svg> 评分数据', items: ['<span class="hl">幸存者统计</span>：救出/死亡/失踪人数','<span class="hl">效率指标</span>：救援速度/资源利用率','<span class="hl">决策质量</span>：关键事件选择的合理性评估'] },
+        campaign: { title: '<svg viewBox="0 0 24 24" style="width:22px;height:22px"><use href="#icon-trophy"/></svg> 单人战役', items: ['<span class="hl">剧情驱动</span>：系列关卡串联故事线','<span class="hl">逐步解锁</span>：通过前关解锁后关','<span class="hl">叙事结尾</span>：S/A/B/C/D/E 各有不同结局'] },
+        "free-mode": { title: '<svg viewBox="0 0 20 20" style="width:22px;height:22px"><use href="#icon-star"/></svg> 自由模式', items: ['<span class="hl">随机生成</span>：城区布局/建筑/灾情随机','<span class="hl">参数自定义</span>：地震强度/城市类型/初始资源逐项可调','<span class="hl">无限重玩</span>：每局不同的挑战'] },
+        challenge: { title: '<svg viewBox="0 0 20 20" style="width:22px;height:22px"><use href="#icon-fire"/></svg> 挑战模式', items: ['<span class="hl">特殊限制</span>："黄金72小时""孤城""夜袭"等','<span class="hl">条件通关</span>：在极端条件下完成救援','<span class="hl">成就解锁</span>：通关解锁更高难度和特殊天赋'] },
+        growth: { title: '<svg viewBox="0 0 20 20" style="width:22px;height:22px"><use href="#icon-route"/></svg> 局外成长', items: ['<span class="hl">指挥官技能树</span>：多局积累经验点解锁新技能','<span class="hl">基地建设</span>：局外基地升级影响局内初始状态','<span class="hl">图鉴收集</span>：灾害/单位/事件档案记录'] },
+        boundaries: { title: '<svg viewBox="0 0 20 20" style="width:22px;height:22px"><use href="#icon-shield"/></svg> 边界声明', items: ['<span class="hl-w">✕</span> 3D 画面——俯视图 2D 是核心风格','<span class="hl-w">✕</span> 真实物理模拟——抽象化灾害模型','<span class="hl-w">✕</span> 多人在线——单人指挥游戏不设计联机','<span class="hl-w">✕</span> 内购/抽卡——买断制或一次性付费','<span class="hl-w">✕</span> 真实城市地图——虚构城市主题','<span class="hl-w">✕</span> UGC 编辑器——MVP 阶段不开放','<span class="hl-w">✕</span> 移动端首发——PC 为主','<span class="hl-w">✕</span> 多语言首发——MVP 仅中文'] },
+        difficulty: { title: '<svg viewBox="0 0 20 20" style="width:22px;height:22px"><use href="#icon-gear"/></svg> 难度系统', items: ['<span class="hl">预设四档</span>：简单 / 普通 / 困难 / 专家','<span class="hl">逐项调节</span>：地震破坏/救援操作/信息迷雾/物资管理等维度独立设置','<span class="hl">动态难度</span>：根据玩家表现自动适配','新手从简单起步，逐步向专家过渡'] },
+        depth: { title: '<svg viewBox="0 0 20 20" style="width:22px;height:22px"><use href="#icon-route"/></svg> 垂直深度', items: ['<span class="hl">简单模式</span>：一键救援，数字统计受困者','<span class="hl">普通模式</span>：2-3 步操作，显示姓名年龄','<span class="hl">专家模式</span>：完整五阶段破拆，三层迷雾，个体化故事','每条设置附带一句话说明它的影响'] }
+      };
+      document.addEventListener("DOMContentLoaded", function () { setTimeout(initAnimations, 300); });
+      function initAnimations() {
+        var tl = anime.timeline({ easing: "easeOutCubic" });
+        tl.add({ targets: "#layer-mode", opacity: [0, 1], translateY: [20, 0], duration: 600 })
+          .add({ targets: "#arrow3", opacity: [0, 1], duration: 400 }, "-=200")
+          .add({ targets: "#layer-data", opacity: [0, 1], translateY: [20, 0], duration: 600 }, "-=200")
+          .add({ targets: "#arrow2", opacity: [0, 1], duration: 400 }, "-=200")
+          .add({ targets: "#layer-core", opacity: [0, 1], translateY: [20, 0], duration: 600 }, "-=200")
+          .add({ targets: "#arrow1", opacity: [0, 1], duration: 400 }, "-=200")
+          .add({ targets: "#layer-present", opacity: [0, 1], translateY: [20, 0], duration: 600 }, "-=200");
+        var sideMods = document.querySelectorAll(".side-module");
+        tl.add({ targets: sideMods, opacity: [0, 1], translateX: [15, 0], duration: 500, delay: anime.stagger(120) }, "-=200");
+        tl.add({ targets: "#userFlow", opacity: [0, 1], duration: 500 }, "-=200");
+        var arrowPaths = document.querySelectorAll(".arrow-path");
+        tl.add({ targets: arrowPaths, strokeDashoffset: [200, 0], duration: 800, delay: anime.stagger(300), easing: "easeInOutSine" }, "-=100");
+        var flowSteps = document.querySelectorAll(".flow-step");
+        tl.add({ targets: flowSteps, opacity: [0, 1], translateX: [-8, 0], duration: 400, delay: anime.stagger(180), easing: "easeOutCubic" }, "-=200");
+        function animateFlowHighlight() {
+          var dots = document.querySelectorAll(".flow-step .dot");
+          var tl2 = anime.timeline({ easing: "easeInOutQuad", loop: true, loopDelay: 2000 });
+          dots.forEach(function(dot, i) {
+            tl2.add({ targets: dot, scale: [1, 1.15, 1], borderColor: ["var(--chalk-dimmer)","var(--accent-gold)","var(--chalk-dimmer)"], duration: 500,
+              begin: function() { dots.forEach(function(d) { d.classList.remove("active"); }); dot.classList.add("active"); }
+            }, i === 0 ? "-=200" : "-=100");
+          });
+          tl2.add({ targets: dots, duration: 1, begin: function() { dots.forEach(function(d) { d.classList.remove("active"); }); } });
+        }
+        setTimeout(animateFlowHighlight, tl.totalDuration + 600);
+        var modules = document.querySelectorAll(".module");
+        modules.forEach(function(mod) {
+          mod.addEventListener("mouseenter", function() {
+            var layer = mod.closest(".layer");
+            if (layer) anime({ targets: layer, borderColor: "var(--accent-gold)", duration: 200 });
+          });
+          mod.addEventListener("mouseleave", function() {
+            var layer = mod.closest(".layer");
+            if (layer) {
+              var colors = { present: "var(--accent-gold)", core: "var(--accent-orange)", data: "var(--accent-blue)", mode: "var(--accent-green)" };
+              anime({ targets: layer, borderColor: colors[layer.getAttribute("data-layer")] || "var(--chalk-dimmer)", duration: 200 });
+            }
+          });
+        });
+        arrowPaths.forEach(function(p) { p.setAttribute("stroke-dasharray", "200"); p.setAttribute("stroke-dashoffset", "200"); });
+        var overlay = document.getElementById("detailOverlay");
+        var detailContent = document.getElementById("detailContent");
+        var closeBtn = document.getElementById("closeDetail");
+        function showDetail(key) {
+          var data = DETAILS[key];
+          if (!data) return;
+          var html = "<h2>" + data.title + "</h2><ul>";
+          data.items.forEach(function(item) { html += "<li>" + item + "</li>"; });
+          html += "</ul>";
+          detailContent.innerHTML = html;
+          overlay.classList.add("open");
+          anime({ targets: ".detail-card", translateY: [24, 0], opacity: [0, 1], duration: 320, easing: "easeOutCubic" });
+        }
+        document.querySelectorAll("[data-detail]").forEach(function(el) {
+          el.addEventListener("click", function(e) { e.stopPropagation(); showDetail(el.getAttribute("data-detail")); });
+        });
+        function closeDetail() {
+          anime({ targets: ".detail-card", translateY: [0, 18], opacity: [1, 0], duration: 220, easing: "easeInCubic",
+            complete: function() { overlay.classList.remove("open"); var c = document.querySelector(".detail-card"); if (c) c.style.transform = "translateZ(0)"; }
+          });
+        }
+        closeBtn.addEventListener("click", closeDetail);
+        overlay.addEventListener("click", function(e) { if (e.target === overlay) closeDetail(); });
+        document.addEventListener("keydown", function(e) { if (e.key === "Escape") closeDetail(); });
+        var board = document.getElementById("chalkboard");
+        var embers = [];
+        var emberCount = 30;
+        var colors = ["rgba(212,135,90,", "rgba(232,192,128,", "rgba(201,112,96,", "rgba(112,160,184,"];
+        for (var i = 0; i < emberCount; i++) {
+          var e = document.createElement("div");
+          e.className = "ember-particle";
+          var size = 2 + Math.random() * 4;
+          var x = 5 + Math.random() * 90;
+          var y = 5 + Math.random() * 90;
+          var c = colors[Math.floor(Math.random() * colors.length)];
+          e.style.cssText = "left:" + x + "%;top:" + y + "%;width:" + size + "px;height:" + size + "px;background:radial-gradient(circle at 30% 30%, rgba(255,255,255,0.9), " + c + "0.5)";
+          e.style.boxShadow = "0 0 " + (size * 3) + "px " + c + "0.25";
+          board.appendChild(e);
+          embers.push({ el: e, x: x, y: y, size: size, speedX: 0.2 + Math.random() * 0.5, speedY: 0.2 + Math.random() * 0.5, phaseX: Math.random() * Math.PI * 2, phaseY: Math.random() * Math.PI * 2, drift: 0.5 + Math.random() * 1.5 });
+        }
+        function animateEmbers() {
+          embers.forEach(function(e, idx) {
+            var tx = Math.sin(Date.now() * 0.0004 * e.speedX + e.phaseX) * e.drift;
+            var ty = Math.cos(Date.now() * 0.0003 * e.speedY + e.phaseY) * e.drift;
+            var sc = 0.7 + 0.3 * Math.sin(Date.now() * 0.0007 + idx);
+            var op = 0.2 + 0.35 * (0.5 + 0.5 * Math.sin(Date.now() * 0.0005 + idx * 0.7));
+            e.el.style.transform = "translate3d(" + tx + "px," + ty + "px,0) scale(" + sc + ")";
+            e.el.style.opacity = op;
+          });
+          requestAnimationFrame(animateEmbers);
+        }
+        animateEmbers();
+        console.log("[地震救援] 产品功能说明书已加载 — 点击模块查看详情 | ESC 关闭");
+      }
+    </script>
+  </body>
+</html>

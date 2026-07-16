@@ -1,0 +1,207 @@
+﻿<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>压力粉碎机</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;600;800&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--board:#1c1010;--board-dark:#0f0707;--chalk:#fce4e4;--chalk-dim:rgba(252,228,228,0.55);--chalk-dimmer:rgba(252,228,228,0.18);--chalk-translucent:rgba(252,228,228,0.06);--accent-crimson:#dc2626;--accent-amber:#f59e0b;--accent-teal:#14b8a6;--accent-ember:#ea580c;--accent-gold:#fbbf24;--scanline:rgba(0,0,0,0.06);--font-display:"Noto Sans SC","PingFang SC", "PingFang SC", "Microsoft YaHei", sans-serif;--font-mono:"IBM Plex Mono","SFMono-Regular", Menlo, Consolas, "SFMono-Regular", Menlo, Consolas, "Courier New", monospace}
+html,body{height:100%;background:#0d0606;font-family:var(--font-mono);color:var(--chalk);overflow-x:hidden}
+.screen-frame{position:relative;min-height:100vh;padding:28px 20px 20px;background:#111;border-radius:20px;box-shadow:inset 0 0 40px rgba(0,0,0,0.8),0 8px 40px rgba(0,0,0,0.6);max-width:1360px;margin:0 auto}
+.screen-frame::before{content:"";position:absolute;inset:0;border-radius:20px;background:repeating-linear-gradient(0deg,transparent,transparent 2px,var(--scanline) 2px,var(--scanline) 4px);pointer-events:none;z-index:100}
+.crt-curve{position:absolute;inset:0;border-radius:20px;background:radial-gradient(ellipse at center,transparent 65%,rgba(0,0,0,0.35) 100%);pointer-events:none;z-index:99}
+.power-led{position:absolute;top:8px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:8px;font-family:var(--font-display);font-size:10px;font-weight:600;color:var(--chalk-dim);letter-spacing:1.5px;z-index:101}
+.power-led span{display:inline-block;width:6px;height:6px;border-radius:50%;background:#dc2626;box-shadow:0 0 6px #dc2626;animation:led-pulse 2s ease-in-out infinite}
+@keyframes led-pulse{0%,100%{opacity:1;box-shadow:0 0 6px #dc2626}50%{opacity:0.5;box-shadow:0 0 2px #dc2626}}
+.chalkboard{position:relative;background:var(--board);border:3px solid #3a1a1a;border-radius:4px;padding:32px 28px 28px;box-shadow:inset 0 0 60px rgba(0,0,0,0.5),0 4px 0 #170a0a;min-height:calc(100vh - 80px)}
+.chalkboard::after{content:"";position:absolute;inset:0;background-image:radial-gradient(circle at 20% 30%,rgba(252,228,228,0.02) 0,transparent 60%),radial-gradient(circle at 80% 70%,rgba(252,228,228,0.015) 0,transparent 50%),radial-gradient(circle at 50% 50%,rgba(252,228,228,0.01) 0,transparent 70%);pointer-events:none;border-radius:2px}
+.header{text-align:center;margin-bottom:24px;position:relative;z-index:1}
+.header h1{font-family:var(--font-display);font-size:26px;font-weight:800;color:var(--accent-crimson);text-shadow:0 0 8px rgba(220,38,38,0.3);letter-spacing:2px;margin-bottom:4px;display:flex;align-items:center;justify-content:center;gap:10px}
+.header .subtitle{font-size:14px;color:var(--chalk-dim);letter-spacing:0.5px}
+.header .subtitle em{font-style:normal;color:var(--accent-amber)}
+.layout-main{display:flex;gap:20px;position:relative;z-index:1}
+.layers-column{flex:1;min-width:0}
+.side-column{width:220px;flex-shrink:0;display:flex;flex-direction:column;gap:10px}
+.layer{position:relative;background:var(--chalk-translucent);border:1.5px solid var(--chalk-dimmer);border-radius:6px;padding:12px 14px 14px;cursor:pointer;transition:border-color 0.3s,background 0.3s;opacity:0;transform:translateY(20px)}
+.layer:hover{border-color:var(--accent-amber);background:rgba(245,158,11,0.06)}
+.layer-label{font-family:var(--font-display);font-size:12px;font-weight:600;color:var(--chalk-dim);letter-spacing:1px;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.layer-label .badge{font-size:10px;font-weight:600;background:var(--chalk-dimmer);color:var(--board);padding:1px 7px;border-radius:3px}
+.layer-modules{display:flex;flex-wrap:wrap;gap:6px}
+.module{background:rgba(252,228,228,0.06);border:1px solid var(--chalk-dimmer);border-radius:4px;padding:5px 10px;font-size:12px;line-height:1.5;color:var(--chalk);transition:all 0.25s;white-space:nowrap;cursor:pointer;display:inline-flex;align-items:center;gap:5px}
+.module:hover{background:rgba(252,228,228,0.12);border-color:var(--chalk);transform:translateY(-1px)}
+svg.icon,.module svg,.side-module svg,.dot svg{width:16px;height:16px;flex-shrink:0}
+.module svg{width:15px;height:15px}
+.dot svg{width:14px;height:14px}
+.module .tag{font-size:10px;font-weight:600;padding:1px 6px;border-radius:3px;margin-left:4px;opacity:0.8}
+.tag-core{background:var(--accent-crimson);color:var(--chalk)}
+.tag-breath{background:var(--accent-teal);color:var(--board)}
+.tag-play{background:var(--accent-amber);color:var(--board)}
+.layer[data-layer="detect"]{border-left:3px solid var(--accent-crimson)}
+.layer[data-layer="release"]{border-left:3px solid var(--accent-amber)}
+.layer[data-layer="game"]{border-left:3px solid var(--accent-teal)}
+.layer[data-layer="track"]{border-left:3px solid var(--accent-ember)}
+.arrow-down{display:flex;align-items:center;justify-content:center;height:28px;position:relative;opacity:0}
+.arrow-down svg{width:100%;height:28px}
+.arrow-label{position:absolute;font-family:var(--font-display);font-size:10px;font-weight:600;color:var(--chalk-dim);letter-spacing:0.5px;background:var(--board);padding:0 8px;white-space:nowrap}
+.side-module{background:var(--chalk-translucent);border:1.5px solid var(--chalk-dimmer);border-left:3px solid var(--accent-gold);border-radius:6px;padding:10px 12px;cursor:pointer;opacity:0;transform:translateX(15px);transition:border-color 0.3s,background 0.3s}
+.side-module:hover{border-color:var(--accent-gold);background:rgba(251,191,36,0.08)}
+.user-flow{margin-top:22px;padding:14px 16px;background:var(--chalk-translucent);border:1.5px solid var(--chalk-dimmer);border-radius:6px;position:relative;z-index:1;opacity:0}
+.user-flow-header{font-family:var(--font-display);font-size:12px;font-weight:600;color:var(--accent-amber);letter-spacing:0.5px;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.user-flow-steps{display:flex;align-items:center;flex-wrap:wrap}
+.flow-step{display:flex;align-items:center;opacity:0}
+.flow-step .dot{width:28px;height:28px;border-radius:50%;border:2px solid var(--chalk-dimmer);background:var(--board);display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;transition:all 0.3s}
+.flow-step .dot.active{border-color:var(--accent-amber);background:rgba(245,158,11,0.12);box-shadow:0 0 10px rgba(245,158,11,0.2)}
+.flow-step .label{font-size:12px;color:var(--chalk-dim);white-space:nowrap;margin:0 8px 0 6px}
+.flow-step .conn{width:24px;height:2px;background:var(--chalk-dimmer);flex-shrink:0;position:relative}
+.flow-step .conn::after{content:">";position:absolute;right:-4px;top:-7px;font-size:10px;color:var(--chalk-dimmer)}
+.flow-step:last-child .conn{display:none}
+.detail-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:200;display:none;align-items:center;justify-content:center;backdrop-filter:blur(2px)}
+.detail-overlay.open{display:flex}
+.detail-card{background:var(--board-dark);border:2px solid var(--chalk-dimmer);border-radius:8px;padding:24px 28px;max-width:500px;width:90%;max-height:80vh;overflow-y:auto;position:relative}
+.detail-card h2{margin-top: 0;font-family:var(--font-display);font-size:18px;font-weight:800;color:var(--accent-crimson);margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid var(--chalk-dimmer);display:flex;align-items:center;gap:8px}
+.detail-card h2 svg{width:22px;height:22px;flex-shrink:0}
+.detail-card ul{list-style:none;padding:0}
+.detail-card li{font-size:13px;color:var(--chalk);padding:5px 0 5px 14px;border-left:2px solid var(--chalk-dimmer);margin-bottom:6px;line-height:1.6}
+.detail-card li .hl{color:var(--accent-teal)}
+.detail-card li .hl-warn{color:var(--accent-crimson)}
+.detail-card .close-btn{position:absolute;top:14px;right:16px;font-family:var(--font-display);font-size:13px;font-weight:600;color:var(--chalk-dimmer);background:none;border:1px solid var(--chalk-dimmer);border-radius:4px;padding:4px 12px;cursor:pointer}
+.detail-card .close-btn:hover{color:var(--accent-crimson);border-color:var(--accent-crimson)}
+@media (max-width:860px){.layout-main{flex-direction:column}.side-column{width:100%;flex-direction:row;flex-wrap:wrap}.side-module{flex:1;min-width:160px}.header h1{font-size:20px}.screen-frame{padding:24px 12px 12px}.chalkboard{padding:20px 14px 16px}.module{font-size:11px;padding:4px 8px}.flow-step .label{font-size:10px}.flow-step .dot{width:24px;height:24px}}
+@media (max-width:480px){.header h1{font-size:16px}.module{font-size:10px;padding:3px 6px;white-space:normal}.layer{padding:8px 8px 10px}}
+.chalk-glow{position:absolute;pointer-events:none;width:4px;height:4px;border-radius:50%;background:rgba(252,228,228,0.15);filter:blur(6px)}
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-thumb{background:var(--chalk-dimmer);border-radius:2px}
+.arrow-path{stroke-dasharray:200;stroke-dashoffset:200}
+.layer-label svg{width:16px;height:16px;flex-shrink:0}
+.svg-connectors{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:0}
+</style>
+</head>
+<body>
+<div class="screen-frame"><div class="crt-curve"></div><div class="power-led"><span></span> SYSTEM · ONLINE</div>
+<div class="chalkboard" id="chalkboard">
+<div class="header" id="header">
+<h1><svg viewBox="0 0 20 20" class="icon"><use href="#icon-hammer" /></svg>压力粉碎机</h1>
+<div class="subtitle">用碎片时间解构焦虑 · <em>检测→释放→游戏→追踪</em></div>
+</div>
+<svg class="svg-connectors" id="connectorSvg" preserveAspectRatio="none">
+<defs>
+<marker id="arrowHead" markerWidth="6" markerHeight="5" refX="6" refY="2.5" orient="auto"><polygon points="0 0, 6 2.5, 0 5" fill="var(--chalk-dimmer)" opacity=".6"/></marker>
+<marker id="arrowHeadFlow" markerWidth="6" markerHeight="5" refX="6" refY="2.5" orient="auto"><polygon points="0 0, 6 2.5, 0 5" fill="var(--accent-amber)"/></marker>
+<filter id="glow"><feGaussianBlur stdDeviation="1.5" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+<symbol id="icon-hammer" viewBox="0 0 20 20"><path d="M8 4l8 8-4 4-8-8 4-4z" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linejoin="round"/><path d="M12 3l5 5" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round"/><path d="M3 12l5 5" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round"/></symbol>
+<symbol id="icon-scan" viewBox="0 0 20 20"><rect x="4" y="4" width="12" height="12" rx="2" stroke="currentColor" fill="none" stroke-width="1.5"/><path d="M4 8h12M4 12h12M8 4v12M12 4v12" stroke="currentColor" fill="none" stroke-width="1.5" stroke-dasharray="2 2"/></symbol>
+<symbol id="icon-activity" viewBox="0 0 20 20"><polyline points="2,10 5,10 7,5 10,15 13,8 15,10 18,10" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+<symbol id="icon-bell" viewBox="0 0 20 20"><path d="M10 3c-3 0-4 2.5-4 5L5 11c0 1-1 2-1 3h12c0-1-1-2-1-3l-1-3c0-2.5-1-5-4-5z" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linejoin="round"/><path d="M8 16c0 1.5 4 1.5 4 0" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round"/></symbol>
+<symbol id="icon-wind" viewBox="0 0 20 20"><path d="M3 8h10M5 12h8M4 16h6" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round"/></symbol>
+<symbol id="icon-game" viewBox="0 0 20 20"><rect x="3" y="7" width="14" height="10" rx="2" stroke="currentColor" fill="none" stroke-width="1.5"/><path d="M6 12h8M10 8v8" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round"/><path d="M7 3v4h6V3" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linejoin="round"/></symbol>
+<symbol id="icon-shield" viewBox="0 0 20 20"><path d="M10 2l6 3v5c0 4-3 7-6 8-3-1-6-4-6-8V5l6-3z" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linejoin="round"/></symbol>
+<symbol id="icon-heart" viewBox="0 0 20 20"><path d="M10 17S4 12 4 7.5C4 5 6 3 8.5 3c1.5 0 2.5.8 3 1.5C11.5 3.8 12.5 3 14 3 16.5 3 18 5 18 7.5 18 12 10 17 10 17z" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linejoin="round"/></symbol>
+<symbol id="icon-clock" viewBox="0 0 20 20"><circle cx="10" cy="10" r="7" stroke="currentColor" fill="none" stroke-width="1.5"/><path d="M10 6v4l3 2" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+<symbol id="icon-wifi" viewBox="0 0 20 20"><path d="M5 9c3-2 7-2 10 0M3 6c5-3 9-3 14 0M7 12c2-1 4-1 6 0" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round"/><circle cx="10" cy="16" r="1" fill="currentColor"/></symbol>
+<symbol id="icon-target" viewBox="0 0 20 20"><circle cx="10" cy="10" r="7" stroke="currentColor" fill="none" stroke-width="1.5"/><circle cx="10" cy="10" r="3" stroke="currentColor" fill="none" stroke-width="1.5"/><path d="M10 1v3m0 12v3M1 10h3m12 0h3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></symbol>
+</defs>
+</svg>
+<div class="layout-main">
+<div class="layers-column" id="layersColumn">
+<div class="layer" data-layer="detect" id="layer-detect">
+<div class="layer-label"><svg viewBox="0 0 20 20"><use href="#icon-scan" /></svg> 压力检测层 <span class="badge">DETECT</span></div>
+<div class="layer-modules">
+<div class="module" data-detail="detect-fast"><svg viewBox="0 0 20 20"><use href="#icon-scan" /></svg> 快速自评 <span class="tag tag-core">30秒</span></div>
+<div class="module" data-detail="detect-bio"><svg viewBox="0 0 20 20"><use href="#icon-activity" /></svg> 生物反馈 <span class="tag tag-core">心率+HRV</span></div>
+<div class="module" data-detail="detect-log"><svg viewBox="0 0 20 20"><use href="#icon-clock" /></svg> 压力日志</div>
+</div>
+</div>
+<div class="arrow-down" id="arrow1"><svg viewBox="0 0 100 28"><line class="arrow-path" x1="50" y1="0" x2="50" y2="26" stroke="var(--chalk-dimmer)" stroke-width="1.5" marker-end="url(#arrowHead)" opacity=".5"/></svg><div class="arrow-label">算法推荐</div></div>
+<div class="layer" data-layer="release" id="layer-release">
+<div class="layer-label"><svg viewBox="0 0 20 20"><use href="#icon-wind" /></svg> 即时释放层 <span class="badge">RELEASE</span></div>
+<div class="layer-modules">
+<div class="module" data-detail="release-breath"><svg viewBox="0 0 20 20"><use href="#icon-wind" /></svg> 呼吸训练 <span class="tag tag-breath">4-7-8</span></div>
+<div class="module" data-detail="release-pulse"><svg viewBox="0 0 20 20"><use href="#icon-activity" /></svg> 脉冲释放</div>
+<div class="module" data-detail="release-sound"><svg viewBox="0 0 20 20"><use href="#icon-bell" /></svg> 白噪音</div>
+</div>
+</div>
+<div class="arrow-down" id="arrow2"><svg viewBox="0 0 100 28"><line class="arrow-path" x1="50" y1="0" x2="50" y2="26" stroke="var(--chalk-dimmer)" stroke-width="1.5" marker-end="url(#arrowHead)" opacity=".5"/></svg><div class="arrow-label">游戏化降压</div></div>
+<div class="layer" data-layer="game" id="layer-game">
+<div class="layer-label"><svg viewBox="0 0 20 20"><use href="#icon-game" /></svg> 游戏化降压层 <span class="badge">GAME</span></div>
+<div class="layer-modules">
+<div class="module" data-detail="game-pop"><svg viewBox="0 0 20 20"><use href="#icon-target" /></svg> 气泡消消乐 <span class="tag tag-play">点按泄压</span></div>
+<div class="module" data-detail="game-break"><svg viewBox="0 0 20 20"><use href="#icon-hammer" /></svg> 砸碎压力</div>
+<div class="module" data-detail="game-flow"><svg viewBox="0 0 20 20"><use href="#icon-activity" /></svg> 心流模式</div>
+</div>
+</div>
+<div class="arrow-down" id="arrow3"><svg viewBox="0 0 100 28"><line class="arrow-path" x1="50" y1="0" x2="50" y2="26" stroke="var(--chalk-dimmer)" stroke-width="1.5" marker-end="url(#arrowHead)" opacity=".5"/></svg><div class="arrow-label">数据·成长</div></div>
+<div class="layer" data-layer="track" id="layer-track">
+<div class="layer-label"><svg viewBox="0 0 20 20"><use href="#icon-activity" /></svg> 追踪成长层 <span class="badge">TRACK</span></div>
+<div class="layer-modules">
+<div class="module" data-detail="track-chart"><svg viewBox="0 0 20 20"><use href="#icon-activity" /></svg> 压力曲线 <span class="tag tag-core">7天/30天</span></div>
+<div class="module" data-detail="track-insight"><svg viewBox="0 0 20 20"><use href="#icon-shield" /></svg> 洞察报告</div>
+<div class="module" data-detail="track-badge"><svg viewBox="0 0 20 20"><use href="#icon-target" /></svg> 成就徽章</div>
+</div>
+</div>
+</div>
+<div class="side-column" id="sideColumn">
+<div class="side-module" data-detail="side-crisis"><div class="layer-label"><svg viewBox="0 0 20 20"><use href="#icon-shield" /></svg> 紧急模式</div><div class="desc">一键启动 · 快速安抚 · SOS 求助</div></div>
+<div class="side-module" data-detail="side-sleep"><div class="layer-label"><svg viewBox="0 0 20 20"><use href="#icon-wind" /></svg> 睡眠辅助</div><div class="desc">睡前放松 · 渐进放松 · 助眠故事</div></div>
+<div class="side-module" data-detail="side-community"><div class="layer-label"><svg viewBox="0 0 20 20"><use href="#icon-heart" /></svg> 社区共鸣</div><div class="desc">匿名倾诉 · 压力故事 · 互助徽章</div></div>
+</div>
+</div>
+<div class="user-flow" id="userFlow">
+<div class="user-flow-header"><svg viewBox="0 0 20 20" style="width:16px;height:16px;flex-shrink:0"><use href="#icon-hammer"/></svg> 用户流程路径 <span style="font-size:7px;color:var(--chalk-dim);font-family:var(--font-mono)">[ 动画播放中 ]</span></div>
+<div class="user-flow-steps" id="flowSteps">
+<div class="flow-step" data-step="0"><div class="dot"><svg viewBox="0 0 20 20"><use href="#icon-scan"/></svg></div><span class="label">快速自评</span><div class="conn"></div></div>
+<div class="flow-step" data-step="1"><div class="dot"><svg viewBox="0 0 20 20"><use href="#icon-wind"/></svg></div><span class="label">即时释放</span><div class="conn"></div></div>
+<div class="flow-step" data-step="2"><div class="dot"><svg viewBox="0 0 20 20"><use href="#icon-game"/></svg></div><span class="label">游戏减压</span><div class="conn"></div></div>
+<div class="flow-step" data-step="3"><div class="dot"><svg viewBox="0 0 20 20"><use href="#icon-activity"/></svg></div><span class="label">追踪趋势</span><div class="conn"></div></div>
+<div class="flow-step" data-step="4"><div class="dot"><svg viewBox="0 0 20 20"><use href="#icon-heart"/></svg></div><span class="label">社群共鸣</span><div class="conn"></div></div>
+<div class="flow-step" data-step="5"><div class="dot"><svg viewBox="0 0 20 20"><use href="#icon-shield"/></svg></div><span class="label">应急储备</span></div>
+</div>
+</div>
+</div>
+</div>
+<div class="detail-overlay" id="detailOverlay"><div class="detail-card" id="detailCard"><button class="close-btn" id="closeDetail">X CLOSE</button><div id="detailContent"></div></div></div>
+<script>
+var DETAILS={
+"detect-fast":{tit:'<svg viewBox="0 0 20 20" class="icon" style="width:22px;height:22px"><use href="#icon-scan"/></svg> 快速自评',its:["3 题极简压力评估（30 秒完成）","5 题标准版压力感知量表","固定 2 小时间隔提醒再测"]},
+"detect-bio":{tit:'<svg viewBox="0 0 20 20" class="icon" style="width:22px;height:22px"><use href="#icon-activity"/></svg> 生物反馈',its:["调用手机摄像头 PPG 测心率","HRV 分析（心率变异性）","持续 60 秒即可获取"]},
+"detect-log":{tit:'<svg viewBox="0 0 20 20" class="icon" style="width:22px;height:22px"><use href="#icon-clock"/></svg> 压力日志',its:["记录触发源+压力水平+时间","提供可选标签便于归类","用户可见历史记录"]},
+"release-breath":{tit:'<svg viewBox="0 0 20 20" class="icon" style="width:22px;height:22px"><use href="#icon-wind"/></svg> 呼吸训练',its:["4-7-8 呼吸法则","动画引导跟随","Haptic 震动反馈"]},
+"release-pulse":{tit:'<svg viewBox="0 20 20" class="icon" style="width:22px;height:22px"><use href="#icon-activity"/></svg> 脉冲释放',its:["渐进式肌肉放松（从脚到头逐组肌群）","2 分钟/5 分钟/10 分钟三档"]},
+"release-sound":{tit:'<svg viewBox="0 0 20 20" class="icon" style="width:22px;height:22px"><use href="#icon-bell"/></svg> 白噪音',its:["雨声/篝火/海浪/森林 4 种","循环播放"]},
+"game-pop":{tit:'<svg viewBox="0 0 20 20" class="icon" style="width:22px;height:22px"><use href="#icon-target"/></svg> 气泡消消乐',its:["屏幕上不断出现压力气泡","点击戳破伴随音效+震动反馈","越按越爽的减压反馈"]},
+"game-break":{tit:'<svg viewBox="0 0 20 20" class="icon" style="width:22px;height:22px"><use href="#icon-hammer"/></svg> 砸碎压力',its:["屏幕出现压力方块","滑动手指击碎","破碎粒子特效"]},
+"game-flow":{tit:'<svg viewBox="0 0 20 20" class="icon" style="width:22px;height:22px"><use href="#icon-activity"/></svg> 心流模式',its:["单局 3 分钟","专注点击消除","默认为无限模式"]},
+"track-chart":{tit:'<svg viewBox="0 0 20 20" class="icon" style="width:22px;height:22px"><use href="#icon-activity"/></svg> 压力曲线',its:["7 天折线图+30 天趋势图","纵向对比每日同一时段","横向展示每周平均变化"]},
+"track-insight":{tit:'<svg viewBox="0 0 20 20" class="icon" style="width:22px;height:22px"><use href="#icon-shield"/></svg> 洞察报告',its:["每周一自动推送压力周报","标注压力高峰时段和情境模式"]},
+"track-badge":{tit:'<svg viewBox="0 0 20 20" class="icon" style="width:22px;height:22px"><use href="#icon-target"/></svg> 成就徽章',its:["连续天数/释放次数/压力下降","徽章仅为正反馈机制"]},
+"side-crisis":{tit:'<svg viewBox="0 0 20 20" class="icon" style="width:22px;height:22px"><use href="#icon-shield"/></svg> 紧急模式',its:["一键启动:震动+呼吸引导+SOS 求助","快速安抚包:60 秒综合放松序列","SOS 一键拨打预设联系人"]},
+"side-sleep":{tit:'<svg viewBox="0 0 20 20" class="icon" style="width:22px;height:22px"><use href="#icon-wind"/></svg> 睡眠辅助',its:["渐进式肌肉放松","助眠故事库"]},
+"side-community":{tit:'<svg viewBox="0 0 20 20" class="icon" style="width:22px;height:22px"><use href="#icon-heart"/></svg> 社区共鸣',its:["匿名压力故事广场","用户可给他人故事送共鸣徽章"]}
+};
+document.addEventListener("DOMContentLoaded",function(){
+var L=document.querySelectorAll(".layer");var A=document.querySelectorAll(".arrow-down");var F=document.querySelectorAll(".flow-step");var S=document.querySelectorAll(".side-module");var U=document.querySelector(".user-flow");var O=document.querySelector("#detailOverlay");var C=document.querySelector("#detailContent");var B=document.querySelector("#closeDetail");
+var T=anime.timeline({easing:"easeOutCubic"});
+T.add({targets:"#header",opacity:[0,1],translateY:[-10,0],duration:600});
+T.add({targets:S,opacity:[0,1],translateX:[15,0],duration:400,delay:anime.stagger(120)},"-=200");
+T.add({targets:L,opacity:[0,1],translateY:[20,0],duration:500,delay:anime.stagger(150)},"-=100");
+T.add({targets:A,opacity:[0,1],duration:400,delay:anime.stagger(200)},"-=200");
+setTimeout(function(){document.querySelectorAll(".arrow-path").forEach(function(p){anime({targets:p,strokeDashoffset:[200,0],duration:800,delay:300,easing:"easeInOutCubic"});});},1500);
+T.add({targets:U,opacity:[0,1],duration:500},"-=100");
+T.add({targets:F,opacity:[0,1],translateX:[-8,0],duration:350,delay:anime.stagger(120)},"-=200");
+var i=0;function pulse(){F.forEach(function(s){s.querySelector(".dot").classList.remove("active");});F[i].querySelector(".dot").classList.add("active");i=(i+1)%F.length;}
+pulse();setInterval(pulse,2500);
+L.forEach(function(l){l.addEventListener("mouseenter",function(){anime({targets:l,borderColor:"var(--accent-amber)",backgroundColor:"rgba(245,158,11,0.06)",duration:200});});l.addEventListener("mouseleave",function(){anime({targets:l,borderColor:"var(--chalk-dimmer)",backgroundColor:"rgba(252,228,228,0.06)",duration:300});});});
+function openDetail(id){var d=DETAILS[id];if(!d)return;C.innerHTML='<h2>'+d.tit+'</h2><ul>'+d.its.map(function(s){return '<li>'+s+'</li>';}).join('')+'</ul>';O.classList.add("open");anime({targets:"#detailCard",scale:[0.85,1],opacity:[0,1],duration:250,easing:"easeOutCubic"});}
+function closeDetail(){anime({targets:"#detailCard",scale:[1,0.85],opacity:[1,0],duration:200,easing:"easeInCubic",complete:function(){O.classList.remove("open");}});}
+document.querySelectorAll(".module[data-detail]").forEach(function(el){el.addEventListener("click",function(){openDetail(el.dataset.detail);});});
+document.querySelectorAll(".side-module[data-detail]").forEach(function(el){el.addEventListener("click",function(){openDetail(el.dataset.detail);});});
+B.addEventListener("click",closeDetail);O.addEventListener("click",function(e){if(e.target===O)closeDetail();});
+var board=document.getElementById("chalkboard");
+for(var n=0;n<20;n++){var dot=document.createElement("div");dot.className="chalk-glow";dot.style.left=Math.random()*100+"%";dot.style.top=Math.random()*100+"%";dot.style.width=dot.style.height=2+Math.random()*4+"px";dot.style.opacity=0.05+Math.random()*0.1;board.appendChild(dot);anime({targets:dot,translateX:[0,-10+Math.random()*20],translateY:[0,-10+Math.random()*20],opacity:[0.05,0.15,0.05],duration:3000+Math.random()*4000,direction:"alternate",loop:true,easing:"easeInOutSine"});}
+});
+</script>
+</body>
+</html>

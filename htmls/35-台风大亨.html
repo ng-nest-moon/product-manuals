@@ -1,0 +1,492 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>台风大亨</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;600;800&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#0a0e1a;--bg-dark:#050812;--panel:#0f1a30;--surface:#142240;--surface-light:#1a3055;--accent:#22d3ee;--accent-dim:rgba(34,211,238,0.15);--accent-gold:#fbbf24;--accent-green:#34d399;--accent-rose:#fb7185;--accent-purple:#a78bfa;--accent-cyan:#22d3ee;--accent-blue:#60a5fa;--text:#d0e4f7;--text-dim:rgba(208,228,247,0.6);--text-dimmer:rgba(208,228,247,0.18);--grid:rgba(34,211,238,0.025);--font-display:"Noto Sans SC","PingFang SC","Microsoft YaHei",sans-serif;--font-mono:"IBM Plex Mono","SFMono-Regular",Menlo,Consolas,"Courier New",monospace}
+html,body{height:100%;background:var(--bg-dark);font-family:var(--font-mono);color:var(--text);overflow-x:hidden}
+.screen-frame{position:relative;min-height:100vh;max-width:1440px;margin:0 auto;background:radial-gradient(ellipse at 50% 0%,rgba(34,211,238,0.02) 0%,var(--bg-dark) 70%);border-radius:20px;box-shadow:inset 0 0 80px rgba(0,0,0,0.8),0 8px 40px rgba(0,0,0,0.6);padding:24px 20px 20px}
+.screen-frame::before{content:"";position:absolute;inset:0;border-radius:20px;background:repeating-linear-gradient(0deg,transparent,transparent 2px,var(--grid) 2px,var(--grid) 4px);pointer-events:none;z-index:100}
+.crt-curve{position:absolute;inset:0;border-radius:20px;background:radial-gradient(ellipse at center,transparent 55%,rgba(0,0,0,0.4) 100%);pointer-events:none;z-index:99}
+.eye-led{position:absolute;top:10px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:10px;font-size:9px;font-weight:500;color:var(--text-dim);letter-spacing:2px;z-index:101;background:rgba(10,14,26,0.85);padding:3px 16px;border-radius:20px;border:1px solid var(--accent-dim);backdrop-filter:blur(4px);text-transform:uppercase;font-family:var(--font-mono)}
+.eye-led .eye{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--accent-cyan);box-shadow:0 0 12px var(--accent-cyan);animation:pulse-eye 2.5s ease-in-out infinite}
+@keyframes pulse-eye{0%,100%{opacity:1;box-shadow:0 0 12px var(--accent-cyan)}50%{opacity:0.3;box-shadow:0 0 3px var(--accent-cyan)}}
+.panel{position:relative;background:var(--panel);border:1.5px solid var(--surface-light);border-radius:8px;padding:28px 24px 24px;box-shadow:inset 0 0 50px rgba(0,0,0,0.5),0 4px 0 var(--bg-dark);min-height:calc(100vh - 80px);overflow:hidden;z-index:2}
+.panel::after{content:"";position:absolute;inset:0;background-image:radial-gradient(circle at 70% 15%,rgba(34,211,238,0.015) 0,transparent 60%),radial-gradient(circle at 30% 85%,rgba(251,191,36,0.01) 0,transparent 50%);pointer-events:none}
+.header{text-align:center;margin-bottom:22px;position:relative;z-index:1}
+.header h1{font-family:var(--font-display);font-size:28px;font-weight:800;color:var(--accent-cyan);text-shadow:0 0 30px rgba(34,211,238,0.25);letter-spacing:3px;margin-bottom:3px;display:flex;align-items:center;justify-content:center;gap:12px}
+.header h1 svg{width:32px;height:32px;flex-shrink:0;filter:drop-shadow(0 0 8px rgba(34,211,238,0.3))}
+.header .subtitle{font-size:13px;font-weight:300;color:var(--text-dim);letter-spacing:0.5px;max-width:720px;margin:0 auto;line-height:1.8}
+.header .subtitle em{font-style:normal;color:var(--accent-gold);font-weight:500}
+.layout-main{display:flex;gap:16px;position:relative;z-index:1}
+.layers-column{flex:1;min-width:0}
+.side-column{width:210px;flex-shrink:0;display:flex;flex-direction:column;gap:8px}
+.layer{position:relative;background:rgba(20,34,64,0.5);border:1.5px solid var(--surface-light);border-radius:6px;padding:10px 12px 12px;margin-bottom:0;cursor:pointer;transition:border-color 0.3s,background 0.3s;opacity:0;transform:translateY(20px)}
+.layer:hover{border-color:var(--accent-cyan);background:rgba(34,211,238,0.05)}
+.layer-label{font-family:var(--font-display);font-size:12px;font-weight:600;color:var(--text-dim);letter-spacing:1px;margin-bottom:6px;display:flex;align-items:center;gap:6px}
+.layer-label .badge{font-size:9px;font-weight:600;background:var(--surface-light);color:var(--text-dim);padding:1px 7px;border-radius:3px;letter-spacing:0}
+.layer-modules{display:flex;flex-wrap:wrap;gap:5px}
+.module{background:rgba(208,228,247,0.03);border:1px solid var(--surface-light);border-radius:4px;padding:4px 10px;font-size:12px;line-height:1.5;color:var(--text);transition:all 0.25s;white-space:nowrap;cursor:pointer;display:inline-flex;align-items:center;gap:5px}
+.module:hover{background:rgba(34,211,238,0.08);border-color:var(--accent-cyan);transform:translateY(-1px);box-shadow:0 0 12px rgba(34,211,238,0.08)}
+.module .tag{font-size:9px;font-weight:600;padding:1px 6px;border-radius:3px;margin-left:3px;opacity:0.8}
+.tag-core{background:var(--accent-dim);color:var(--bg)}
+.tag-evolve{background:var(--accent-green);color:var(--bg)}
+.tag-event{background:var(--accent-gold);color:var(--bg)}
+.tag-reinc{background:var(--accent-purple);color:var(--bg)}
+.layer[data-layer="cultivate"]{border-left:3px solid var(--accent-cyan)}
+.layer[data-layer="map"]{border-left:3px solid var(--accent-green)}
+.layer[data-layer="landfall"]{border-left:3px solid var(--accent-gold)}
+svg.icon,.module svg,.side-module svg{width:16px;height:16px;flex-shrink:0}
+.module svg{width:14px;height:14px}
+.layer-label>svg:first-child{width:18px;height:18px;flex-shrink:0}
+.header h1 svg{width:32px;height:32px;flex-shrink:0}
+.arrow-down{display:flex;align-items:center;justify-content:center;height:24px;position:relative;opacity:0}
+.arrow-down svg{width:100%;height:24px}
+.arrow-label{position:absolute;font-family:var(--font-mono);font-size:9px;font-weight:500;color:var(--text-dim);background:var(--panel);padding:0 10px;text-align:center;white-space:nowrap;letter-spacing:0.5px}
+.side-module{background:rgba(20,34,64,0.5);border:1.5px solid var(--surface-light);border-left:3px solid var(--accent-cyan);border-radius:6px;padding:8px 10px;cursor:pointer;opacity:0;transform:translateX(15px);transition:border-color 0.3s,background 0.3s}
+.side-module:hover{border-color:var(--accent-cyan);background:rgba(34,211,238,0.05)}
+.side-module .layer-label{margin-bottom:3px}
+.side-module .desc{font-size:11px;color:var(--text-dim);line-height:1.5}
+.side-module.border-gold{border-left-color:var(--accent-gold)}
+.side-module.border-gold:hover{border-color:var(--accent-gold);background:rgba(251,191,36,0.05)}
+.side-module.border-green{border-left-color:var(--accent-green)}
+.side-module.border-green:hover{border-color:var(--accent-green);background:rgba(52,211,153,0.05)}
+.side-module.border-purple{border-left-color:var(--accent-purple)}
+.side-module.border-purple:hover{border-color:var(--accent-purple);background:rgba(167,139,250,0.05)}
+.user-flow{margin-top:18px;padding:12px 14px;background:rgba(20,34,64,0.5);border:1.5px solid var(--surface-light);border-radius:6px;position:relative;z-index:1;opacity:0}
+.user-flow-header{font-family:var(--font-display);font-size:11px;font-weight:600;color:var(--accent-gold);letter-spacing:0.5px;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.user-flow-steps{display:flex;align-items:center;flex-wrap:wrap;gap:0}
+.flow-step{display:flex;align-items:center;gap:0;opacity:0}
+.flow-step .dot{width:26px;height:26px;border-radius:50%;border:2px solid var(--surface-light);background:var(--bg);display:flex;align-items:center;justify-content:center;font-size:10px;line-height:1;flex-shrink:0;transition:all 0.3s;font-family:var(--font-mono);font-weight:600;color:var(--text-dim)}
+.flow-step .dot.active{border-color:var(--accent-gold);background:rgba(251,191,36,0.1);box-shadow:0 0 12px rgba(251,191,36,0.15);color:var(--accent-gold)}
+.flow-step .label{font-size:10px;color:var(--text-dim);white-space:nowrap;margin:0 6px 0 4px;line-height:1}
+.flow-step .conn{width:22px;height:2px;background:var(--surface-light);position:relative;flex-shrink:0}
+.flow-step .conn::after{content:"▶";position:absolute;right:-4px;top:-7px;font-size:8px;color:var(--surface-light)}
+.flow-step:last-child .conn{display:none}
+.branch-bar{margin-top:14px;padding:12px 14px;background:rgba(20,34,64,0.5);border:1.5px solid var(--surface-light);border-radius:6px;position:relative;z-index:1;opacity:0}
+.branch-bar-header{font-family:var(--font-display);font-size:11px;font-weight:600;color:var(--accent-cyan);letter-spacing:0.5px;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.branch-steps{display:flex;align-items:center;gap:0;flex-wrap:wrap}
+.branch-step{display:flex;align-items:center;opacity:0}
+.branch-step .dot-b{width:28px;height:28px;border-radius:50%;border:2px solid var(--surface-light);background:var(--bg);display:flex;align-items:center;justify-content:center;font-size:9px;line-height:1;flex-shrink:0;font-family:var(--font-mono);font-weight:700;color:var(--text-dim);transition:all 0.3s}
+.branch-step .dot-b.off{opacity:0.4}
+.branch-step .dot-b.b1{border-color:var(--accent-cyan);color:var(--accent-cyan)}
+.branch-step .dot-b.b2{border-color:var(--accent-green);color:var(--accent-green)}
+.branch-step .dot-b.b3{border-color:var(--accent-gold);color:var(--accent-gold)}
+.branch-step .dot-b.b4{border-color:var(--accent-rose);color:var(--accent-rose)}
+.branch-step .label-b{font-size:10px;color:var(--text-dim);white-space:nowrap;margin:0 5px;line-height:1.2}
+.branch-step .label-b .s{display:block;font-size:8px;color:var(--text-dimmer)}
+.branch-step .conn-b{width:12px;height:1.5px;background:var(--surface-light);position:relative;flex-shrink:0}
+.branch-step .conn-b::after{content:"▸";position:absolute;right:-3px;top:-6px;font-size:7px;color:var(--surface-light)}
+.branch-step:last-child .conn-b{display:none}
+.detail-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:200;display:none;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
+.detail-overlay.open{display:flex}
+.detail-card{background:var(--surface);border:2px solid var(--accent-dim);border-radius:8px;padding:22px 24px;max-width:520px;width:90%;max-height:80vh;overflow-y:auto;position:relative;box-shadow:0 8px 50px rgba(0,0,0,0.7),0 0 30px rgba(34,211,238,0.05);will-change:transform,opacity;backface-visibility:hidden;-webkit-backface-visibility:hidden;transform:translateZ(0);-webkit-transform:translateZ(0)}
+.detail-card h2{margin-top:0;font-family:var(--font-display);font-size:17px;font-weight:700;color:var(--accent-cyan);margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--surface-light);display:flex;align-items:center;gap:8px}
+.detail-card h2 svg{width:20px;height:20px;flex-shrink:0}
+.detail-card h3{font-size:12px;font-weight:600;color:var(--text-dim);margin:12px 0 6px}
+.detail-card ul{list-style:none;padding:0}
+.detail-card li{font-size:13px;color:var(--text);padding:4px 0 4px 14px;border-left:2px solid var(--surface-light);margin-bottom:5px;line-height:1.6}
+.detail-card li .hl{color:var(--accent-cyan)}
+.detail-card li .hl-gold{color:var(--accent-gold)}
+.detail-card li .hl-green{color:var(--accent-green)}
+.detail-card li .hl-rose{color:var(--accent-rose)}
+.detail-card li .hl-purple{color:var(--accent-purple)}
+.detail-card .close-btn{position:absolute;top:12px;right:14px;font-family:var(--font-mono);font-size:11px;font-weight:600;color:var(--text-dimmer);background:none;border:1px solid var(--surface-light);border-radius:4px;padding:3px 10px;cursor:pointer;transition:all 0.2s}
+.detail-card .close-btn:hover{color:var(--accent-rose);border-color:var(--accent-rose)}
+@media (max-width:860px){
+.layout-main{flex-direction:column}
+.side-column{width:100%;flex-direction:row;flex-wrap:wrap}
+.side-module{flex:1;min-width:150px}
+.header h1{font-size:22px}
+.layer{padding:8px 8px 10px}
+.layer-label{font-size:10px}
+.module{padding:3px 8px;font-size:11px}
+.flow-step .label{font-size:9px}
+.flow-step .dot{width:22px;height:22px;font-size:9px}
+.detail-card{padding:16px 18px;max-width:90%}
+}
+@media (max-width:480px){
+.header h1{font-size:18px;letter-spacing:1px}
+.module{font-size:10px;padding:3px 6px;white-space:normal}
+.layer{padding:6px 6px 8px}
+.layer-modules{gap:3px}
+.flow-step .label{font-size:8px}
+.flow-step .conn{width:14px}
+.branch-step .label-b{font-size:8px}
+.branch-step .conn-b{width:8px}
+}
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:var(--bg-dark)}
+::-webkit-scrollbar-thumb{background:var(--surface-light);border-radius:2px}
+.arrow-path{stroke-dasharray:200;stroke-dashoffset:200}
+.chalk-glow{position:absolute;pointer-events:none;width:4px;height:4px;border-radius:50%;background:rgba(34,211,238,0.08);filter:blur(6px)}
+</style>
+</head>
+<body>
+<div class="screen-frame">
+<div class="crt-curve"></div>
+<div class="eye-led"><span class="eye"></span> TYPHOON TYCOON · EYE OF THE STORM</div>
+<div class="panel" id="panel">
+<div class="header" id="header">
+<h1>
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/><path d="M3 12h2M19 12h2M12 3v2M12 19v2"/><path d="M5.6 5.6l1.4 1.4M17 17l1.4 1.4M5.6 18.4l1.4-1.4M17 7l1.4-1.4"/></svg>
+台风大亨
+</h1>
+<div class="subtitle">模拟经营游戏 · <em>从一颗气旋之种，到一场传承万世的风暴</em></div>
+</div>
+<div class="layout-main">
+<div class="layers-column" id="layersColumn">
+
+<div class="layer" data-layer="cultivate" id="layer-cultivate">
+<div class="layer-label">
+<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="10" cy="10" r="7"/><circle cx="10" cy="10" r="4"/><circle cx="10" cy="10" r="1.5"/></svg>
+台风养成
+<span class="badge">4 模块</span>
+</div>
+<div class="layer-modules">
+<div class="module" data-detail="cult-name">
+<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 4h14M3 8h10M3 12h14M3 16h10"/></svg>
+命名系统
+</div>
+<div class="module" data-detail="cult-panel">
+<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="14" height="14" rx="2"/><path d="M3 8h14M8 3v14"/></svg>
+成长面板
+<span class="tag tag-core">核心</span>
+</div>
+<div class="module" data-detail="cult-evolve">
+<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="2,17 6,7 10,14 14,4 18,10"/></svg>
+进化树
+<span class="tag tag-evolve">4 级</span>
+</div>
+<div class="module" data-detail="cult-reinc">
+<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 12a8 8 0 1116 0H4z"/><path d="M4 12l4-4M4 12l4 4"/></svg>
+轮回传承
+<span class="tag tag-reinc">★ 爆点</span>
+</div>
+</div>
+</div>
+
+<div class="arrow-down">
+<svg viewBox="0 0 100 24"><path class="arrow-path" d="M50 0v16M42 8l8 8 8-8" stroke="var(--text-dimmer)" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+<div class="arrow-label">养成 → 路径</div>
+</div>
+
+<div class="layer" data-layer="map" id="layer-map">
+<div class="layer-label">
+<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 3l3 2 4-2 4 2 3-2v14l-3 2-4-2-4 2-3-2V3z"/><path d="M7 5v10M13 5v10"/></svg>
+路径地图
+<span class="badge">3 模块</span>
+</div>
+<div class="layer-modules">
+<div class="module" data-detail="map-energy">
+<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 10l3-5 2 8 2-5 3 7"/><path d="M2 16h16"/></svg>
+海面能量区
+<span class="tag tag-core">供能</span>
+</div>
+<div class="module" data-detail="map-landing">
+<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 17h14l-2-6H5l-2 6z"/><path d="M7 11V7M13 11V7"/><path d="M10 7V3"/></svg>
+陆地登陆点
+</div>
+<div class="module" data-detail="map-env">
+<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M10 3v14M3 10h14"/><path d="M6 6l8 8M14 6l-8 8"/></svg>
+环境干扰
+</div>
+</div>
+</div>
+
+<div class="arrow-down">
+<svg viewBox="0 0 100 24"><path class="arrow-path" d="M50 0v16M42 8l8 8 8-8" stroke="var(--text-dimmer)" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+<div class="arrow-label">路径 → 登陆</div>
+</div>
+
+<div class="layer" data-layer="landfall" id="layer-landfall">
+<div class="layer-label">
+<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 18L10 4l8 14H2z"/><path d="M7 12h6"/><path d="M10 12v5"/></svg>
+登陆事件
+<span class="badge">3 模块</span>
+</div>
+<div class="layer-modules">
+<div class="module" data-detail="land-destroy">
+<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 3v12M14 3v12M3 6h14M3 14h14"/><rect x="3" y="3" width="14" height="14" rx="2"/></svg>
+破坏结算
+<span class="tag tag-event">核心</span>
+</div>
+<div class="module" data-detail="land-chain">
+<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="3,15 7,10 11,13 15,6 17,8"/><path d="M10 3v14"/></svg>
+连锁事件
+</div>
+<div class="module" data-detail="land-human">
+<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="10" cy="6" r="3"/><path d="M4 17c1-4 3-5 6-5s5 1 6 5"/></svg>
+人类反应
+</div>
+</div>
+</div>
+
+</div>
+
+<div class="side-column">
+<div class="side-module border-gold" data-detail="side-economy">
+<div class="layer-label">
+<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="10" cy="10" r="7"/><path d="M10 6v8M6 10h8"/></svg>
+毁灭值经济
+</div>
+<div class="desc">登陆→破坏→赚币→解锁更强能力</div>
+</div>
+<div class="side-module border-green" data-detail="side-atlas">
+<div class="layer-label">
+<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="14" height="14" rx="2"/><path d="M3 7h14M7 3v14"/></svg>
+台风图鉴
+</div>
+<div class="desc">记录每一世台风的能力与传奇</div>
+</div>
+<div class="side-module border-purple" data-detail="side-watcher">
+<div class="layer-label">
+<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="10" cy="10" r="7"/><path d="M10 7v3l2 2"/></svg>
+观众模式
+</div>
+<div class="desc">回放台风完整路径与云图可视化</div>
+</div>
+</div>
+</div>
+
+<div class="branch-bar" id="branchBar">
+<div class="branch-bar-header">
+<svg viewBox="0 0 20 20" style="width:16px;height:16px" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="2,17 6,7 10,14 14,4 18,10"/></svg>
+进化等级
+</div>
+<div class="branch-steps">
+<div class="branch-step">
+<div class="dot-b b1">扰</div>
+<div class="label-b">热带扰动<span class="s">能量 &lt; 100 · 基础移动</span></div>
+<div class="conn-b"></div>
+</div>
+<div class="branch-step">
+<div class="dot-b b2">风</div>
+<div class="label-b">热带风暴<span class="s">能量 ≥ 100 · 命名权</span></div>
+<div class="conn-b"></div>
+</div>
+<div class="branch-step">
+<div class="dot-b b3">强</div>
+<div class="label-b">强台风<span class="s">能量 ≥ 300 · 连锁事件</span></div>
+<div class="conn-b"></div>
+</div>
+<div class="branch-step">
+<div class="dot-b b4">超</div>
+<div class="label-b">超强台风<span class="s">能量 ≥ 600 · 双风眼</span></div>
+</div>
+</div>
+</div>
+
+<div class="user-flow" id="userFlow">
+<div class="user-flow-header">
+<svg viewBox="0 0 20 20" style="width:16px;height:16px" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v4"/><path d="M12 14h.01"/></svg>
+台风轮回流程
+</div>
+<div class="user-flow-steps">
+<div class="flow-step"><div class="dot">1</div><div class="label">命名台风</div><div class="conn"></div></div>
+<div class="flow-step"><div class="dot">2</div><div class="label">海面养成</div><div class="conn"></div></div>
+<div class="flow-step"><div class="dot">3</div><div class="label">路径规划</div><div class="conn"></div></div>
+<div class="flow-step"><div class="dot">4</div><div class="label">登陆造风</div><div class="conn"></div></div>
+<div class="flow-step"><div class="dot">5</div><div class="label">破坏结算</div><div class="conn"></div></div>
+<div class="flow-step"><div class="dot">6</div><div class="label">轮回传承</div></div>
+</div>
+</div>
+</div>
+</div>
+<div class="detail-overlay" id="detailOverlay">
+<div class="detail-card" id="detailCard">
+<button class="close-btn" id="closeDetail">✕ 关闭</button>
+<div id="detailContent"></div>
+</div>
+</div>
+<script>
+const DETAILS = {
+"cult-name": {
+title: '<svg viewBox="0 0 20 20" style="width:22px;height:22px" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 4h14M3 8h10M3 12h14M3 16h10"/></svg> 命名系统',
+items: [
+'每一世台风生成时，玩家自定义台风名称',
+'最多 6 个中文字符或 12 个英文字符',
+'名称将显示在台风路径、登录结算、图鉴记录中',
+'支持的名称中的风格将影响台风外观配色',
+],
+},
+"cult-panel": {
+title: '<svg viewBox="0 0 20 20" style="width:22px;height:22px" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="14" height="14" rx="2"/><path d="M3 8h14M8 3v14"/></svg> 成长面板 <span class="hl-gold">★ 核心</span>',
+items: [
+'实时显示台风四项核心属性：<span class="hl">风速</span> / <span class="hl">气压</span> / <span class="hl-green">风圈半径</span> / <span class="hl-gold">移动速度</span>',
+'属性随台风位置和能量摄入动态变化',
+'风速越高→破坏力越强，气压越低→台风越成熟',
+'风圈半径影响登陆覆盖面积，移动速度决定登陆窗口时长',
+'在海面暖水区停留可加速能量吸收；冷水区导致能量衰减',
+],
+},
+"cult-evolve": {
+title: '<svg viewBox="0 0 20 20" style="width:22px;height:22px" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="2,17 6,7 10,14 14,4 18,10"/></svg> 进化树 <span class="hl-green">4 级进化</span>',
+items: [
+'<span class="hl">热带扰动</span>（能量 &lt;100）：基础移动能力，不可命名',
+'<span class="hl-green">热带风暴</span>（能量 ≥100）：获得命名权，解锁风圈扩展',
+'<span class="hl-gold">强台风</span>（能量 ≥300）：解锁连锁事件触发、风眼可视化',
+'<span class="hl-rose">超强台风</span>（能量 ≥600）：解锁双风眼、路径分支、终极技能',
+'每级进化有华丽的动画过渡，台风外观逐级变得更加庞大和震撼',
+'越高级的台风解锁的登陆事件越丰富，毁灭值奖励越丰厚',
+],
+},
+"cult-reinc": {
+title: '<svg viewBox="0 0 20 20" style="width:22px;height:22px" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 12a8 8 0 1116 0H4z"/><path d="M4 12l4-4M4 12l4 4"/></svg> 轮回传承 <span class="hl-gold">★ 核心爆点</span>',
+items: [
+'台风登陆消散后并不会彻底消失——<span class="hl">气旋记忆会保留</span>',
+'残留的"气旋记忆"飘回海上，以"台风之种"孵化下一世',
+'<span class="hl">能力遗传</span>：上一世 30% 的能量上限和随机 1-2 项能力传承给下一代',
+'<span class="hl">城市记忆</span>：登陆过的城市会记住你的台风——下次登陆防御更强',
+'<span class="hl-green">未了心愿</span>：台风消散时未完成的执念遗传给下一世（如"我想吹到青藏高原"）',
+'<span class="hl-gold">圆满消散</span>：完成全部心愿后获得世代专属皮肤、称号、特效',
+'被高压脊压散过？下一世本能绕开高压区——<span class="hl-rose">台风在进化</span>',
+],
+},
+"map-energy": {
+title: '<svg viewBox="0 0 20 20" style="width:22px;height:22px" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 10l3-5 2 8 2-5 3 7"/><path d="M2 16h16"/></svg> 海面能量区 <span class="hl">供能</span>',
+items: [
+'世界地图的海洋区域分布着<span class="hl">暖水区</span>和<span class="hl">冷水区</span>',
+'暖水区为台风供给能量——水温越高能量吸收越快',
+'冷水区导致台风能量衰减，风速下降',
+'路径规划需要穿越多个暖水区蓄能，才能冲击高级进化',
+'能量值达到阈值（100/300/600）触发进化',
+],
+},
+"map-landing": {
+title: '<svg viewBox="0 0 20 20" style="width:22px;height:22px" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 17h14l-2-6H5l-2 6z"/><path d="M7 11V7M13 11V7"/><path d="M10 7V3"/></svg> 陆地登陆点',
+items: [
+'玩家在海岸线选择登陆位置，不同地形破坏结算不同',
+'<span class="hl">平原</span>：风灾范围广，建筑损失大',
+'<span class="hl">山地</span>：触发山体滑坡概率高',
+'<span class="hl">沿海城市</span>：人类反应更强，但毁灭值回报更高',
+'<span class="hl-green">城市记忆系统</span>：被登陆过的城市下次防御升级——同一个城市二刷难度提升',
+],
+},
+"map-env": {
+title: '<svg viewBox="0 0 20 20" style="width:22px;height:22px" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M10 3v14M3 10h14"/><path d="M6 6l8 8M14 6l-8 8"/></svg> 环境干扰',
+items: [
+'<span class="hl">高压脊</span>：阻挡台风前进，迫使其绕行——绕行增加能耗',
+'<span class="hl">季风</span>：加速或偏航——双刃剑，可能打乱计划也可能助推',
+'<span class="hl">地形摩擦</span>：靠近陆地时减速——降低登陆速度但增加破坏时长',
+'玩家无法精确控制台风——路径受环境影响产生偏差，增加策略性',
+'高级台风可解锁"硬闯高压脊"能力',
+],
+},
+"land-destroy": {
+title: '<svg viewBox="0 0 20 20" style="width:22px;height:22px" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 3v12M14 3v12M3 6h14M3 14h14"/><rect x="3" y="3" width="14" height="14" rx="2"/></svg> 破坏结算 <span class="hl-gold">★ 核心玩法</span>',
+items: [
+'登陆后触发四种破坏结算：<span class="hl">建筑</span> / <span class="hl-green">树木</span> / <span class="hl-gold">交通</span> / <span class="hl-rose">农业</span>',
+'每种破坏按风速/降雨量/风暴潮综合计算',
+'破坏值转化为<span class="hl">毁灭值</span>——游戏内货币，用于商店消费',
+'登陆点地形影响破坏分布：城市偏建筑、农村偏农业、森林偏树木',
+'等级越高、登陆点选择越精准，毁灭值收益越大',
+],
+},
+"land-chain": {
+title: '<svg viewBox="0 0 20 20" style="width:22px;height:22px" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="3,15 7,10 11,13 15,6 17,8"/><path d="M10 3v14"/></svg> 连锁事件',
+items: [
+'登陆后根据地形和降雨量触发次生灾害链',
+'<span class="hl">暴雨→洪水→山体滑坡</span>：山地地形高概率',
+'<span class="hl">风暴潮→海水倒灌</span>：沿海低洼地区触发',
+'连锁事件毁灭值乘数更高——但人类反应也会升级',
+'强台风及以上等级解锁连锁事件系统',
+'连锁事件链越长，最终结算画面越壮观',
+],
+},
+"land-human": {
+title: '<svg viewBox="0 0 20 20" style="width:22px;height:22px" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="10" cy="6" r="3"/><path d="M4 17c1-4 3-5 6-5s5 1 6 5"/></svg> 人类反应',
+items: [
+'登陆前人类方根据预警等级采取行动',
+'<span class="hl">预警体系</span>：根据台风强度发布蓝/黄/橙/红预警',
+'<span class="hl">撤离系统</span>：高风险区域人员撤离，降低伤亡但毁灭值减少',
+'<span class="hl">救援力量</span>：灾后救援影响最终毁灭值结算',
+'人类反应越充分→毁灭值越少——但这也是台风"成长"的一部分',
+'低等级台风可能被无视，高等级触发全面动员——<span class="hl-rose">这也是一种成就感</span>',
+],
+},
+"side-economy": {
+title: '<svg viewBox="0 0 20 20" style="width:22px;height:22px" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="10" cy="10" r="7"/><path d="M10 6v8M6 10h8"/></svg> 毁灭值经济 <span class="hl-gold">养成闭环</span>',
+items: [
+'毁灭值是游戏内唯一货币，通过登陆破坏获得',
+'用于<span class="hl">毁灭值商店</span>：解锁台风部件、特殊能力、外观特效',
+'也可以购买"台风之种"强化道具，提升下一世起点',
+'跨世代继承：毁灭值不因轮回清零，但消耗品不继承',
+'高级商品需要达成特定成就后才能解锁购买权限',
+],
+},
+"side-atlas": {
+title: '<svg viewBox="0 0 20 20" style="width:22px;height:22px" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="14" height="14" rx="2"/><path d="M3 7h14M7 3v14"/></svg> 台风图鉴',
+items: [
+'记录每一世台风的完整信息：名称、等级、路径、心愿完成度',
+'可视化展示每一世的路径轨迹和最大风速',
+'世代树状图展示台风家族传承关系',
+'查看历史数据对比每世的成长速度和破坏力',
+'集齐全图鉴解锁隐藏奖励',
+],
+},
+"side-watcher": {
+title: '<svg viewBox="0 0 20 20" style="width:22px;height:22px" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="10" cy="10" r="7"/><path d="M10 7v3l2 2"/></svg> 观众模式',
+items: [
+'回放台风从诞生到消散的完整生命周期',
+'生成台风云图可视化——展示风眼、螺旋雨带、风圈变化',
+'可导出回放视频分享给其他玩家',
+'对比模式：同时播放两世台风的路径和强度变化',
+'观众模式下所有游戏机制暂停，纯观赏体验',
+],
+},
+};
+document.addEventListener("DOMContentLoaded", () => {
+const layers = document.querySelectorAll(".layer");
+const arrows = document.querySelectorAll(".arrow-down");
+const flowSteps = document.querySelectorAll(".flow-step");
+const sideModules = document.querySelectorAll(".side-module");
+const userFlow = document.querySelector(".user-flow");
+const branchBar = document.querySelector(".branch-bar");
+const branchSteps = document.querySelectorAll(".branch-step");
+const overlays = document.querySelector("#detailOverlay");
+const detailContent = document.querySelector("#detailContent");
+const closeBtn = document.querySelector("#closeDetail");
+const mainTimeline = anime.timeline({ easing: "easeOutCubic" });
+mainTimeline.add({ targets: "#header", opacity: [0, 1], translateY: [-10, 0], duration: 600 });
+mainTimeline.add({ targets: sideModules, opacity: [0, 1], translateX: [15, 0], duration: 400, delay: anime.stagger(120) }, "-=200");
+mainTimeline.add({ targets: layers, opacity: [0, 1], translateY: [20, 0], duration: 500, delay: anime.stagger(150) }, "-=100");
+mainTimeline.add({ targets: arrows, opacity: [0, 1], duration: 400, delay: anime.stagger(200) }, "-=200");
+setTimeout(() => { document.querySelectorAll(".arrow-path").forEach((p) => { anime({ targets: p, strokeDashoffset: [200, 0], duration: 800, delay: 300, easing: "easeInOutCubic" }); }); }, 1500);
+mainTimeline.add({ targets: userFlow, opacity: [0, 1], duration: 500 }, "-=100");
+mainTimeline.add({ targets: flowSteps, opacity: [0, 1], translateX: [-8, 0], duration: 350, delay: anime.stagger(120) }, "-=200");
+mainTimeline.add({ targets: branchBar, opacity: [0, 1], duration: 500 }, "-=100");
+mainTimeline.add({ targets: branchSteps, opacity: [0, 1], translateY: [6, 0], duration: 300, delay: anime.stagger(100) }, "-=200");
+let flowIndex = 0;
+function pulseFlow() { flowSteps.forEach((s) => s.querySelector(".dot").classList.remove("active")); flowSteps[flowIndex].querySelector(".dot").classList.add("active"); flowIndex = (flowIndex + 1) % flowSteps.length; }
+pulseFlow(); setInterval(pulseFlow, 2500);
+layers.forEach((l) => { l.addEventListener("mouseenter", () => { anime({ targets: l, borderColor: "var(--accent-cyan)", backgroundColor: "rgba(34,211,238,0.05)", duration: 200 }); }); l.addEventListener("mouseleave", () => { anime({ targets: l, borderColor: "var(--surface-light)", backgroundColor: "rgba(20,34,64,0.5)", duration: 300 }); }); });
+function openDetail(id) {
+const data = DETAILS[id]; if (!data) return;
+detailContent.innerHTML = `<h2>${data.title}</h2><ul>${data.items.map((i) => `<li>${i}</li>`).join("")}</ul>`;
+overlays.classList.add("open");
+anime({ targets: "#detailCard", scale: [0.85, 1], opacity: [0, 1], duration: 250, easing: "easeOutCubic" });
+}
+function closeDetail() { anime({ targets: "#detailCard", scale: [1, 0.85], opacity: [1, 0], duration: 200, easing: "easeInCubic", complete: () => { overlays.classList.remove("open"); } }); }
+document.querySelectorAll(".module[data-detail]").forEach((el) => { el.addEventListener("click", () => openDetail(el.dataset.detail)); });
+document.querySelectorAll(".side-module[data-detail]").forEach((el) => { el.addEventListener("click", () => openDetail(el.dataset.detail)); });
+closeBtn.addEventListener("click", closeDetail);
+overlays.addEventListener("click", (e) => { if (e.target === overlays) closeDetail(); });
+const panel = document.getElementById("panel");
+for (let i = 0; i < 20; i++) {
+const dot = document.createElement("div"); dot.className = "chalk-glow";
+dot.style.left = Math.random() * 100 + "%"; dot.style.top = Math.random() * 100 + "%";
+dot.style.width = dot.style.height = 2 + Math.random() * 4 + "px"; dot.style.opacity = 0.04 + Math.random() * 0.08;
+panel.appendChild(dot);
+anime({ targets: dot, translateX: [0, -10 + Math.random() * 20], translateY: [0, -10 + Math.random() * 20], opacity: [0.04, 0.12, 0.04], duration: 3000 + Math.random() * 4000, direction: "alternate", loop: true, easing: "easeInOutSine" });
+}
+});
+</script>
+</body>
+</html>
