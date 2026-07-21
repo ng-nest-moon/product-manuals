@@ -25,11 +25,11 @@
     var idx = raw.toLowerCase().indexOf(q);
     if (idx === -1) {
       var t = raw.slice(0, 80);
-      return t + (raw.length > 80 ? '…' : '');
+      return t + (raw.length > 80 ? '...' : '');
     }
     var start = Math.max(0, idx - 30);
     var end = Math.min(raw.length, idx + q.length + 50);
-    return (start > 0 ? '…' : '') + raw.slice(start, end) + (end < raw.length ? '…' : '');
+    return (start > 0 ? '...' : '') + raw.slice(start, end) + (end < raw.length ? '...' : '');
   }
 
   /* Lazy-init MiniSearch when needed */
@@ -82,7 +82,7 @@
 
   function doSearch(query) {
     if (!query || query.length < 1 || !searchData) {
-      searchResults.innerHTML = '<div class="pm-search-empty">输入关键词搜索...</div>';
+      searchResults.innerHTML = '<div class="pm-search-empty">璇疯緭鍏ュ叧閿瘝...</div>';
       return;
     }
 
@@ -108,7 +108,7 @@
     }
 
     if (!results.length) {
-      searchResults.innerHTML = '<div class="pm-search-empty">没有找到相关结果</div>';
+      searchResults.innerHTML = '<div class="pm-search-empty">娌℃湁鎵惧埌鐩稿叧缁撴灉</div>';
       return;
     }
 
@@ -133,7 +133,7 @@
     searchOverlay.classList.add('open');
     setTimeout(function () { searchInput.focus(); }, 100);
     searchInput.value = '';
-    searchResults.innerHTML = '<div class="pm-search-empty">输入关键词搜索...</div>';
+    searchResults.innerHTML = '<div class="pm-search-empty">璇疯緭鍏ュ叧閿瘝...</div>';
     loadSearchIndex();
   }
 

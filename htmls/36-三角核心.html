@@ -1,0 +1,636 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>三角核心</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;600;800&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#0b0716;--bg-dark:#04020a;--panel:#120c25;--surface:#1e1540;--surface-light:#2d1f5e;--accent:#a78bfa;--accent-dim:rgba(167,139,250,0.18);--accent-gold:#fbbf24;--accent-green:#34d399;--accent-rose:#fb7185;--accent-purple:#a78bfa;--accent-cyan:#22d3ee;--accent-blue:#60a5fa;--text:#d4cdf0;--text-dim:rgba(212,205,240,0.55);--text-dimmer:rgba(212,205,240,0.15);--grid:rgba(167,139,250,0.025);--font-display:"Noto Sans SC","PingFang SC","Microsoft YaHei",sans-serif;--font-mono:"IBM Plex Mono","SFMono-Regular",Menlo,Consolas,"Courier New",monospace}
+html,body{height:100%;background:var(--bg-dark);font-family:var(--font-mono);color:var(--text);overflow-x:hidden}
+.screen-frame{position:relative;min-height:100vh;max-width:1440px;margin:0 auto;background:radial-gradient(ellipse at 50% 0%,rgba(167,139,250,0.02) 0%,var(--bg-dark) 70%);border-radius:20px;box-shadow:inset 0 0 80px rgba(0,0,0,0.8),0 8px 40px rgba(0,0,0,0.6);padding:24px 20px 20px}
+.screen-frame::before{content:"";position:absolute;inset:0;border-radius:20px;background:repeating-linear-gradient(0deg,transparent,transparent 2px,var(--grid) 2px,var(--grid) 4px);pointer-events:none;z-index:100}
+.crt-curve{position:absolute;inset:0;border-radius:20px;background:radial-gradient(ellipse at center,transparent 55%,rgba(0,0,0,0.4) 100%);pointer-events:none;z-index:99}
+.eye-led{position:absolute;top:10px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:10px;font-size:9px;font-weight:500;color:var(--text-dim);letter-spacing:2px;z-index:101;background:rgba(11,7,22,0.85);padding:3px 16px;border-radius:20px;border:1px solid var(--accent-dim);backdrop-filter:blur(4px);text-transform:uppercase;font-family:var(--font-mono)}
+.eye-led .eye{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--accent-purple);box-shadow:0 0 12px var(--accent-purple);animation:pulse-eye 2.5s ease-in-out infinite}
+@keyframes pulse-eye{0%,100%{opacity:1;box-shadow:0 0 12px var(--accent-purple)}50%{opacity:0.3;box-shadow:0 0 3px var(--accent-purple)}}
+.panel{position:relative;background:var(--panel);border:1.5px solid var(--surface-light);border-radius:8px;padding:28px 24px 24px;box-shadow:inset 0 0 50px rgba(0,0,0,0.5),0 4px 0 var(--bg-dark);min-height:calc(100vh - 80px);overflow:hidden;z-index:2}
+.panel::after{content:"";position:absolute;inset:0;background-image:radial-gradient(circle at 70% 15%,rgba(167,139,250,0.015) 0,transparent 60%),radial-gradient(circle at 30% 85%,rgba(34,211,238,0.01) 0,transparent 50%);pointer-events:none}
+.header{text-align:center;margin-bottom:22px;position:relative;z-index:1}
+.header h1{font-family:var(--font-display);font-size:28px;font-weight:800;color:var(--accent-purple);text-shadow:0 0 30px rgba(167,139,250,0.25);letter-spacing:3px;margin-bottom:3px;display:flex;align-items:center;justify-content:center;gap:12px}
+.header h1 svg{width:32px;height:32px;flex-shrink:0;filter:drop-shadow(0 0 8px rgba(167,139,250,0.3))}
+.header .subtitle{font-size:13px;font-weight:300;color:var(--text-dim);letter-spacing:0.5px;max-width:720px;margin:0 auto;line-height:1.8}
+.header .subtitle em{font-style:normal;color:var(--accent-gold);font-weight:500}
+.layout-main{display:flex;gap:16px;position:relative;z-index:1}
+.layers-column{flex:1;min-width:0}
+.side-column{width:210px;flex-shrink:0;display:flex;flex-direction:column;gap:8px}
+.layer{position:relative;background:rgba(30,21,64,0.5);border:1.5px solid var(--surface-light);border-radius:6px;padding:10px 12px 12px;margin-bottom:0;cursor:pointer;transition:border-color 0.3s,background 0.3s;opacity:0;transform:translateY(20px)}
+.layer:hover{border-color:var(--accent-purple);background:rgba(167,139,250,0.05)}
+.layer-label{font-family:var(--font-display);font-size:12px;font-weight:600;color:var(--text-dim);letter-spacing:1px;margin-bottom:6px;display:flex;align-items:center;gap:6px}
+.layer-label .badge{font-size:9px;font-weight:600;background:var(--surface-light);color:var(--text-dim);padding:1px 7px;border-radius:3px;letter-spacing:0}
+.layer-modules{display:flex;flex-wrap:wrap;gap:5px}
+.module{background:rgba(212,205,240,0.03);border:1px solid var(--surface-light);border-radius:4px;padding:4px 10px;font-size:12px;line-height:1.5;color:var(--text);transition:all 0.25s;white-space:nowrap;cursor:pointer;display:inline-flex;align-items:center;gap:5px}
+.module:hover{background:rgba(167,139,250,0.08);border-color:var(--accent-purple);transform:translateY(-1px);box-shadow:0 0 12px rgba(167,139,250,0.08)}
+.module .tag{font-size:9px;font-weight:600;padding:1px 6px;border-radius:3px;margin-left:3px;opacity:0.8}
+.tag-core{background:var(--accent-dim);color:var(--bg)}
+.tag-evolve{background:var(--accent-green);color:var(--bg)}
+.tag-event{background:var(--accent-gold);color:var(--bg)}
+.tag-reinc{background:var(--accent-purple);color:var(--bg)}
+.layer[data-layer="triangle"]{border-left:3px solid var(--accent-cyan)}
+.layer[data-layer="chip"]{border-left:3px solid var(--accent-purple)}
+.layer[data-layer="dungeon"]{border-left:3px solid var(--accent-gold)}
+.layer[data-layer="combat"]{border-left:3px solid var(--accent-rose)}
+svg.icon,.module svg,.side-module svg{width:16px;height:16px;flex-shrink:0}
+.module svg{width:14px;height:14px}
+.layer-label>svg:first-child{width:18px;height:18px;flex-shrink:0}
+.header h1 svg{width:32px;height:32px;flex-shrink:0}
+.arrow-down{display:flex;align-items:center;justify-content:center;height:24px;position:relative;opacity:0}
+.arrow-down svg{width:100%;height:24px}
+.arrow-label{position:absolute;font-family:var(--font-mono);font-size:9px;font-weight:500;color:var(--text-dim);background:var(--panel);padding:0 10px;text-align:center;white-space:nowrap;letter-spacing:0.5px}
+.side-module{background:rgba(30,21,64,0.5);border:1.5px solid var(--surface-light);border-left:3px solid var(--accent-purple);border-radius:6px;padding:8px 10px;cursor:pointer;opacity:0;transform:translateX(15px);transition:border-color 0.3s,background 0.3s}
+.side-module:hover{border-color:var(--accent-purple);background:rgba(167,139,250,0.05)}
+.side-module .layer-label{margin-bottom:3px}
+.side-module .desc{font-size:11px;color:var(--text-dim);line-height:1.5}
+.side-module.border-gold{border-left-color:var(--accent-gold)}
+.side-module.border-gold:hover{border-color:var(--accent-gold);background:rgba(251,191,36,0.05)}
+.side-module.border-green{border-left-color:var(--accent-green)}
+.side-module.border-green:hover{border-color:var(--accent-green);background:rgba(52,211,153,0.05)}
+.side-module.border-purple{border-left-color:var(--accent-purple)}
+.side-module.border-purple:hover{border-color:var(--accent-purple);background:rgba(167,139,250,0.05)}
+.side-module.border-cyan{border-left-color:var(--accent-cyan)}
+.side-module.border-cyan:hover{border-color:var(--accent-cyan);background:rgba(34,211,238,0.05)}
+.side-module.border-rose{border-left-color:var(--accent-rose)}
+.side-module.border-rose:hover{border-color:var(--accent-rose);background:rgba(251,113,133,0.05)}
+.user-flow{margin-top:18px;padding:12px 14px;background:rgba(30,21,64,0.5);border:1.5px solid var(--surface-light);border-radius:6px;position:relative;z-index:1;opacity:0}
+.user-flow-header{font-family:var(--font-display);font-size:11px;font-weight:600;color:var(--accent-gold);letter-spacing:0.5px;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.user-flow-steps{display:flex;align-items:center;flex-wrap:wrap;gap:0}
+.flow-step{display:flex;align-items:center;gap:0;opacity:0}
+.flow-step .dot{width:26px;height:26px;border-radius:50%;border:2px solid var(--surface-light);background:var(--bg);display:flex;align-items:center;justify-content:center;font-size:10px;line-height:1;flex-shrink:0;transition:all 0.3s;font-family:var(--font-mono);font-weight:600;color:var(--text-dim)}
+.flow-step .dot.active{border-color:var(--accent-gold);background:rgba(251,191,36,0.1);box-shadow:0 0 12px rgba(251,191,36,0.15);color:var(--accent-gold)}
+.flow-step .label{font-size:10px;color:var(--text-dim);white-space:nowrap;margin:0 6px 0 4px;line-height:1}
+.flow-step .conn{width:22px;height:2px;background:var(--surface-light);position:relative;flex-shrink:0}
+.flow-step .conn::after{content:"▶";position:absolute;right:-4px;top:-7px;font-size:8px;color:var(--surface-light)}
+.flow-step:last-child .conn{display:none}
+.branch-bar{margin-top:14px;padding:12px 14px;background:rgba(30,21,64,0.5);border:1.5px solid var(--surface-light);border-radius:6px;position:relative;z-index:1;opacity:0}
+.branch-bar-header{font-family:var(--font-display);font-size:11px;font-weight:600;color:var(--accent-cyan);letter-spacing:0.5px;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.branch-steps{display:flex;align-items:center;gap:0;flex-wrap:wrap}
+.branch-step{display:flex;align-items:center;opacity:0}
+.branch-step .dot-b{width:28px;height:28px;border-radius:50%;border:2px solid var(--surface-light);background:var(--bg);display:flex;align-items:center;justify-content:center;font-size:9px;line-height:1;flex-shrink:0;font-family:var(--font-mono);font-weight:700;color:var(--text-dim);transition:all 0.3s}
+.branch-step .dot-b.off{opacity:0.4}
+.branch-step .dot-b.b1{border-color:var(--accent-cyan);color:var(--accent-cyan)}
+.branch-step .dot-b.b2{border-color:var(--accent-purple);color:var(--accent-purple)}
+.branch-step .dot-b.b3{border-color:var(--accent-gold);color:var(--accent-gold)}
+.branch-step .dot-b.b4{border-color:var(--accent-rose);color:var(--accent-rose)}
+.branch-step .label-b{font-size:10px;color:var(--text-dim);white-space:nowrap;margin:0 5px;line-height:1.2}
+.branch-step .label-b .s{display:block;font-size:8px;color:var(--text-dimmer)}
+.branch-step .conn-b{width:12px;height:1.5px;background:var(--surface-light);position:relative;flex-shrink:0}
+.branch-step .conn-b::after{content:"▸";position:absolute;right:-3px;top:-6px;font-size:7px;color:var(--surface-light)}
+.branch-step:last-child .conn-b{display:none}
+.tri-viz{display:flex;justify-content:center;align-items:center;gap:10px;padding:6px 0}
+.tri-node{display:flex;flex-direction:column;align-items:center;gap:2px;width:56px}
+.tri-node .tri-icon{width:20px;height:20px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:12px}
+.tri-node .tri-label{font-size:9px;font-weight:600;color:var(--text-dim)}
+.tri-node .tri-max{font-size:16px;font-weight:800;line-height:1}
+.tri-node .tri-sub{font-size:8px;color:var(--text-dimmer)}
+.tri-node.b1 .tri-icon{background:rgba(34,211,238,0.15);color:var(--accent-cyan)}
+.tri-node.b2 .tri-icon{background:rgba(167,139,250,0.15);color:var(--accent-purple)}
+.tri-node.b3 .tri-icon{background:rgba(251,191,36,0.15);color:var(--accent-gold)}
+.tri-node .tri-max.c1{color:var(--accent-cyan)}
+.tri-node .tri-max.c2{color:var(--accent-purple)}
+.tri-node .tri-max.c3{color:var(--accent-gold)}
+.tri-arrow{color:var(--text-dimmer);font-size:12px}
+.detail-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:200;display:none;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
+.detail-overlay.open{display:flex}
+.detail-card{background:var(--surface);border:2px solid var(--accent-dim);border-radius:8px;padding:22px 24px;max-width:520px;width:90%;max-height:80vh;overflow-y:auto;position:relative;box-shadow:0 8px 50px rgba(0,0,0,0.7),0 0 30px rgba(167,139,250,0.05);will-change:transform,opacity;backface-visibility:hidden;-webkit-backface-visibility:hidden;transform:translateZ(0);-webkit-transform:translateZ(0)}
+.detail-card h2{margin-top:0;font-family:var(--font-display);font-size:17px;font-weight:700;color:var(--accent-purple);margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--surface-light);display:flex;align-items:center;gap:8px}
+.detail-card h2 svg{width:20px;height:20px;flex-shrink:0}
+.detail-card h3{font-size:12px;font-weight:600;color:var(--text-dim);margin:12px 0 6px}
+.detail-card ul{list-style:none;padding:0}
+.detail-card li{font-size:13px;color:var(--text);padding:4px 0 4px 14px;border-left:2px solid var(--surface-light);margin-bottom:5px;line-height:1.6}
+.detail-card li .hl{color:var(--accent-cyan)}
+.detail-card li .hl-gold{color:var(--accent-gold)}
+.detail-card li .hl-green{color:var(--accent-green)}
+.detail-card li .hl-rose{color:var(--accent-rose)}
+.detail-card li .hl-purple{color:var(--accent-purple)}
+.detail-card .close-btn{position:absolute;top:12px;right:14px;font-family:var(--font-mono);font-size:11px;font-weight:600;color:var(--text-dimmer);background:none;border:1px solid var(--surface-light);border-radius:4px;padding:3px 10px;cursor:pointer;transition:all 0.2s}
+.detail-card .close-btn:hover{color:var(--accent-rose);border-color:var(--accent-rose)}
+@media (max-width:860px){
+.layout-main{flex-direction:column}
+.side-column{width:100%;flex-direction:row;flex-wrap:wrap}
+.side-module{flex:1;min-width:150px}
+.header h1{font-size:22px}
+.layer{padding:8px 8px 10px}
+.layer-label{font-size:10px}
+.module{padding:3px 8px;font-size:11px}
+.flow-step .label{font-size:9px}
+.flow-step .dot{width:22px;height:22px;font-size:9px}
+.detail-card{padding:16px 18px;max-width:90%}
+}
+@media (max-width:480px){
+.header h1{font-size:18px;letter-spacing:1px}
+.module{font-size:10px;padding:3px 6px;white-space:normal}
+.layer{padding:6px 6px 8px}
+.layer-modules{gap:3px}
+.flow-step .label{font-size:8px}
+.flow-step .conn{width:14px}
+.branch-step .label-b{font-size:8px}
+.branch-step .conn-b{width:8px}
+}
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:var(--bg-dark)}
+::-webkit-scrollbar-thumb{background:var(--surface-light);border-radius:2px}
+.arrow-path{stroke-dasharray:200;stroke-dashoffset:200}
+.chalk-glow{position:absolute;pointer-events:none;width:4px;height:4px;border-radius:50%;background:rgba(167,139,250,0.08);filter:blur(6px)}
+</style>
+</head>
+<body>
+<div class="screen-frame">
+<div class="crt-curve"></div>
+<div class="eye-led"><span class="eye"></span> TRIANGLE CORE · CAPACITY · PERFORMANCE · STABILITY</div>
+<div class="panel" id="panel">
+<div class="header" id="header">
+<h1>
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12,2 22,22 2,22"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="16" x2="16" y2="16"/></svg>
+三角核心
+</h1>
+<div class="subtitle">肉鸽·取舍游戏 · <em>每次开局都是一道选择题——你只能选两个做强</em></div>
+</div>
+<div class="layout-main">
+<div class="layers-column" id="layersColumn">
+
+<div class="layer" data-layer="triangle" id="layer-triangle">
+<div class="layer-label">
+<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="10,2 18,18 2,18"/><line x1="10" y1="6" x2="10" y2="14"/><circle cx="10" cy="14" r="1"/></svg>
+三角分配
+<span class="badge">4 模块</span>
+</div>
+<div class="layer-modules">
+<div class="module" data-detail="tri-capacity">
+<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="5" width="14" height="10" rx="2"/><path d="M7 5V3h6v2"/><path d="M8 10l2 2 3-4"/></svg>
+容量
+<span class="tag tag-core">核心</span>
+</div>
+<div class="module" data-detail="tri-perf">
+<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="4,14 8,8 12,12 16,5"/><circle cx="16" cy="5" r="1"/></svg>
+性能
+<span class="tag tag-core">核心</span>
+</div>
+<div class="module" data-detail="tri-stab">
+<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M10 3v7l4 2"/><circle cx="10" cy="14" r="4"/></svg>
+稳定
+<span class="tag tag-core">核心</span>
+</div>
+<div class="module" data-detail="tri-mutex">
+<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="5" cy="10" r="4"/><circle cx="15" cy="10" r="4"/><path d="M7 10h6"/></svg>
+三者互斥
+<span class="tag tag-reinc">★ 灵魂</span>
+</div>
+</div>
+</div>
+
+<div class="arrow-down">
+<svg viewBox="0 0 100 24"><path class="arrow-path" d="M50 0v16M42 8l8 8 8-8" stroke="var(--text-dimmer)" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+<div class="arrow-label">分配 → 组装</div>
+</div>
+
+<div class="layer" data-layer="chip" id="layer-chip">
+<div class="layer-label">
+<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="4" y="4" width="12" height="12" rx="2"/><path d="M4 10h12M10 4v12M7 7h2M7 11h2"/></svg>
+芯片组装
+<span class="badge">4 模块</span>
+</div>
+<div class="layer-modules">
+<div class="module" data-detail="chip-types">
+<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="14" height="14" rx="2"/><path d="M3 7h14M7 3v14"/></svg>
+芯片类型
+<span class="tag tag-core">4 类</span>
+</div>
+<div class="module" data-detail="chip-bandwidth">
+<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="4" y="8" width="12" height="4" rx="1"/><path d="M10 5v3M10 12v3"/></svg>
+带宽成本
+</div>
+<div class="module" data-detail="chip-threshold">
+<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 15l4-8 3 6 3-5 2 7"/><line x1="2" y1="17" x2="18" y2="17"/></svg>
+阈值门槛
+</div>
+<div class="module" data-detail="chip-level">
+<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="4,16 7,9 10,13 13,6 16,10"/><line x1="2" y1="17" x2="18" y2="17"/></svg>
+芯片等级
+</div>
+</div>
+</div>
+
+<div class="arrow-down">
+<svg viewBox="0 0 100 24"><path class="arrow-path" d="M50 0v16M42 8l8 8 8-8" stroke="var(--text-dimmer)" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+<div class="arrow-label">组装 → 进本</div>
+</div>
+
+<div class="layer" data-layer="dungeon" id="layer-dungeon">
+<div class="layer-label">
+<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="10,2 18,8 18,16 10,20 2,16 2,8"/><line x1="10" y1="8" x2="10" y2="16"/><line x1="6" y1="10" x2="14" y2="10"/></svg>
+副本探索
+<span class="badge">5 模块</span>
+</div>
+<div class="layer-modules">
+<div class="module" data-detail="dungeon-gen">
+<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="6" height="6"/><rect x="11" y="3" width="6" height="6"/><rect x="3" y="11" width="6" height="6"/><rect x="11" y="11" width="6" height="6"/></svg>
+程序生成
+<span class="tag tag-evolve">自动</span>
+</div>
+<div class="module" data-detail="dungeon-zone">
+<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="10" cy="10" r="7"/><path d="M10 3v14M3 10h14"/></svg>
+区域侧重
+</div>
+<div class="module" data-detail="dungeon-supply">
+<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="6" cy="10" r="3"/><circle cx="14" cy="10" r="3"/><path d="M8 8l4 4M12 8l-4 4"/></svg>
+随机供给
+</div>
+<div class="module" data-detail="dungeon-shop">
+<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="6" width="14" height="10" rx="1"/><path d="M6 6V4a4 4 0 118 0v2"/></svg>
+商店节点
+</div>
+<div class="module" data-detail="dungeon-event">
+<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="10,1 13,7 19,8 14,12 16,19 10,15 4,19 6,12 1,8 7,7"/></svg>
+事件节点
+</div>
+</div>
+</div>
+
+<div class="arrow-down">
+<svg viewBox="0 0 100 24"><path class="arrow-path" d="M50 0v16M42 8l8 8 8-8" stroke="var(--text-dimmer)" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+<div class="arrow-label">探路 → 战斗</div>
+</div>
+
+<div class="layer" data-layer="combat" id="layer-combat">
+<div class="layer-label">
+<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="10" cy="10" r="6"/><path d="M10 7v6M7 10h6"/></svg>
+战斗系统
+<span class="badge">3 模块</span>
+</div>
+<div class="layer-modules">
+<div class="module" data-detail="combat-realtime">
+<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="10,2 12,8 18,8 13,12 15,18 10,14 5,18 7,12 2,8 8,8"/></svg>
+实时对战
+</div>
+<div class="module" data-detail="combat-enemy">
+<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="10" cy="6" r="3"/><path d="M4 18c1-4 3-5 6-5s5 1 6 5"/></svg>
+敌人类型
+</div>
+<div class="module" data-detail="combat-death">
+<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="4" y1="16" x2="16" y2="4"/><path d="M4 4h12v12H4z"/></svg>
+死亡判定
+<span class="tag tag-event">肉鸽</span>
+</div>
+</div>
+</div>
+
+</div>
+
+<div class="side-column">
+<div class="side-module border-cyan" data-detail="side-reject">
+<div class="layer-label">
+<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="10" cy="10" r="8"/><line x1="6" y1="6" x2="14" y2="14"/><line x1="14" y1="6" x2="6" y2="14"/></svg>
+神经排斥
+</div>
+<div class="desc">装得太多→稳定不够→芯片反噬</div>
+</div>
+<div class="side-module border-rose" data-detail="side-overload">
+<div class="layer-label">
+<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M10 2v8l4 2"/><path d="M10 2a12 12 0 108 10"/><path d="M4 10a6 6 0 016-6"/></svg>
+过载风险
+</div>
+<div class="desc">性能太高→稳定不够→直接晕</div>
+</div>
+<div class="side-module border-gold" data-detail="side-meta">
+<div class="layer-label">
+<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="10" cy="10" r="7"/><path d="M10 6v8M6 10h8"/></svg>
+元进度
+</div>
+<div class="desc">记忆晶体 → 升级总容量</div>
+</div>
+<div class="side-module border-green" data-detail="side-economy">
+<div class="layer-label">
+<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="6" width="14" height="10" rx="1"/><path d="M6 6V4a4 4 0 118 0v2"/></svg>
+双经济
+</div>
+<div class="desc">数据(局内) + 晶体(跨局)</div>
+</div>
+</div>
+</div>
+
+<div class="branch-bar" id="branchBar">
+<div class="branch-bar-header">
+<svg viewBox="0 0 20 20" style="width:16px;height:16px" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="10,2 18,18 2,18"/></svg>
+三角取舍 · 一条池里的水，一边多另外两边就少
+</div>
+<div class="branch-steps">
+<div class="tri-viz">
+<div class="tri-node b1">
+<div class="tri-icon">📦</div>
+<div class="tri-label">容量</div>
+<div class="tri-max c1">↑↓</div>
+<div class="tri-sub">能装多少芯片</div>
+</div>
+<div class="tri-arrow">⇄</div>
+<div class="tri-node b2">
+<div class="tri-icon">⚡</div>
+<div class="tri-label">性能</div>
+<div class="tri-max c2">↑↓</div>
+<div class="tri-sub">芯片效果多强</div>
+</div>
+<div class="tri-arrow">⇄</div>
+<div class="tri-node b3">
+<div class="tri-icon">🛡️</div>
+<div class="tri-label">稳定</div>
+<div class="tri-max c3">↑↓</div>
+<div class="tri-sub">系统会不会翻</div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="user-flow" id="userFlow">
+<div class="user-flow-header">
+<svg viewBox="0 0 20 20" style="width:16px;height:16px" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v4"/><path d="M12 14h.01"/></svg>
+一局流程
+</div>
+<div class="user-flow-steps">
+<div class="flow-step"><div class="dot">1</div><div class="label">分配三角</div><div class="conn"></div></div>
+<div class="flow-step"><div class="dot">2</div><div class="label">进副本</div><div class="conn"></div></div>
+<div class="flow-step"><div class="dot">3</div><div class="label">探索战斗</div><div class="conn"></div></div>
+<div class="flow-step"><div class="dot">4</div><div class="label">商店/事件</div><div class="conn"></div></div>
+<div class="flow-step"><div class="dot">5</div><div class="label">Boss</div><div class="conn"></div></div>
+<div class="flow-step"><div class="dot">6</div><div class="label">结算升级</div></div>
+</div>
+</div>
+</div>
+</div>
+<div class="detail-overlay" id="detailOverlay">
+<div class="detail-card" id="detailCard">
+<button class="close-btn" id="closeDetail">✕ 关闭</button>
+<div id="detailContent"></div>
+</div>
+</div>
+<script>
+const DETAILS = {
+"tri-capacity": {
+title: '<svg viewBox="0 0 20 20" style="width:22px;height:22px" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="5" width="14" height="10" rx="2"/><path d="M7 5V3h6v2"/><path d="M8 10l2 2 3-4"/></svg> 容量 <span class="hl">★ 核心</span>',
+items: [
+'<span class="hl">容量</span>决定了你这局能装多少芯片',
+'容量越高→芯片位越多→功能越丰富',
+'容量是三角的一部分——容量拉满，性能和稳定就得让步',
+'多装芯片的代价是系统负荷增加，触发排斥的概率上升',
+'特定芯片需要高容量支撑，如多核心运算芯片、多技能联动套装',
+],
+},
+"tri-perf": {
+title: '<svg viewBox="0 0 20 20" style="width:22px;height:22px" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="4,14 8,8 12,12 16,5"/><circle cx="16" cy="5" r="1"/></svg> 性能 <span class="hl">★ 核心</span>',
+items: [
+'<span class="hl">性能</span>决定了你的芯片效果有多强',
+'性能越高→伤害/速度/射程/效果全部放大',
+'性能是三角的一部分——性能拉满，容量和稳定就得让步',
+'性能太高而稳定不够→<span class="hl-rose">过载条涨得飞快</span>，满则眩晕',
+'走"玻璃大炮"路线就把性能拉到顶，配少量高伤芯片，速战速决',
+],
+},
+"tri-stab": {
+title: '<svg viewBox="0 0 20 20" style="width:22px;height:22px" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M10 3v7l4 2"/><circle cx="10" cy="14" r="4"/></svg> 稳定 <span class="hl">★ 核心</span>',
+items: [
+'<span class="hl">稳定</span>决定了你的系统稳不稳、会不会翻车',
+'稳定越高→越不容易触发排斥，过载条涨得越慢',
+'稳定是三角的一部分——稳定拉满，容量和性能就得让步',
+'稳定太低→装多芯片频繁排斥（失效/反噬扣血）',
+'新手建议先拉高稳定，活到 Boss 面前再说',
+],
+},
+"tri-mutex": {
+title: '<svg viewBox="0 0 20 20" style="width:22px;height:22px" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="5" cy="10" r="4"/><circle cx="15" cy="10" r="4"/><path d="M7 10h6"/></svg> 三者互斥 <span class="hl-gold">★ 灵魂机制</span>',
+items: [
+'容量、性能、稳定三条属性<span class="hl">共享一池总点数</span>',
+'你只能选 <span class="hl-gold">"两个做强，一个拖着"</span>，没有全能的选项',
+'<span class="hl">装得多(容量↑)</span> → 系统负荷↑ → 稳定↓',
+'<span class="hl">效果猛(性能↑)</span> → 能耗+震荡 → 容量和稳定都被挤压',
+'<span class="hl">求稳(稳定↑)</span> → 屏蔽层吃插槽 → 容量↓，降频 → 性能↓',
+'这就是每局的第一道选择题，也是每局的核心约束',
+'随着元进度提升，总点数上限增加，但比例取舍永远存在',
+],
+},
+"chip-types": {
+title: '<svg viewBox="0 0 20 20" style="width:22px;height:22px" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="14" height="14" rx="2"/><path d="M3 7h14M7 3v14"/></svg> 芯片类型 <span class="hl-green">4 类</span>',
+items: [
+'<span class="hl">感知型</span>：解锁新感知能力——红外视觉、电磁扫描、读心雷达',
+'<span class="hl-green">技能型</span>：主动战斗技——子弹时间、瞬间格挡、肌肉记忆格斗',
+'<span class="hl-purple">运算型</span>：AI 辅助——敌人行为预测、路径最优化、记忆检索',
+'<span class="hl-gold">强化型</span>：被动属性——反应速度、带宽扩展、神经自愈',
+'每块芯片占用一定容量值，高阶芯片还有三角阈值要求',
+'同类型芯片装配多个可触发隐藏协同效果',
+],
+},
+"chip-bandwidth": {
+title: '<svg viewBox="0 0 20 20" style="width:22px;height:22px" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="4" y="8" width="12" height="4" rx="1"/><path d="M10 5v3M10 12v3"/></svg> 带宽成本',
+items: [
+'每块芯片都有<span class="hl">带宽成本</span>，成本越高占用容量越多',
+'容量属性决定了你本局的带宽上限',
+'稀有/强力芯片带宽成本更高，需要高容量支撑',
+'带宽成本是三角约束在芯片层面的体现——容量不够就装不了',
+'某些芯片有<span class="hl-gold">"容量折扣"</span>条件：同类型装≥2则成本减半',
+],
+},
+"chip-threshold": {
+title: '<svg viewBox="0 0 20 20" style="width:22px;height:22px" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 15l4-8 3 6 3-5 2 7"/><line x1="2" y1="17" x2="18" y2="17"/></svg> 阈值门槛',
+items: [
+'高阶芯片有<span class="hl-gold">三角阈值门槛</span>——某个属性必须达到指定值才能装',
+'例如：<span class="hl">"时停芯片"</span>需要性能≥6 且 稳定≥4',
+'这逼你在分配三角时就要想好<em>本局走什么流派</em>',
+'阈值让"属性分配"和"芯片选择"深度绑定，不是随便点完再挑芯片',
+'部分芯片有负门槛——"过载芯片"要求稳定≤3（越低越好）',
+],
+},
+"chip-level": {
+title: '<svg viewBox="0 0 20 20" style="width:22px;height:22px" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="4,16 7,9 10,13 13,6 16,10"/><line x1="2" y1="17" x2="18" y2="17"/></svg> 芯片等级',
+items: [
+'芯片分 <span class="hl">I / II / III</span> 三个品级',
+'品级越高→基线效果越强，但也带来更高的带宽成本和阈值门槛',
+'III 级芯片必有 <span class="hl-gold">"第三效果"</span>——额外被动增益',
+'低品级芯片可以通过局内<span class="hl">改装</span>升级品级（消耗数据）',
+'每局芯片池按 seed 洗牌，品级分布随机——你只能围绕"这局给了什么"来搭',
+],
+},
+"dungeon-gen": {
+title: '<svg viewBox="0 0 20 20" style="width:22px;height:22px" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="6" height="6"/><rect x="11" y="3" width="6" height="6"/><rect x="3" y="11" width="6" height="6"/><rect x="11" y="11" width="6" height="6"/></svg> 程序生成 <span class="hl-green">自动地图</span>',
+items: [
+'每次进本自动生成全新地图路线',
+'房间制结构：战斗房 / 事件房 / 商店房 / Boss 房随机排列',
+'地图深度固定，但分支路径随机—没有两次完全一样的路线',
+'不同区域有不同的<span class="hl">"三角侧重"</span>（区域隐藏属性）',
+'程序种子随 run 变化，保证无限重复可玩性',
+],
+},
+"dungeon-zone": {
+title: '<svg viewBox="0 0 20 20" style="width:22px;height:22px" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="10" cy="10" r="7"/><path d="M10 3v14M3 10h14"/></svg> 区域侧重 <span class="hl-gold">防套路核心</span>',
+items: [
+'副本不同区域对三角属性有<span class="hl">隐性偏好</span>',
+'<span class="hl">防火墙区</span>：更考验稳定——稳定低则触发强力排斥',
+'<span class="hl">战斗区</span>：更考验性能——性能低则战斗吃力',
+'<span class="hl">解谜区</span>：更考验容量——需要多芯片配合才能过',
+'用一套固定的三角分配<em>走不到底</em>——必须中途调整',
+'这是防止"算出固定套路"的核心防火墙（②号）',
+],
+},
+"dungeon-supply": {
+title: '<svg viewBox="0 0 20 20" style="width:22px;height:22px" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="6" cy="10" r="3"/><circle cx="14" cy="10" r="3"/><path d="M8 8l4 4M12 8l-4 4"/></svg> 随机供给 <span class="hl-gold">防套路核心</span>',
+items: [
+'每局芯片掉落池按照 run seed <span class="hl">洗牌</span>',
+'你只能围绕"<span class="hl">这局给了什么</span>"来做 build，而非朝固定目标堆',
+'商店可刷新，但次数有限——你得在"不满意"和"凑合用"之间取舍',
+'这是防止"算出固定套路"的核心防火墙（①号）',
+'高阶玩家不看攻略定 build，而是看这局掉什么再定方向',
+],
+},
+"dungeon-shop": {
+title: '<svg viewBox="0 0 20 20" style="width:22px;height:22px" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="6" width="14" height="10" rx="1"/><path d="M6 6V4a4 4 0 118 0v2"/></svg> 商店节点',
+items: [
+'副本中段和尾前段固定出现商店',
+'用打怪赚的<span class="hl">"数据"</span>购买新芯片或对已有芯片进行改装',
+'改装项目：升级品级 / 降低带宽成本 / 解锁额外效果',
+'商店每局随机上架 3-5 件商品，可花费数据刷新 1 次',
+'有时候"这把就不买了留着数据"也是一种正确选择',
+],
+},
+"dungeon-event": {
+title: '<svg viewBox="0 0 20 20" style="width:22px;height:22px" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="10,1 13,7 19,8 14,12 16,19 10,15 4,19 6,12 1,8 7,7"/></svg> 事件节点',
+items: [
+'副本中随机出现事件房，多种类型：',
+'<span class="hl-gold">超频陷阱</span>：性能+但稳定-，要赌吗？',
+'<span class="hl">黑市交易</span>：用数据换本局不会掉落的稀缺芯片',
+'<span class="hl-green">紧急升级</span>：选择一项三角属性临时+2（但另两项-1）',
+'<span class="hl-rose">神经风暴</span>：当前所有芯片随机洗牌重置——赌徒狂喜',
+'事件是你"偏离原计划重新规划"的转折点',
+],
+},
+"combat-realtime": {
+title: '<svg viewBox="0 0 20 20" style="width:22px;height:22px" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="10,2 12,8 18,8 13,12 15,18 10,14 5,18 7,12 2,8 8,8"/></svg> 实时对战',
+items: [
+'舍弃传统回合制格子，采用<span class="hl">即时战术</span>',
+'走位 + 技能释放的组合操作，更爽快的战斗节奏',
+'芯片技能有冷却/能耗管理，考验临场判断',
+'战斗时三角 HUD 实时变化——过载条在涨、排斥在闪',
+'战斗节奏紧凑但不会过快——给玩家思考"下一步怎么打"的时间',
+],
+},
+"combat-enemy": {
+title: '<svg viewBox="0 0 20 20" style="width:22px;height:22px" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="10" cy="6" r="3"/><path d="M4 18c1-4 3-5 6-5s5 1 6 5"/></svg> 敌人类型',
+items: [
+'三类敌人：<span class="hl">普通怪</span> / <span class="hl-gold">精英</span> / <span class="hl-rose">Boss</span>',
+'普通怪：基础行为模式，掉落基础芯片和数据',
+'精英怪：特殊能力，高概率掉落稀有芯片',
+'Boss：企业核心反制程序，有多个阶段和机制',
+'不同区域敌人倾向克制某种三角属性',
+'后续迭代会加入"反-build 敌族"（防火墙③），进一步防套路',
+],
+},
+"combat-death": {
+title: '<svg viewBox="0 0 20 20" style="width:22px;height:22px" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="4" y1="16" x2="16" y2="4"/><path d="M4 4h12v12H4z"/></svg> 死亡判定 <span class="hl-gold">肉鸽</span>',
+items: [
+'死亡 = 本局结束，无续命',
+'死亡后带走<span class="hl">记忆晶体</span>（按本局进度结算）',
+'符合肉鸽核心规则之一——<span class="hl-rose">永久死亡 / Run 制</span>',
+'但元进度（总容量 C / 插槽 / 兼容性）永久留存',
+'所以本作属于 <span class="hl">roguelite</span>——有跨局成长的肉鸽',
+'晶体结算公式：探索房间数 × 击杀数 × Boss 击败奖励',
+],
+},
+"side-reject": {
+title: '<svg viewBox="0 0 20 20" style="width:22px;height:22px" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="10" cy="10" r="8"/><line x1="6" y1="6" x2="14" y2="14"/><line x1="14" y1="6" x2="6" y2="14"/></svg> 神经排斥 <span class="hl-rose">系统惩罚</span>',
+items: [
+'稳定值低 + 装载芯片多 = <span class="hl">神经排斥</span>',
+'排斥效果：芯片随机<span class="hl-rose">短暂失效</span>或<span class="hl-rose">反噬扣血</span>',
+'触发频率 = f（装载芯片总数 ÷ 稳定值）',
+'排斥时芯片图标闪红 + 屏幕边缘震动反馈',
+'高稳定=>几乎不触发排斥；低稳定=>频繁排斥是在提醒你"装太多了"',
+],
+},
+"side-overload": {
+title: '<svg viewBox="0 0 20 20" style="width:22px;height:22px" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M10 2v8l4 2"/><path d="M10 2a12 12 0 108 10"/><path d="M4 10a6 6 0 016-6"/></svg> 过载风险 <span class="hl-rose">暴毙惩罚</span>',
+items: [
+'性能太高 + 稳定太低 = <span class="hl">过载条累积</span>',
+'过载条满 = <span class="hl-rose">眩晕 / 短暂意识丧失</span>→极易被敌人击杀',
+'过载增长速度 = f（性能值 ÷ 稳定值）',
+'操作技能和释放频率也会影响过载涨速',
+'"玻璃大炮"路线的核心风险——爆发强但容错率极低',
+'过载预警会实时显示在 HUD 中央，逼你注意节奏',
+],
+},
+"side-meta": {
+title: '<svg viewBox="0 0 20 20" style="width:22px;height:22px" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="10" cy="10" r="7"/><path d="M10 6v8M6 10h8"/></svg> 元进度 <span class="hl-gold">跨局成长</span>',
+items: [
+'<span class="hl">记忆晶体</span>——死亡或通关后结算，带回家升级',
+'<span class="hl">总容量 C</span>——三角三条属性的点数上限，永久提升',
+'<span class="hl">插槽解锁</span>——增加最大芯片位，装更多组合',
+'<span class="hl">兼容性</span>——降低排斥触发概率，逐级解锁',
+'元进度让每一局都有意义——就算死得早，晶体再少也是积累',
+'但元进度不会突破三角约束——上限再高，取舍依然存在',
+],
+},
+"side-economy": {
+title: '<svg viewBox="0 0 20 20" style="width:22px;height:22px" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="6" width="14" height="10" rx="1"/><path d="M6 6V4a4 4 0 118 0v2"/></svg> 双经济系统',
+items: [
+'<span class="hl-gold">数据</span>（局内货币）：打怪掉落，在商店消费',
+'<span class="hl">记忆晶体</span>（跨局货币）：死亡或通关结算，用于元进度',
+'局内物价与局内经济有关——越深层的商店越贵但货越好',
+'晶体是唯一跨局资源——你永远在"多探一层多赚晶体"和"保命回基地"间权衡',
+'没有内购/抽卡——<span class="hl-green">所有解锁靠游戏内行为</span>',
+],
+},
+};
+document.addEventListener("DOMContentLoaded", () => {
+const layers = document.querySelectorAll(".layer");
+const arrows = document.querySelectorAll(".arrow-down");
+const flowSteps = document.querySelectorAll(".flow-step");
+const sideModules = document.querySelectorAll(".side-module");
+const userFlow = document.querySelector(".user-flow");
+const branchBar = document.querySelector(".branch-bar");
+const branchSteps = document.querySelectorAll(".branch-step");
+const overlays = document.querySelector("#detailOverlay");
+const detailContent = document.querySelector("#detailContent");
+const closeBtn = document.querySelector("#closeDetail");
+const mainTimeline = anime.timeline({ easing: "easeOutCubic" });
+mainTimeline.add({ targets: "#header", opacity: [0, 1], translateY: [-10, 0], duration: 600 });
+mainTimeline.add({ targets: sideModules, opacity: [0, 1], translateX: [15, 0], duration: 400, delay: anime.stagger(120) }, "-=200");
+mainTimeline.add({ targets: layers, opacity: [0, 1], translateY: [20, 0], duration: 500, delay: anime.stagger(150) }, "-=100");
+mainTimeline.add({ targets: arrows, opacity: [0, 1], duration: 400, delay: anime.stagger(200) }, "-=200");
+setTimeout(() => { document.querySelectorAll(".arrow-path").forEach((p) => { anime({ targets: p, strokeDashoffset: [200, 0], duration: 800, delay: 300, easing: "easeInOutCubic" }); }); }, 1500);
+mainTimeline.add({ targets: userFlow, opacity: [0, 1], duration: 500 }, "-=100");
+mainTimeline.add({ targets: flowSteps, opacity: [0, 1], translateX: [-8, 0], duration: 350, delay: anime.stagger(120) }, "-=200");
+mainTimeline.add({ targets: branchBar, opacity: [0, 1], duration: 500 }, "-=100");
+mainTimeline.add({ targets: branchSteps, opacity: [0, 1], translateY: [6, 0], duration: 300, delay: anime.stagger(100) }, "-=200");
+let flowIndex = 0;
+function pulseFlow() { flowSteps.forEach((s) => s.querySelector(".dot").classList.remove("active")); flowSteps[flowIndex].querySelector(".dot").classList.add("active"); flowIndex = (flowIndex + 1) % flowSteps.length; }
+pulseFlow(); setInterval(pulseFlow, 2500);
+layers.forEach((l) => { l.addEventListener("mouseenter", () => { anime({ targets: l, borderColor: "var(--accent-purple)", backgroundColor: "rgba(167,139,250,0.05)", duration: 200 }); }); l.addEventListener("mouseleave", () => { anime({ targets: l, borderColor: "var(--surface-light)", backgroundColor: "rgba(30,21,64,0.5)", duration: 300 }); }); });
+function openDetail(id) {
+const data = DETAILS[id]; if (!data) return;
+detailContent.innerHTML = `<h2>${data.title}</h2><ul>${data.items.map((i) => `<li>${i}</li>`).join("")}</ul>`;
+overlays.classList.add("open");
+anime({ targets: "#detailCard", scale: [0.85, 1], opacity: [0, 1], duration: 250, easing: "easeOutCubic" });
+}
+function closeDetail() { anime({ targets: "#detailCard", scale: [1, 0.85], opacity: [1, 0], duration: 200, easing: "easeInCubic", complete: () => { overlays.classList.remove("open"); } }); }
+document.querySelectorAll(".module[data-detail]").forEach((el) => { el.addEventListener("click", () => openDetail(el.dataset.detail)); });
+document.querySelectorAll(".side-module[data-detail]").forEach((el) => { el.addEventListener("click", () => openDetail(el.dataset.detail)); });
+closeBtn.addEventListener("click", closeDetail);
+overlays.addEventListener("click", (e) => { if (e.target === overlays) closeDetail(); });
+const panel = document.getElementById("panel");
+for (let i = 0; i < 20; i++) {
+const dot = document.createElement("div"); dot.className = "chalk-glow";
+dot.style.left = Math.random() * 100 + "%"; dot.style.top = Math.random() * 100 + "%";
+dot.style.width = dot.style.height = 2 + Math.random() * 4 + "px"; dot.style.opacity = 0.04 + Math.random() * 0.08;
+panel.appendChild(dot);
+anime({ targets: dot, translateX: [0, -10 + Math.random() * 20], translateY: [0, -10 + Math.random() * 20], opacity: [0.04, 0.12, 0.04], duration: 3000 + Math.random() * 4000, direction: "alternate", loop: true, easing: "easeInOutSine" });
+}
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,332 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>功夫武馆</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;600;800&family=IBM+Plex+Mono:wght@400;600&family=Ma+Shan+Zheng&display=swap" rel="stylesheet" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root {
+--bg:#1a1210;--bg-dark:#0f0a08;--paper:#2a1e18;--paper-light:#3d2b24;
+--ink:#d4c5b0;--ink-dim:rgba(212,197,176,0.5);--ink-dimmer:rgba(212,197,176,0.15);
+--vermilion:#c23a2b;--vermilion-glow:rgba(194,58,43,0.25);--vermilion-dim:rgba(194,58,43,0.1);
+--gold:#d4a048;--gold-glow:rgba(212,160,72,0.25);--gold-dim:rgba(212,160,72,0.12);
+--jade:#5a8f6a;--jade-dim:rgba(90,143,106,0.12);--steel:#8899aa;
+--font-display:"Noto Sans SC","PingFang SC","Microsoft YaHei",sans-serif;
+--font-kai:"Ma Shan Zheng","KaiTi","STKaiti",serif;
+--font-mono:"IBM Plex Mono","SFMono-Regular",Menlo,Consolas,"Courier New",monospace;
+}
+html,body{height:100%;background:var(--bg-dark);font-family:var(--font-mono);color:var(--ink);overflow-x:hidden}
+.screen-frame{position:relative;min-height:100vh;padding:24px 20px 20px;background:radial-gradient(ellipse at 50% 0%,rgba(194,58,43,0.03) 0%,var(--bg-dark) 70%);border-radius:20px;box-shadow:inset 0 0 60px rgba(0,0,0,0.7),0 8px 40px rgba(0,0,0,0.6);max-width:1440px;margin:0 auto}
+.screen-frame::before{content:"";position:absolute;inset:0;border-radius:20px;background:url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100' height='100' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");pointer-events:none;z-index:100;opacity:0.4}
+.crt-curve{position:absolute;inset:0;border-radius:20px;background:radial-gradient(ellipse at center,transparent 55%,rgba(0,0,0,0.45) 100%);pointer-events:none;z-index:99}
+.scroll-led{position:absolute;top:10px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:8px;font-size:9px;font-weight:500;color:var(--ink-dim);letter-spacing:2px;z-index:101;background:rgba(26,18,16,0.88);padding:3px 16px;border-radius:20px;border:1px solid var(--ink-dimmer);backdrop-filter:blur(4px);font-family:var(--font-mono)}
+.scroll-led .seal{display:inline-block;width:8px;height:8px;border-radius:0;background:var(--vermilion);box-shadow:0 0 10px var(--vermilion);animation:seal-pulse 3s ease-in-out infinite;transform:rotate(45deg)}
+@keyframes seal-pulse{0%,100%{opacity:1;box-shadow:0 0 10px var(--vermilion)}50%{opacity:0.4;box-shadow:0 0 3px var(--vermilion)}}
+.panel{position:relative;background:var(--paper);border:2px solid var(--paper-light);border-radius:6px;padding:28px 24px 24px;box-shadow:inset 0 0 60px rgba(0,0,0,0.5),0 4px 0 var(--bg-dark);min-height:calc(100vh - 80px);overflow:hidden;z-index:2}
+.panel::after{content:"";position:absolute;inset:0;background-image:radial-gradient(circle at 30% 20%,rgba(212,160,72,0.02) 0,transparent 50%),radial-gradient(circle at 80% 80%,rgba(194,58,43,0.015) 0,transparent 50%),radial-gradient(circle at 50% 50%,rgba(90,143,106,0.01) 0,transparent 70%);pointer-events:none}
+.header{text-align:center;margin-bottom:20px;position:relative;z-index:1}
+.header h1{font-family:var(--font-kai);font-size:34px;font-weight:400;color:var(--vermilion);text-shadow:0 0 20px var(--vermilion-glow);letter-spacing:6px;margin-bottom:4px;display:flex;align-items:center;justify-content:center;gap:12px}
+.header h1 svg{width:34px;height:34px;flex-shrink:0;filter:drop-shadow(0 0 8px var(--vermilion-glow))}
+.header .subtitle{font-size:13px;font-weight:300;color:var(--ink-dim);letter-spacing:1px;max-width:720px;margin:0 auto;line-height:1.8;font-family:var(--font-display)}
+.header .subtitle em{font-style:normal;color:var(--gold);font-weight:600}
+.layout-main{display:flex;gap:16px;position:relative;z-index:1}
+.layers-column{flex:1;min-width:0}
+.side-column{width:210px;flex-shrink:0;display:flex;flex-direction:column;gap:8px}
+.layer{position:relative;background:rgba(61,43,36,0.4);border:1.5px solid var(--ink-dimmer);border-radius:6px;padding:10px 12px 12px;margin-bottom:0;cursor:pointer;transition:border-color 0.3s,background 0.3s;opacity:0;transform:translateY(20px)}
+.layer:hover{border-color:var(--gold);background:var(--gold-dim)}
+.layer-label{font-family:var(--font-display);font-size:12px;font-weight:600;color:var(--ink-dim);letter-spacing:1px;margin-bottom:7px;display:flex;align-items:center;gap:6px}
+.layer-label .badge{font-size:10px;font-weight:600;background:var(--ink-dimmer);color:var(--paper);padding:1px 7px;border-radius:3px;letter-spacing:0;font-family:var(--font-mono)}
+.layer-modules{display:flex;flex-wrap:wrap;gap:5px}
+.module{background:rgba(212,197,176,0.05);border:1px solid var(--ink-dimmer);border-radius:4px;padding:5px 9px;font-size:12px;line-height:1.5;color:var(--ink);transition:all 0.25s;white-space:nowrap;cursor:pointer;display:inline-flex;align-items:center;gap:5px;font-family:var(--font-display)}
+.module:hover{background:rgba(212,197,176,0.1);border-color:var(--ink);transform:translateY(-1px)}
+svg.icon,.module svg,.side-module svg,.dot svg{width:16px;height:16px;flex-shrink:0}
+.module svg{width:14px;height:14px}
+.dot svg{width:14px;height:14px}
+.layer-label>svg:first-child{width:18px;height:18px;flex-shrink:0}
+.header h1 svg{width:34px;height:34px;flex-shrink:0}
+.module .tag{font-size:10px;font-weight:600;padding:1px 6px;border-radius:3px;margin-left:3px;opacity:0.85;font-family:var(--font-mono)}
+.tag-core{background:var(--vermilion);color:var(--paper)}
+.tag-evo{background:var(--gold);color:var(--paper)}
+.tag-disc{background:var(--jade);color:var(--paper)}
+.tag-event{background:var(--steel);color:var(--bg-dark)}
+.layer[data-layer="school"]{border-left:3px solid var(--gold)}
+.layer[data-layer="disciple"]{border-left:3px solid var(--jade)}
+.layer[data-layer="martial"]{border-left:3px solid var(--vermilion)}
+.layer[data-layer="jianghu"]{border-left:3px solid var(--steel)}
+.arrow-down{display:flex;align-items:center;justify-content:center;height:26px;position:relative;opacity:0}
+.arrow-down svg{width:100%;height:26px}
+.arrow-label{position:absolute;font-family:var(--font-kai);font-size:13px;color:var(--ink-dim);letter-spacing:1px;background:var(--paper);padding:0 10px;text-align:center;white-space:nowrap}
+.side-module{background:rgba(61,43,36,0.4);border:1.5px solid var(--ink-dimmer);border-left:3px solid var(--gold);border-radius:6px;padding:10px 12px;cursor:pointer;opacity:0;transform:translateX(15px);transition:border-color 0.3s,background 0.3s}
+.side-module:hover{border-color:var(--gold);background:var(--gold-dim)}
+.side-module .layer-label{margin-bottom:3px}
+.side-module .desc{font-size:12px;color:var(--ink-dim);line-height:1.6;font-family:var(--font-display)}
+.user-flow{margin-top:20px;padding:14px 16px;background:rgba(61,43,36,0.4);border:1.5px solid var(--ink-dimmer);border-radius:6px;position:relative;z-index:1;opacity:0}
+.user-flow-header{font-family:var(--font-display);font-size:12px;font-weight:600;color:var(--vermilion);letter-spacing:0.5px;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.user-flow-steps{display:flex;align-items:center;flex-wrap:wrap;gap:0}
+.flow-step{display:flex;align-items:center;gap:0;opacity:0}
+.flow-step .dot{width:28px;height:28px;border-radius:50%;border:2px solid var(--ink-dimmer);background:var(--paper);display:flex;align-items:center;justify-content:center;font-size:13px;line-height:1;flex-shrink:0;transition:all 0.3s}
+.flow-step .dot.active{border-color:var(--vermilion);background:var(--vermilion-dim);box-shadow:0 0 12px var(--vermilion-glow)}
+.flow-step .label{font-size:12px;color:var(--ink-dim);white-space:nowrap;margin:0 8px 0 6px;line-height:1;font-family:var(--font-display)}
+.flow-step .conn{width:22px;height:2px;background:var(--ink-dimmer);position:relative;flex-shrink:0}
+.flow-step .conn::after{content:"›";position:absolute;right:-3px;top:-7px;font-size:12px;color:var(--ink-dimmer);font-weight:600}
+.flow-step:last-child .conn{display:none}
+.detail-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:200;display:none;align-items:center;justify-content:center;backdrop-filter:blur(2px)}
+.detail-overlay.open{display:flex}
+.detail-card{background:var(--paper);border:2px solid var(--ink-dimmer);border-radius:6px;padding:24px 28px;max-width:520px;width:90%;max-height:80vh;overflow-y:auto;position:relative;box-shadow:0 8px 40px rgba(0,0,0,0.6);will-change:transform,opacity;backface-visibility:hidden;-webkit-backface-visibility:hidden;transform:translateZ(0);-webkit-transform:translateZ(0)}
+.detail-card h2{margin-top:0;font-family:var(--font-kai);font-size:22px;font-weight:400;color:var(--vermilion);margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid var(--ink-dimmer);display:flex;align-items:center;gap:8px}
+.detail-card h2 svg{width:24px;height:24px;flex-shrink:0}
+.detail-card h3{font-family:var(--font-display);font-size:13px;font-weight:600;color:var(--ink-dim);margin:14px 0 6px}
+.detail-card ul{list-style:none;padding:0}
+.detail-card li{font-size:13px;color:var(--ink);padding:5px 0 5px 14px;border-left:2px solid var(--ink-dimmer);margin-bottom:6px;line-height:1.6;font-family:var(--font-display)}
+.detail-card li .hl{color:var(--gold);display:inline-flex;align-items:center;gap:4px}
+.detail-card li .hl-warn{color:var(--vermilion)}
+.detail-card .close-btn{position:absolute;top:14px;right:16px;font-family:var(--font-display);font-size:13px;font-weight:600;color:var(--ink-dim);background:none;border:1px solid var(--ink-dimmer);border-radius:4px;padding:4px 12px;cursor:pointer;transition:all 0.2s}
+.detail-card .close-btn:hover{color:var(--gold);border-color:var(--gold)}
+.detail-divider{text-align:center;padding:6px 0;font-size:11px;color:var(--ink-dimmer);font-family:var(--font-kai);letter-spacing:3px}
+@media (max-width:860px){
+.layout-main{flex-direction:column}
+.side-column{width:100%;flex-direction:row;flex-wrap:wrap}
+.side-module{flex:1;min-width:160px}
+.header h1{font-size:26px;letter-spacing:4px}
+.screen-frame{padding:20px 10px 10px}
+.panel{padding:20px 14px 16px}
+.layer-modules{gap:4px}
+.module{font-size:11px;padding:4px 7px}
+.flow-step .label{font-size:10px}
+.flow-step .dot{width:24px;height:24px;font-size:11px}
+}
+@media (max-width:480px){
+.header h1{font-size:20px;letter-spacing:2px}
+.module{font-size:10px;padding:3px 5px;white-space:normal}
+.layer{padding:8px 8px 10px}
+.layer-label{font-size:10px}
+}
+.ink-dot{position:absolute;pointer-events:none;width:3px;height:3px;border-radius:50%;background:rgba(212,197,176,0.08);filter:blur(4px)}
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:var(--bg-dark)}
+::-webkit-scrollbar-thumb{background:var(--ink-dimmer);border-radius:2px}
+.svg-connectors{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:0}
+.arrow-path{stroke-dasharray:200;stroke-dashoffset:200}
+</style>
+</head>
+<body>
+<div class="screen-frame">
+<div class="crt-curve"></div>
+<div class="scroll-led"><span class="seal"></span> 武者 · 传承</div>
+<div class="panel" id="panel">
+<div class="header" id="header">
+<h1><svg viewBox="0 0 34 34"><use href="#icon-fist" /></svg>功夫武馆</h1>
+<div class="subtitle">经营武馆收徒教拳，你教的每套武功都会被弟子活学活用产生变异 · <em>每个存档独一无二的传承</em></div>
+</div>
+<svg class="svg-connectors" id="connectorSvg" preserveAspectRatio="none">
+<defs>
+<marker id="arrowHead" markerWidth="6" markerHeight="5" refX="6" refY="2.5" orient="auto"><polygon points="0 0, 6 2.5, 0 5" fill="var(--ink-dimmer)" opacity=".6"/></marker>
+<marker id="arrowHeadFlow" markerWidth="6" markerHeight="5" refX="6" refY="2.5" orient="auto"><polygon points="0 0, 6 2.5, 0 5" fill="var(--vermilion)"/></marker>
+<filter id="glow"><feGaussianBlur stdDeviation="1.5" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+<symbol id="icon-fist" viewBox="0 0 34 34">
+<circle cx="17" cy="17" r="14" stroke="currentColor" fill="none" stroke-width="1.8"/>
+<path d="M17 10c-2 0-4 1-4 3v4c0 2 2 4 4 4s4-2 4-4v-4c0-2-2-3-4-3z" stroke="currentColor" fill="none" stroke-width="1.8" stroke-linejoin="round"/>
+<path d="M12 17c-1-1-2-1-3 0s-1 3 0 4 2 2 3 2" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round"/>
+<path d="M22 17c1-1 2-1 3 0s1 3 0 4-2 2-3 2" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round"/>
+</symbol>
+<symbol id="icon-sword" viewBox="0 0 20 20">
+<path d="M10 2v12M7 6l3-4 3 4" stroke="currentColor" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M6 14h8l1 4H5l1-4z" stroke="currentColor" fill="none" stroke-width="1.6" stroke-linejoin="round"/>
+</symbol>
+<symbol id="icon-palm" viewBox="0 0 20 20">
+<path d="M10 4v5M7 5v4M13 5v4M6 10c0-1 1-1.5 2-1.5s2 .5 2 1.5M10 10c0-1 1-1.5 2-1.5s2 .5 2 1.5" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round"/>
+<path d="M5 13c1 2 2 3 5 3s4-1 5-3" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round"/>
+<rect x="8" y="10" width="4" height="4" rx="1" stroke="currentColor" fill="none" stroke-width="1.5"/>
+</symbol>
+<symbol id="icon-pagoda" viewBox="0 0 20 20">
+<path d="M10 2l-4 3h8l-4-3z" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linejoin="round"/>
+<rect x="6" y="5" width="8" height="3" rx=".5" stroke="currentColor" fill="none" stroke-width="1.5"/>
+<rect x="5" y="8" width="10" height="3" rx=".5" stroke="currentColor" fill="none" stroke-width="1.5"/>
+<rect x="4" y="11" width="12" height="2" rx=".5" stroke="currentColor" fill="none" stroke-width="1.5"/>
+<path d="M10 5v9M7 14v2M13 14v2" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round"/>
+</symbol>
+<symbol id="icon-yin" viewBox="0 0 20 20">
+<circle cx="10" cy="10" r="8" stroke="currentColor" fill="none" stroke-width="1.5"/>
+<path d="M10 10c-3 0-5-2-5-4s2-4 5-4v2c-2 0-3 1-3 2s1 2 3 2v-2" stroke="currentColor" fill="none" stroke-width="1.2"/>
+<path d="M10 10c3 0 5 2 5 4s-2 4-5 4v-2c2 0 3-1 3-2s-1-2-3-2v2" stroke="currentColor" fill="none" stroke-width="1.2"/>
+</symbol>
+<symbol id="icon-tea" viewBox="0 0 20 20">
+<path d="M5 9h10l-1 8H6L5 9z" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linejoin="round"/>
+<path d="M15 9c0-2-1-3-3-3" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round"/>
+<ellipse cx="6" cy="17" rx="4" ry="1" stroke="currentColor" fill="none" stroke-width="1.2"/>
+</symbol>
+<symbol id="icon-tree" viewBox="0 0 20 20">
+<path d="M10 2v5M6 5c-2 0-3 1.5-3 3 0 1.5 1 3 3 3h8c2 0 3-1.5 3-3 0-1.5-1-3-3-3" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linejoin="round"/>
+<path d="M10 7l-3 4h6l-3-4z" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linejoin="round"/>
+<path d="M10 11v5M7 16h6" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round"/>
+</symbol>
+<symbol id="icon-gong" viewBox="0 0 20 20">
+<circle cx="10" cy="9" r="5" stroke="currentColor" fill="none" stroke-width="1.5"/>
+<path d="M6 13l-2 3" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round"/>
+<path d="M14 13l2 3" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round"/>
+<path d="M10 14v2" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round"/>
+<path d="M10 4V2" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round"/>
+</symbol>
+<symbol id="icon-scroll" viewBox="0 0 20 20">
+<path d="M4 3h12v14H4V3z" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linejoin="round"/>
+<path d="M4 3c0-1 2-1 3 0l3 2 3-2c1-1 3-1 3 0" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linejoin="round"/>
+<path d="M7 7h6M7 10h4" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round"/>
+</symbol>
+<symbol id="icon-footprint" viewBox="0 0 20 20">
+<ellipse cx="10" cy="12" rx="5" ry="4" stroke="currentColor" fill="none" stroke-width="1.5"/>
+<path d="M7 13c0-1 1-2 3-2s3 1 3 2" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round"/>
+<circle cx="7" cy="7" r="1.5" stroke="currentColor" fill="none" stroke-width="1.3"/>
+<circle cx="13" cy="7" r="1.5" stroke="currentColor" fill="none" stroke-width="1.3"/>
+</symbol>
+<symbol id="icon-dragon" viewBox="0 0 20 20">
+<path d="M4 12c0-3 2-6 6-6s6 3 6 6c0 2-1 4-3 5" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round"/>
+<path d="M10 6c-2 0-4 2-4 4 0 1 .5 2 1 3" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round"/>
+<circle cx="7.5" cy="5.5" r="1" stroke="currentColor" fill="none" stroke-width="1.3"/>
+<circle cx="12.5" cy="5.5" r="1" stroke="currentColor" fill="none" stroke-width="1.3"/>
+</symbol>
+</defs>
+</svg>
+<div class="layout-main">
+<div class="layers-column" id="layersColumn">
+<div class="layer" data-layer="school" id="layer-school">
+<div class="layer-label"><svg viewBox="0 0 20 20"><use href="#icon-pagoda" /></svg> 武馆经营层 <span class="badge">经营</span></div>
+<div class="layer-modules">
+<div class="module" data-detail="school-build"><svg viewBox="0 0 20 20"><use href="#icon-pagoda" /></svg> 选址与扩建 <span class="tag tag-core">场地</span></div>
+<div class="module" data-detail="school-finance"><svg viewBox="0 0 20 20"><use href="#icon-gong" /></svg> 财务管理</div>
+<div class="module" data-detail="school-rep"><svg viewBox="0 0 20 20"><use href="#icon-dragon" /></svg> 声誉系统</div>
+<div class="module" data-detail="school-branch"><svg viewBox="0 0 20 20"><use href="#icon-tree" /></svg> 分馆扩张</div>
+</div>
+</div>
+<div class="arrow-down" id="arrow1" data-flow="收徒教拳">
+<svg viewBox="0 0 100 26"><line class="arrow-path" x1="50" y1="0" x2="50" y2="24" stroke="var(--ink-dimmer)" stroke-width="1.5" marker-end="url(#arrowHead)" opacity=".5"/></svg>
+<div class="arrow-label">收徒 · 教学</div>
+</div>
+<div class="layer" data-layer="disciple" id="layer-disciple">
+<div class="layer-label"><svg viewBox="0 0 20 20"><use href="#icon-footprint" /></svg> 弟子培养层 <span class="badge">养成</span></div>
+<div class="layer-modules">
+<div class="module" data-detail="disc-recruit"><svg viewBox="0 0 20 20"><use href="#icon-footprint" /></svg> 招徒系统 <span class="tag tag-evo">天赋随机</span></div>
+<div class="module" data-detail="disc-teach"><svg viewBox="0 0 20 20"><use href="#icon-palm" /></svg> 教学方式</div>
+<div class="module" data-detail="disc-talent"><svg viewBox="0 0 20 20"><use href="#icon-yin" /></svg> 三维天赋</div>
+<div class="module" data-detail="disc-state"><svg viewBox="0 0 20 20"><use href="#icon-tea" /></svg> 弟子状态</div>
+</div>
+</div>
+<div class="arrow-down" id="arrow2" data-flow="武学变异">
+<svg viewBox="0 0 100 26"><line class="arrow-path" x1="50" y1="0" x2="50" y2="24" stroke="var(--ink-dimmer)" stroke-width="1.5" marker-end="url(#arrowHead)" opacity=".5"/></svg>
+<div class="arrow-label">活学 · 活用 · 变异</div>
+</div>
+<div class="layer" data-layer="martial" id="layer-martial">
+<div class="layer-label"><svg viewBox="0 0 20 20"><use href="#icon-fist" /></svg> 武学变异层 <span class="badge">核心</span></div>
+<div class="layer-modules">
+<div class="module" data-detail="mar-types"><svg viewBox="0 0 20 20"><use href="#icon-fist" /></svg> 武学库 <span class="tag tag-core">5 大类</span></div>
+<div class="module" data-detail="mar-mutate"><svg viewBox="0 0 20 20"><use href="#icon-yin" /></svg> 变异引擎 <span class="tag tag-core">★</span></div>
+<div class="module" data-detail="mar-fusion"><svg viewBox="0 0 20 20"><use href="#icon-dragon" /></svg> 融合系统</div>
+<div class="module" data-detail="mar-lineage"><svg viewBox="0 0 20 20"><use href="#icon-tree" /></svg> 传承谱系</div>
+</div>
+</div>
+<div class="arrow-down" id="arrow3" data-flow="江湖恩怨">
+<svg viewBox="0 0 100 26"><line class="arrow-path" x1="50" y1="0" x2="50" y2="24" stroke="var(--ink-dimmer)" stroke-width="1.5" marker-end="url(#arrowHead)" opacity=".5"/></svg>
+<div class="arrow-label">踢馆 · 大会 · 恩怨</div>
+</div>
+<div class="layer" data-layer="jianghu" id="layer-jianghu">
+<div class="layer-label"><svg viewBox="0 0 20 20"><use href="#icon-sword" /></svg> 江湖事件层 <span class="badge">事件</span></div>
+<div class="layer-modules">
+<div class="module" data-detail="jh-challenge"><svg viewBox="0 0 20 20"><use href="#icon-sword" /></svg> 踢馆系统 <span class="tag tag-event">比武</span></div>
+<div class="module" data-detail="jh-tournament"><svg viewBox="0 0 20 20"><use href="#icon-gong" /></svg> 武林大会</div>
+<div class="module" data-detail="jh-feud"><svg viewBox="0 0 20 20"><use href="#icon-dragon" /></svg> 江湖恩怨</div>
+<div class="module" data-detail="jh-official"><svg viewBox="0 0 20 20"><use href="#icon-scroll" /></svg> 官府与绿林</div>
+</div>
+</div>
+</div>
+<div class="side-column" id="sideColumn">
+<div class="side-module" data-detail="side-mutation">
+<div class="layer-label"><svg viewBox="0 0 20 20"><use href="#icon-yin" /></svg> 武学变异</div>
+<div class="desc">性格 × 天赋 × 经历 → 招式变异，每个弟子的武功都不一样</div>
+</div>
+<div class="side-module" data-detail="side-fusion">
+<div class="layer-label"><svg viewBox="0 0 20 20"><use href="#icon-dragon" /></svg> 融合创造</div>
+<div class="desc">双人对练可融合出全新招式，继承双方风格特征</div>
+</div>
+<div class="side-module" data-detail="side-lineage">
+<div class="layer-label"><svg viewBox="0 0 20 20"><use href="#icon-tree" /></svg> 传承谱系</div>
+<div class="desc">每套武功从传入到变异的完整谱系树，每个存档独一无二</div>
+</div>
+<div class="side-module" data-detail="side-ending">
+<div class="layer-label"><svg viewBox="0 0 20 20"><use href="#icon-gong" /></svg> 终局结局</div>
+<div class="desc">百艺归宗 / 天下第一 / 桃李满天下 / 百年武馆</div>
+</div>
+</div>
+</div>
+<div class="user-flow" id="userFlow">
+<div class="user-flow-header">
+<svg viewBox="0 0 20 20" style="width:16px;height:16px;flex-shrink:0"><use href="#icon-scroll"/></svg>
+开馆收徒 · 传承百年
+<span style="font-size:7px;color:var(--ink-dim);font-family:var(--font-mono)">[ 年复一年 ]</span>
+</div>
+<div class="user-flow-steps" id="flowSteps">
+<div class="flow-step" data-step="0"><div class="dot"><svg viewBox="0 0 20 20"><use href="#icon-pagoda"/></svg></div><span class="label">开馆立派</span><div class="conn"></div></div>
+<div class="flow-step" data-step="1"><div class="dot"><svg viewBox="0 0 20 20"><use href="#icon-footprint"/></svg></div><span class="label">春招收徒</span><div class="conn"></div></div>
+<div class="flow-step" data-step="2"><div class="dot"><svg viewBox="0 0 20 20"><use href="#icon-palm"/></svg></div><span class="label">教学对练</span><div class="conn"></div></div>
+<div class="flow-step" data-step="3"><div class="dot"><svg viewBox="0 0 20 20"><use href="#icon-sword"/></svg></div><span class="label">江湖事件</span><div class="conn"></div></div>
+<div class="flow-step" data-step="4"><div class="dot"><svg viewBox="0 0 20 20"><use href="#icon-gong"/></svg></div><span class="label">年终结算</span><div class="conn"></div></div>
+<div class="flow-step" data-step="5"><div class="dot"><svg viewBox="0 0 20 20"><use href="#icon-tree"/></svg></div><span class="label">武学传承</span></div>
+</div>
+</div>
+</div>
+</div>
+<div class="detail-overlay" id="detailOverlay">
+<div class="detail-card" id="detailCard">
+<button class="close-btn" id="closeDetail">✕ 关闭</button>
+<div id="detailContent"></div>
+</div>
+</div>
+<script>
+const DETAILS = {
+"school-build":{title:'<svg viewBox="0 0 20 20" style="width:24px;height:24px"><use href="#icon-pagoda"/></svg> 选址与扩建',items:["初始选择武馆所在地：城中心(客流大/地价贵) / 城郊(空间大/清静)","可扩建建筑：练功场 → 宿舍 → 药房 → 藏经阁 → 演武台","每种建筑解锁不同功能：药房可治疗弟子，藏经阁可解锁武学","达到条件可开设分馆，派驻弟子坐馆"]},
+"school-finance":{title:'<svg viewBox="0 0 20 20" style="width:24px;height:24px"><use href="#icon-gong"/></svg> 财务管理',items:["主要收入：学费、镖局任务、药材买卖、比武奖金","学费受声誉和教学品质影响，声誉越高学费越贵","镖局任务派遣弟子押镖，赚取收入+实战经验","药材可种植或采购，用于弟子治疗和状态提升"]},
+"school-rep":{title:'<svg viewBox="0 0 20 20" style="width:24px;height:24px"><use href="#icon-dragon"/></svg> 声誉系统',items:["本地声望：影响招生数量和质量","江湖名望：影响江湖事件的选择权","官府关系：影响是否被查访、镖局任务获取","声誉随事件选择波动，高声誉解锁更多弟子和武学"]},
+"school-branch":{title:'<svg viewBox="0 20 20" style="width:24px;height:24px"><use href="#icon-tree"/></svg> 分馆扩张',items:["本馆达到一定规模后可开设分馆","选择分馆地点，派驻弟子坐馆教学","分馆可收取额外学费，但需要派驻得力弟子","分馆若经营不善会损害总馆声誉"]},
+"disc-recruit":{title:'<svg viewBox="0 0 20 20" style="width:24px;height:24px"><use href="#icon-footprint"/></svg> 招徒系统',items:["每年春秋两季招徒，各地少年来投","每个弟子携带随机三维天赋（根骨/悟性/心性）","天赋总值固定但分布倾向不同——有人根骨奇佳但悟性低","隐藏性格属性影响武学变异方向","可以拒绝收徒，被拒者可能去对手武馆"]},
+"disc-teach":{title:'<svg viewBox="0 0 20 20" style="width:24px;height:24px"><use href="#icon-palm"/></svg> 教学方式',items:["三种教学方式：演练（根骨成长）、讲解（悟性成长）、对练（综合成长）","选择教授武功 → 指定方式 → 消耗课时 → 悟道进度变化","教学方式影响变异倾向：对练易触发融合，讲解易触发巧变","每回合可查看弟子练法笔记，根据笔记调整教学策略"]},
+"disc-talent":{title:'<svg viewBox="0 0 20 20" style="width:24px;height:24px"><use href="#icon-yin"/></svg> 三维天赋',items:["<span class=hl>根骨</span> — 体质与力量，影响外功修炼速度和威力","<span class=hl>悟性</span> — 理解与创造力，影响内功修炼和变异概率","<span class=hl>心性</span> — 意志与忠诚，影响修为上限和叛门概率","师徒相性匹配时，教学效率大幅提升"]},
+"disc-state":{title:'<svg viewBox="0 0 20 20" style="width:24px;height:24px"><use href="#icon-tea"/></svg> 弟子状态',items:["<span class=hl>疲劳</span> — 悟道效率下降，需安排休息或药浴","<span class=hl>伤病</span> — 无法练武，需药材治疗","<span class=hl>心境</span> — 低落时有叛门风险，可谈话或安排散心","<span class=hl>野心</span> — 膨胀时可能自立门户，可提升地位或传授核心武功"]},
+"mar-types":{title:'<svg viewBox="0 0 20 20" style="width:24px;height:24px"><use href="#icon-fist"/></svg> 武学库',items:["拳法 — 刚猛直接，适合根骨高的弟子","掌法 — 变化多端，适合悟性高的弟子","腿法 — 灵活迅捷，需要平衡发展","兵刃 — 外物辅助，依赖教学品质","内功 — 根基之学，影响所有外功的表现"]},
+"mar-mutate":{title:'<svg viewBox="0 0 20 20" style="width:24px;height:24px"><use href="#icon-yin"/></svg> 变异引擎 <span style="color:var(--vermilion);font-size:12px;margin-left:4px">★ 核心机制</span>',items:["<span class=hl>性格偏激</span> → 威力上升稳定性下降（如「崩拳」→「烈风崩」）","<span class=hl>悟性高</span> → 招式巧变附加特殊效果（如「崩拳」→「寸劲崩」）","<span class=hl>反复实战</span> → 去繁就简，只剩致命招（如「长拳」→「杀式三招」）","<span class=hl>师徒默契高</span> → 继承师父风格更精纯","变异方向不可控但可引导，玩家不能指定结果但可影响倾向"]},
+"mar-fusion":{title:'<svg viewBox="0 0 20 20" style="width:24px;height:24px"><use href="#icon-dragon"/></svg> 融合系统',items:["两名弟子长期对练可融合出全新招式","融合产物继承双方风格特征（刚猛+轻灵=刚柔并济）","同门多人对练也可触发多向融合","融合招式在武林大会上从未出现过，对手无从应对"]},
+"mar-lineage":{title:'<svg viewBox="0 0 20 20" style="width:24px;height:24px"><use href="#icon-tree"/></svg> 传承谱系',items:["可视化展示每套武功从开馆祖师到当前弟子的完整传承树","每个存档的谱系图不可能重复——弟子不同、选择不同，走向天壤之别","可追溯每招每式的来源：谁教的谁、因何变异","谱系本身就是玩家的成就证明"]},
+"jh-challenge":{title:'<svg viewBox="0 0 20 20" style="width:24px;height:24px"><use href="#icon-sword"/></svg> 踢馆系统',items:["其他武馆上门叫阵，也可主动踢馆","踢馆结果影响双方声誉和弟子信心","对方可能派弟子先试阵，再派主力","胜败皆有后果：胜则声望↑，败则声望↓+弟子信心↓"]},
+"jh-tournament":{title:'<svg viewBox="0 0 20 20" style="width:24px;height:24px"><use href="#icon-gong"/></svg> 武林大会',items:["年度比武大会，各门派排名决定江湖地位","可派弟子参赛，表现影响个人和武馆声誉","冠军武功可能被其他门派模仿传播","三连冠可解锁「天下第一」结局"]},
+"jh-feud":{title:'<svg viewBox="0 0 20 20" style="width:24px;height:24px"><use href="#icon-dragon"/></svg> 江湖恩怨',items:["弟子在外惹事可能招来仇家寻仇","选择庇护弟子则可能全面开战","联姻事件：他派提亲联姻则两派好感↑","叛门弟子可能自立门户成为竞争对手"]},
+"jh-official":{title:'<svg viewBox="0 0 20 20" style="width:24px;height:24px"><use href="#icon-scroll"/></svg> 官府与绿林',items:["官府查访：怀疑武馆勾结乱党 → 打点/配合/抗命三选一","镖局合作：与镖局建立关系获取稳定任务","绿林往来：江湖人士可能来投靠或寻仇","平衡官府与绿林关系是武馆长期发展的关键"]},
+"side-mutation":{title:'<svg viewBox="0 0 20 20" style="width:24px;height:24px"><use href="#icon-yin"/></svg> 武学变异',items:["核心玩法：每套武功都不是固定模板，而是活的传承","影响变异的因素：弟子性格、三维天赋、对练记录、实战经历","同门练同一套拳法，三个月后路子完全不同","存档独有：没有两个武馆练出同样的功夫"]},
+"side-fusion":{title:'<svg viewBox="0 0 20 20" style="width:24px;height:24px"><use href="#icon-dragon"/></svg> 融合创造',items:["双人/多人对练有机率融合出全新招式","融合产物同时携带双方风格特征","被融合的招式在江湖上独一无二","融合成功需要弟子之间有一定的默契值"]},
+"side-lineage":{title:'<svg viewBox="0 0 20 20" style="width:24px;height:24px"><use href="#icon-tree"/></svg> 传承谱系',items:["全可视化展示：张师父传赵虎，赵虎变异出「烈风崩」","赵虎传钱六，钱六再变异出「怒涛崩」","不同分支对练又融合出新武功","每个存档的传承树都是独一无二的艺术品"]},
+"side-ending":{title:'<svg viewBox="0 0 20 20" style="width:24px;height:24px"><use href="#icon-gong"/></svg> 终局结局',items:["<span class=hl>百艺归宗</span> — 武学传承达到 100 种","<span class=hl>天下第一</span> — 武林大会三连冠","<span class=hl>桃李满天下</span> — 弟子出师自立 10 人","<span class=hl>百年武馆</span> — 传承三代不衰"]},
+};
+document.addEventListener("DOMContentLoaded",()=>{
+const layers=document.querySelectorAll(".layer");const arrows=document.querySelectorAll(".arrow-down");const flowSteps=document.querySelectorAll(".flow-step");const sideModules=document.querySelectorAll(".side-module");const userFlow=document.querySelector(".user-flow");const overlay=document.querySelector("#detailOverlay");const detailContent=document.querySelector("#detailContent");const closeBtn=document.querySelector("#closeDetail");
+const mainTimeline=anime.timeline({easing:"easeOutCubic"});
+mainTimeline.add({targets:"#header",opacity:[0,1],translateY:[-10,0],duration:600});
+mainTimeline.add({targets:sideModules,opacity:[0,1],translateX:[15,0],duration:400,delay:anime.stagger(120)},"-=200");
+mainTimeline.add({targets:layers,opacity:[0,1],translateY:[20,0],duration:500,delay:anime.stagger(150)},"-=100");
+mainTimeline.add({targets:arrows,opacity:[0,1],duration:400,delay:anime.stagger(200)},"-=200");
+setTimeout(()=>{document.querySelectorAll(".arrow-path").forEach((p)=>{anime({targets:p,strokeDashoffset:[200,0],duration:800,delay:300,easing:"easeInOutCubic"});});},1500);
+mainTimeline.add({targets:userFlow,opacity:[0,1],duration:500},"-=100");
+mainTimeline.add({targets:flowSteps,opacity:[0,1],translateX:[-8,0],duration:350,delay:anime.stagger(120)},"-=200");
+let flowIndex=0;function pulseFlow(){flowSteps.forEach((s)=>s.querySelector(".dot").classList.remove("active"));flowSteps[flowIndex].querySelector(".dot").classList.add("active");flowIndex=(flowIndex+1)%flowSteps.length;}
+pulseFlow();setInterval(pulseFlow,2500);
+layers.forEach((l)=>{l.addEventListener("mouseenter",()=>{anime({targets:l,borderColor:"var(--gold)",backgroundColor:"var(--gold-dim)",duration:200});});l.addEventListener("mouseleave",()=>{anime({targets:l,borderColor:"var(--ink-dimmer)",backgroundColor:"rgba(61,43,36,0.4)",duration:300});});});
+function openDetail(id){const data=DETAILS[id];if(!data)return;detailContent.innerHTML=`<h2>${data.title}</h2><ul>${data.items.map((i)=>`<li>${i}</li>`).join("")}</ul>`;overlay.classList.add("open");anime({targets:"#detailCard",scale:[0.85,1],opacity:[0,1],duration:250,easing:"easeOutCubic"});}
+function closeDetail(){anime({targets:"#detailCard",scale:[1,0.85],opacity:[1,0],duration:200,easing:"easeInCubic",complete:()=>{overlay.classList.remove("open");}});}
+document.querySelectorAll(".module[data-detail]").forEach((el)=>{el.addEventListener("click",()=>openDetail(el.dataset.detail));});
+document.querySelectorAll(".side-module[data-detail]").forEach((el)=>{el.addEventListener("click",()=>openDetail(el.dataset.detail));});
+closeBtn.addEventListener("click",closeDetail);overlay.addEventListener("click",(e)=>{if(e.target===overlay)closeDetail();});
+const panel=document.getElementById("panel");
+for(let i=0;i<15;i++){const dot=document.createElement("div");dot.className="ink-dot";dot.style.left=Math.random()*100+"%";dot.style.top=Math.random()*100+"%";dot.style.width=dot.style.height=2+Math.random()*5+"px";dot.style.opacity=0.03+Math.random()*0.08;panel.appendChild(dot);anime({targets:dot,translateX:[0,-8+Math.random()*16],translateY:[0,-8+Math.random()*16],opacity:[0.03,0.1,0.03],duration:4000+Math.random()*5000,direction:"alternate",loop:true,easing:"easeInOutSine"});}
+});
+</script>
+</body>
+</html>
