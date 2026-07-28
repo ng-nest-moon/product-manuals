@@ -1,0 +1,529 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>出海风云</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;600;800&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#0b0e17;--bg-dark:#060810;--panel:#0f1a2e;--surface:#1a2d4a;--surface-light:#243b5e;--accent:#f0b429;--accent-dim:rgba(240,180,41,0.12);--accent-gold:#f0b429;--accent-green:#34d399;--accent-rose:#fb7185;--accent-purple:#a78bfa;--accent-blue:#60a5fa;--accent-teal:#2dd4bf;--text:#d0e4f7;--text-dim:rgba(208,228,247,0.55);--text-dimmer:rgba(208,228,247,0.15);--grid:rgba(240,180,41,0.02);--font-display:"Noto Sans SC","PingFang SC","Microsoft YaHei",sans-serif;--font-mono:"IBM Plex Mono","SFMono-Regular",Menlo,Consolas,"Courier New",monospace}
+html,body{height:100%;background:var(--bg-dark);font-family:var(--font-mono);color:var(--text);overflow-x:hidden}
+.screen-frame{position:relative;min-height:100vh;max-width:1440px;margin:0 auto;background:radial-gradient(ellipse at 50% 0%,rgba(240,180,41,0.02) 0%,var(--bg-dark) 70%);border-radius:20px;box-shadow:inset 0 0 80px rgba(0,0,0,0.8),0 8px 40px rgba(0,0,0,0.6);padding:24px 20px 20px}
+.screen-frame::before{content:"";position:absolute;inset:0;border-radius:20px;background:repeating-linear-gradient(0deg,transparent,transparent 2px,var(--grid) 2px,var(--grid) 4px);pointer-events:none;z-index:100}
+.crt-curve{position:absolute;inset:0;border-radius:20px;background:radial-gradient(ellipse at center,transparent 55%,rgba(0,0,0,0.4) 100%);pointer-events:none;z-index:99}
+.top-led{position:absolute;top:10px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:10px;font-size:9px;font-weight:500;color:var(--text-dim);letter-spacing:2px;z-index:101;background:rgba(11,14,23,0.85);padding:3px 16px;border-radius:20px;border:1px solid var(--accent-dim);backdrop-filter:blur(4px);text-transform:uppercase;font-family:var(--font-mono)}
+.top-led .led{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--accent-gold);box-shadow:0 0 12px var(--accent-gold);animation:pulse-led 2.5s ease-in-out infinite}
+@keyframes pulse-led{0%,100%{opacity:1;box-shadow:0 0 12px var(--accent-gold)}50%{opacity:0.3;box-shadow:0 0 3px var(--accent-gold)}}
+.panel{position:relative;background:var(--panel);border:1.5px solid var(--surface-light);border-radius:8px;padding:28px 24px 24px;box-shadow:inset 0 0 50px rgba(0,0,0,0.5),0 4px 0 var(--bg-dark);min-height:calc(100vh - 80px);overflow:hidden;z-index:2}
+.panel::after{content:"";position:absolute;inset:0;background-image:radial-gradient(circle at 70% 15%,rgba(240,180,41,0.015) 0,transparent 60%),radial-gradient(circle at 30% 85%,rgba(52,211,153,0.01) 0,transparent 50%);pointer-events:none}
+.header{text-align:center;margin-bottom:22px;position:relative;z-index:1}
+.header h1{font-family:var(--font-display);font-size:28px;font-weight:800;color:var(--accent-gold);text-shadow:0 0 30px rgba(240,180,41,0.25);letter-spacing:3px;margin-bottom:3px;display:flex;align-items:center;justify-content:center;gap:12px}
+.header h1 svg{width:32px;height:32px;flex-shrink:0;filter:drop-shadow(0 0 8px rgba(240,180,41,0.3))}
+.header .subtitle{font-size:13px;font-weight:300;color:var(--text-dim);letter-spacing:0.5px;max-width:720px;margin:0 auto;line-height:1.8}
+.header .subtitle em{font-style:normal;color:var(--accent-gold);font-weight:500}
+.layout-main{display:flex;gap:16px;position:relative;z-index:1}
+.layers-column{flex:1;min-width:0}
+.side-column{width:210px;flex-shrink:0;display:flex;flex-direction:column;gap:8px}
+.layer{position:relative;background:rgba(26,45,74,0.5);border:1.5px solid var(--surface-light);border-radius:6px;padding:10px 12px 12px;margin-bottom:0;cursor:pointer;transition:border-color 0.3s,background 0.3s;opacity:0;transform:translateY(20px)}
+.layer:hover{border-color:var(--accent-gold);background:rgba(240,180,41,0.05)}
+.layer-label{font-family:var(--font-display);font-size:12px;font-weight:600;color:var(--text-dim);letter-spacing:1px;margin-bottom:6px;display:flex;align-items:center;gap:6px}
+.layer-label .badge{font-size:9px;font-weight:600;background:var(--surface-light);color:var(--text-dim);padding:1px 7px;border-radius:3px;letter-spacing:0}
+.layer-label .phase-tag{font-size:8px;font-weight:700;padding:1px 7px;border-radius:3px;letter-spacing:0}
+.phase-1{background:rgba(96,165,250,0.2);color:var(--accent-blue)}
+.phase-2{background:rgba(52,211,153,0.2);color:var(--accent-green)}
+.phase-3{background:rgba(167,139,250,0.2);color:var(--accent-purple)}
+.layer-modules{display:flex;flex-wrap:wrap;gap:5px}
+.module{background:rgba(208,228,247,0.03);border:1px solid var(--surface-light);border-radius:4px;padding:4px 10px;font-size:12px;line-height:1.5;color:var(--text);transition:all 0.25s;white-space:nowrap;cursor:pointer;display:inline-flex;align-items:center;gap:5px}
+.module:hover{background:rgba(240,180,41,0.08);border-color:var(--accent-gold);transform:translateY(-1px);box-shadow:0 0 12px rgba(240,180,41,0.08)}
+.module .tag{font-size:9px;font-weight:600;padding:1px 6px;border-radius:3px;margin-left:3px;opacity:0.8}
+.tag-core{background:var(--accent-dim);color:var(--bg)}
+.tag-money{background:var(--accent-gold);color:var(--bg)}
+.tag-brand{background:var(--accent-green);color:var(--bg)}
+.tag-risk{background:var(--accent-rose);color:var(--bg)}
+.tag-event{background:var(--accent-blue);color:var(--bg)}
+.layer[data-layer="phase1"]{border-left:3px solid var(--accent-blue)}
+.layer[data-layer="phase2"]{border-left:3px solid var(--accent-green)}
+.layer[data-layer="phase3"]{border-left:3px solid var(--accent-purple)}
+svg.icon,.module svg,.side-module svg{width:16px;height:16px;flex-shrink:0}
+.module svg{width:14px;height:14px}
+.layer-label>svg:first-child{width:18px;height:18px;flex-shrink:0}
+.header h1 svg{width:32px;height:32px;flex-shrink:0}
+.arrow-down{display:flex;align-items:center;justify-content:center;height:24px;position:relative;opacity:0}
+.arrow-down svg{width:100%;height:24px}
+.arrow-label{position:absolute;font-family:var(--font-display);font-size:9px;font-weight:600;color:var(--text-dim);letter-spacing:0.5px;background:var(--panel);padding:0 10px;text-align:center;white-space:nowrap}
+.arrow-down .arrow-path{stroke-dasharray:200;stroke-dashoffset:200}
+.side-module{background:rgba(26,45,74,0.5);border:1.5px solid var(--surface-light);border-radius:6px;padding:10px 12px;cursor:pointer;opacity:0;transform:translateX(15px);transition:border-color 0.3s,background 0.3s}
+.side-module:hover{border-color:var(--accent-gold);background:rgba(240,180,41,0.05)}
+.side-module .layer-label{margin-bottom:4px}
+.side-module .desc{font-size:11px;color:var(--text-dim);line-height:1.5}
+.border-gold{border-left:3px solid var(--accent-gold)}
+.border-green{border-left:3px solid var(--accent-green)}
+.border-blue{border-left:3px solid var(--accent-blue)}
+.phase-bar{position:relative;z-index:1;margin-top:16px;padding:10px 16px;background:rgba(26,45,74,0.3);border:1.5px solid var(--surface-light);border-radius:6px;opacity:0}
+.phase-bar-header{font-family:var(--font-display);font-size:11px;font-weight:600;color:var(--accent-gold);letter-spacing:0.5px;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.phase-bar-steps{display:flex;align-items:stretch;gap:0;position:relative}
+.phase-step{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px 4px;position:relative;opacity:0}
+.phase-step:not(:last-child)::after{content:"";position:absolute;right:-1px;top:25%;height:50%;width:1.5px;background:var(--surface-light)}
+.phase-dot{width:28px;height:28px;border-radius:50%;border:2px solid var(--surface-light);background:var(--bg);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;transition:all 0.3s}
+.phase-step .phase-name{font-family:var(--font-display);font-size:11px;font-weight:600;color:var(--text);white-space:nowrap;line-height:1.2}
+.phase-step .phase-sub{font-size:9px;color:var(--text-dim);white-space:nowrap;line-height:1.2}
+.phase-step .dot-p1{border-color:var(--accent-blue);color:var(--accent-blue)}
+.phase-step .dot-p2{border-color:var(--accent-green);color:var(--accent-green)}
+.phase-step .dot-p3{border-color:var(--accent-purple);color:var(--accent-purple)}
+.user-flow{margin-top:16px;padding:12px 16px;background:rgba(26,45,74,0.3);border:1.5px solid var(--surface-light);border-radius:6px;position:relative;z-index:1;opacity:0}
+.user-flow-header{font-family:var(--font-display);font-size:11px;font-weight:600;color:var(--accent-gold);letter-spacing:0.5px;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.user-flow-steps{display:flex;align-items:center;flex-wrap:wrap;gap:0}
+.flow-step{display:flex;align-items:center;gap:0;opacity:0}
+.flow-step .dot{width:24px;height:24px;border-radius:50%;border:1.5px solid var(--surface-light);background:var(--bg);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0;transition:all 0.3s}
+.flow-step .dot.active{border-color:var(--accent-gold);background:rgba(240,180,41,0.12);box-shadow:0 0 10px rgba(240,180,41,0.2)}
+.flow-step .label{font-size:10px;color:var(--text-dim);white-space:nowrap;margin:0 6px 0 5px;line-height:1}
+.flow-step .conn{width:20px;height:1.5px;background:var(--surface-light);position:relative;flex-shrink:0}
+.flow-step .conn::after{content:"\25B8";position:absolute;right:-3px;top:-6px;font-size:9px;color:var(--surface-light)}
+.flow-step:last-child .conn{display:none}
+.detail-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:200;display:none;align-items:center;justify-content:center;backdrop-filter:blur(2px)}
+.detail-overlay.open{display:flex}
+.detail-card{background:var(--bg-dark);border:2px solid var(--surface-light);border-radius:8px;padding:20px 24px;max-width:480px;width:90%;max-height:80vh;overflow-y:auto;position:relative;box-shadow:0 8px 40px rgba(0,0,0,0.6)}
+.detail-card h2{margin-top:0;font-family:var(--font-display);font-size:17px;font-weight:800;color:var(--accent-gold);margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--surface-light);display:flex;align-items:center;gap:8px}
+.detail-card h2 svg{width:20px;height:20px;flex-shrink:0}
+.detail-card h3{font-family:var(--font-display);font-size:12px;font-weight:600;color:var(--text-dim);margin:12px 0 5px}
+.detail-card ul{list-style:none;padding:0}
+.detail-card li{font-size:12px;color:var(--text);padding:4px 0 4px 12px;border-left:2px solid var(--surface-light);margin-bottom:4px;line-height:1.6}
+.detail-card li .hl{color:var(--accent-gold)}
+.detail-card li .hl-blue{color:var(--accent-blue)}
+.detail-card li .hl-green{color:var(--accent-green)}
+.detail-card li .hl-rose{color:var(--accent-rose)}
+.detail-card li .hl-purple{color:var(--accent-purple)}
+.detail-card .close-btn{position:absolute;top:12px;right:14px;font-family:var(--font-mono);font-size:11px;font-weight:600;color:var(--text-dimmer);background:none;border:1px solid var(--surface-light);border-radius:4px;padding:3px 10px;cursor:pointer;transition:all 0.2s}
+.detail-card .close-btn:hover{color:var(--accent-rose);border-color:var(--accent-rose)}
+@media (max-width:860px){
+.layout-main{flex-direction:column}
+.side-column{width:100%;flex-direction:row;flex-wrap:wrap}
+.side-module{flex:1;min-width:140px}
+.header h1{font-size:22px}
+.layer{padding:8px 8px 10px}
+.layer-label{font-size:10px}
+.module{padding:3px 8px;font-size:11px}
+.flow-step .label{font-size:9px}
+.flow-step .dot{width:20px;height:20px;font-size:9px}
+.detail-card{padding:16px 18px;max-width:90%}
+.phase-step .phase-name{font-size:10px}
+.phase-step .phase-sub{font-size:8px}
+}
+@media (max-width:480px){
+.header h1{font-size:18px;letter-spacing:1px}
+.module{font-size:10px;padding:3px 6px;white-space:normal}
+.layer{padding:6px 6px 8px}
+.layer-modules{gap:3px}
+.flow-step .label{font-size:8px}
+.flow-step .conn{width:12px}
+.phase-step .phase-name{font-size:9px}
+.phase-step .phase-sub{display:none}
+.phase-dot{width:22px;height:22px;font-size:9px}
+}
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:var(--bg-dark)}
+::-webkit-scrollbar-thumb{background:var(--surface-light);border-radius:2px}
+.chalk-glow{position:absolute;pointer-events:none;width:4px;height:4px;border-radius:50%;background:rgba(240,180,41,0.06);filter:blur(6px)}
+</style>
+</head>
+<body>
+<div class="screen-frame">
+<div class="crt-curve"></div>
+<div class="top-led"><span class="led"></span> GOING GLOBAL · TRADE WINDS</div>
+<div class="panel" id="panel">
+<div class="header" id="header">
+<h1>
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M2 12h20M12 2a15 15 0 010 20 15 15 0 010-20z"/><path d="M8 3c-1 3-1 7 0 9M16 3c1 3 1 7 0 9M8 21c-1-3-1-7 0-9M16 21c1-3 1-7 0-9"/></svg>
+出海风云
+</h1>
+<div class="subtitle">全球化商业模拟游戏 · <em>从华强北到全世界</em></div>
+</div>
+<div class="layout-main">
+<div class="layers-column" id="layersColumn">
+
+<!-- PHASE 1 -->
+<div class="layer" data-layer="phase1" id="layer-phase1">
+<div class="layer-label">
+<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 3h14v14H3z"/><path d="M7 7h6v6H7z"/><path d="M3 7h14M7 3v14"/></svg>
+第一阶段 · 草莽出海
+<span class="badge">供应链</span>
+<span class="phase-tag phase-1">P1</span>
+</div>
+<div class="layer-modules">
+<div class="module" data-detail="p1-category">
+<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="14" height="6" rx="1"/><rect x="3" y="11" width="6" height="6" rx="1"/><rect x="11" y="11" width="6" height="6" rx="1"/></svg>
+品类选品
+<span class="tag tag-core">5 品类</span>
+</div>
+<div class="module" data-detail="p1-supplier">
+<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M7 3h6l3 4v10a1 1 0 01-1 1H5a1 1 0 01-1-1V7l3-4z"/><path d="M10 12v4"/></svg>
+供应商管理
+</div>
+<div class="module" data-detail="p1-logistics">
+<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 13h3l2 4h6l2-4h1a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v7z"/><circle cx="7" cy="16" r="1.5"/><circle cx="14" cy="16" r="1.5"/></svg>
+物流链路
+<span class="tag tag-core">海运/空运/铁路</span>
+</div>
+<div class="module" data-detail="p1-channel">
+<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 5h14v10H3z"/><path d="M10 7v6M7 10h6"/></svg>
+渠道管理
+</div>
+</div>
+</div>
+
+<div class="arrow-down">
+<svg viewBox="0 0 100 24"><path class="arrow-path" d="M50 0v16M42 8l8 8 8-8" stroke="var(--text-dimmer)" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+<div class="arrow-label">供应链 → 品牌</div>
+</div>
+
+<!-- PHASE 2 -->
+<div class="layer" data-layer="phase2" id="layer-phase2">
+<div class="layer-label">
+<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M10 2l3 6 6 .5-4.5 4.5L16 19l-6-3.5L4 19l1.5-6L2 8.5 8 8l2-6z"/></svg>
+第二阶段 · 品牌扎根
+<span class="badge">品牌</span>
+<span class="phase-tag phase-2">P2</span>
+</div>
+<div class="layer-modules">
+<div class="module" data-detail="p2-position">
+<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="10" cy="10" r="7"/><path d="M10 3v3M10 14v3M3 10h3M14 10h3"/></svg>
+品牌定位
+<span class="tag tag-brand">核心</span>
+</div>
+<div class="module" data-detail="p2-rd">
+<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M13 3l4 4-9 9H4v-4l9-9z"/><path d="M10 5l5 5"/></svg>
+产品研发
+</div>
+<div class="module" data-detail="p2-marketing">
+<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 12a8 8 0 1112 4l3 3"/><path d="M10 6v4l2 2"/></svg>
+营销矩阵
+</div>
+<div class="module" data-detail="p2-localize">
+<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="10" cy="10" r="9"/><path d="M2 10h16M10 2c-3 3-5 6-5 10s2 7 5 10"/></svg>
+本地化
+</div>
+</div>
+</div>
+
+<div class="arrow-down">
+<svg viewBox="0 0 100 24"><path class="arrow-path" d="M50 0v16M42 8l8 8 8-8" stroke="var(--text-dimmer)" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+<div class="arrow-label">品牌 → 博弈</div>
+</div>
+
+<!-- PHASE 3 -->
+<div class="layer" data-layer="phase3" id="layer-phase3">
+<div class="layer-label">
+<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 3l7 7-7 7M17 3l-7 7 7 7"/></svg>
+第三阶段 · 全球博弈
+<span class="badge">地缘</span>
+<span class="phase-tag phase-3">P3</span>
+</div>
+<div class="layer-modules">
+<div class="module" data-detail="p3-geo">
+<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M10 3v14M3 10h14"/><path d="M6 6l8 8M14 6l-8 8"/></svg>
+地缘风险
+<span class="tag tag-risk">高</span>
+</div>
+<div class="module" data-detail="p3-ma">
+<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 16l3-3 3 3 3-3 3 3"/><path d="M4 8l3-3 3 3 3-3 3 3"/></svg>
+跨国并购
+</div>
+<div class="module" data-detail="p3-finance">
+<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="10" cy="10" r="7"/><path d="M10 6v8M6 10h8"/></svg>
+金融工具
+</div>
+<div class="module" data-detail="p3-gov">
+<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="4" y="5" width="12" height="12" rx="1"/><path d="M7 5V3h6v2"/><path d="M8 9h4M8 12h4"/></svg>
+政府关系
+</div>
+</div>
+</div>
+
+</div>
+
+<div class="side-column">
+<div class="side-module border-gold" data-detail="side-economy">
+<div class="layer-label">
+<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="10" cy="10" r="7"/><path d="M10 6v8M6 10h8"/></svg>
+双货币经济
+</div>
+<div class="desc">人民币采购 + 美元结算 · 汇率波动直接影响利润</div>
+</div>
+<div class="side-module border-green" data-detail="side-events">
+<div class="layer-label">
+<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 6l7-3 7 3v9l-7 3-7-3V6z"/><circle cx="10" cy="10" r="2"/></svg>
+事件系统
+</div>
+<div class="desc">随机事件 + 周期性事件持续打破均衡</div>
+</div>
+<div class="side-module border-blue" data-detail="side-risk">
+<div class="layer-label">
+<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M10 3v14M3 10h14"/><path d="M6 6l8 8M14 6l-8 8"/></svg>
+风险仪表盘
+</div>
+<div class="desc">汇率敞口 / 库存风险 / 政策风险 / 竞争压力</div>
+</div>
+</div>
+</div>
+
+<div class="phase-bar" id="phaseBar">
+<div class="phase-bar-header">
+<svg viewBox="0 0 20 20" style="width:16px;height:16px" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="2,17 6,7 10,14 14,4 18,10"/></svg>
+三阶段渐进
+</div>
+<div class="phase-bar-steps">
+<div class="phase-step">
+<div class="phase-dot dot-p1">P1</div>
+<div class="phase-name">草莽出海</div>
+<div class="phase-sub">第 1-5 年 · 供应链</div>
+</div>
+<div class="phase-step">
+<div class="phase-dot dot-p2">P2</div>
+<div class="phase-name">品牌扎根</div>
+<div class="phase-sub">第 5-15 年 · 品牌</div>
+</div>
+<div class="phase-step">
+<div class="phase-dot dot-p3">P3</div>
+<div class="phase-name">全球博弈</div>
+<div class="phase-sub">第 15 年+ · 地缘</div>
+</div>
+</div>
+</div>
+
+<div class="user-flow" id="userFlow">
+<div class="user-flow-header">
+<svg viewBox="0 0 20 20" style="width:16px;height:16px" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 16l4-4 4 4 4-4 2 2"/></svg>
+玩家成长流程
+</div>
+<div class="user-flow-steps">
+<div class="flow-step"><div class="dot">1</div><div class="label">选品</div><div class="conn"></div></div>
+<div class="flow-step"><div class="dot">2</div><div class="label">采购</div><div class="conn"></div></div>
+<div class="flow-step"><div class="dot">3</div><div class="label">发货</div><div class="conn"></div></div>
+<div class="flow-step"><div class="dot">4</div><div class="label">上架</div><div class="conn"></div></div>
+<div class="flow-step"><div class="dot">5</div><div class="label">品牌</div><div class="conn"></div></div>
+<div class="flow-step"><div class="dot">6</div><div class="label">并购</div><div class="conn"></div></div>
+<div class="flow-step"><div class="dot">7</div><div class="label">终局</div></div>
+</div>
+</div>
+</div>
+</div>
+<div class="detail-overlay" id="detailOverlay">
+<div class="detail-card" id="detailCard">
+<button class="close-btn" id="closeDetail">✕ 关闭</button>
+<div id="detailContent"></div>
+</div>
+</div>
+<script>
+const DETAILS = {
+"p1-category": {
+title: '<svg viewBox="0 0 20 20" style="width:20px;height:20px" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="14" height="6" rx="1"/><rect x="3" y="11" width="6" height="6" rx="1"/><rect x="11" y="11" width="6" height="6" rx="1"/></svg> 品类选品 <span class="hl">5 大品类</span>',
+items: [
+'<span class="hl">电子</span>：利润率 15-25%，竞争高，物流成本低',
+'<span class="hl-green">服饰</span>：利润率 40-60%，竞争极高，退货率 15-25%',
+'<span class="hl">家居</span>：利润率 30-45%，物流成本高，竞争中等',
+'<span class="hl-blue">玩具</span>：利润率 35-50%，竞争低，退货率低',
+'<span class="hl-green">配件</span>：利润率 50-70%，竞争最低，新手推荐',
+'每季度刷新选品池，每次 10-15 款产品供选择',
+'最多同时运营 6 款产品，超出需淘汰或扩仓',
+'品类热度随季节和事件波动——黑五电子品类 +30%',
+],
+},
+"p1-supplier": {
+title: '<svg viewBox="0 0 20 20" style="width:20px;height:20px" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M7 3h6l3 4v10a1 1 0 01-1 1H5a1 1 0 01-1-1V7l3-4z"/><path d="M10 12v4"/></svg> 供应商管理',
+items: [
+'每个品类 3-5 家供应商可选，分布在义乌/深圳/广州/东莞',
+'四维评分：<span class="hl">价格</span>、<span class="hl">质量</span>、<span class="hl-blue">交期</span>、<span class="hl-green">账期</span>，各有 trade-off',
+'低价供应商质量可能低，快交期供应商价格可能高',
+'长期合作提升关系值→解锁更优条件',
+'独家协议：达一定关系后签独家，享 10% 价格优惠',
+'供应商突然涨价、延期交货等随机事件考验备选方案',
+],
+},
+"p1-logistics": {
+title: '<svg viewBox="0 0 20 20" style="width:20px;height:20px" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 13h3l2 4h6l2-4h1a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v7z"/><circle cx="7" cy="16" r="1.5"/><circle cx="14" cy="16" r="1.5"/></svg> 物流链路',
+items: [
+'四种运输方式：<span class="hl-blue">海运</span>（30-45天，最便宜）、<span class="hl">空运</span>（5-7天，最贵）、<span class="hl-green">铁路</span>（15-20天，居中）、<span class="hl-purple">海外仓</span>（2-3天配送）',
+'海外仓需提前备货——月租成本 + 库存占用资金，但配送时效快',
+'每批货物需清关，随机抽检率影响通关速度',
+'品类合规文件是否齐备影响清关效率',
+'地图上实时追踪每批货物位置，异常预警',
+],
+},
+"p1-channel": {
+title: '<svg viewBox="0 0 20 20" style="width:20px;height:20px" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 5h14v10H3z"/><path d="M10 7v6M7 10h6"/></svg> 渠道管理',
+items: [
+'<span class="hl-blue">亚马逊</span>：流量大、竞争激烈、佣金 15%、回款周期 14 天',
+'<span class="hl">独立站</span>：自建 Shopify/Shopline，需自己引流但利润更高',
+'<span class="hl-green">当地平台</span>：东南亚 Shopee/Lazada、欧洲 Allegro 等，目标市场适配',
+'多渠道并行可降低单一平台依赖风险',
+'每个渠道的上架策略、定价策略、促销方式各不相同',
+],
+},
+"p2-position": {
+title: '<svg viewBox="0 0 20 20" style="width:20px;height:20px" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="10" cy="10" r="7"/><path d="M10 3v3M10 14v3M3 10h3M14 10h3"/></svg> 品牌定位 <span class="hl">第二阶段核心</span>',
+items: [
+'四选一定位：<span class="hl-blue">性价比</span>、<span class="hl">品质</span>、<span class="hl-green">设计感</span>、<span class="hl-purple">科技感</span>',
+'定位影响目标客群、定价区间、营销方式',
+'<span class="hl">性价比</span>走量但利润低，<span class="hl-green">设计感</span>溢价高但需持续投入',
+'品牌知名度各市场独立计算，需逐市场建立',
+'知名度越高，可定价越高（受定位上限约束）',
+],
+},
+"p2-rd": {
+title: '<svg viewBox="0 0 20 20" style="width:20px;height:20px" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M13 3l4 4-9 9H4v-4l9-9z"/><path d="M10 5l5 5"/></svg> 产品研发',
+items: [
+'四种研发方向：<span class="hl-blue">改款升级</span>、<span class="hl-green">包装设计</span>、<span class="hl">认证申请</span>（CE/FCC/RoHS）、<span class="hl-purple">专利申请</span>',
+'每次研发消耗资金，耗时 3-6 个月',
+'成功后提升产品评分——评分影响转化率和好评率',
+'认证是进入某些市场的硬门槛（CE 进欧洲、FCC 进美国）',
+'专利可建立护城河——防止竞争对手抄袭和跟卖',
+],
+},
+"p2-marketing": {
+title: '<svg viewBox="0 0 20 20" style="width:20px;height:20px" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 12a8 8 0 1112 4l3 3"/><path d="M10 6v4l2 2"/></svg> 营销矩阵',
+items: [
+'四类营销手段：<span class="hl-blue">社交媒体</span>（Instagram/TikTok/Facebook）、<span class="hl">KOL 合作</span>、<span class="hl-green">广告投放</span>（Google Ads/Amazon PPC）、<span class="hl-purple">本地 PR</span>',
+'不同市场和品类的最佳营销组合不同',
+'KOL 合作适合设计感和品质定位，广告投放适合性价比定位',
+'营销效果受品牌知名度和产品评分双重影响',
+'预算分配需要权衡——投得多不一定效果好',
+],
+},
+"p2-localize": {
+title: '<svg viewBox="0 0 20 20" style="width:20px;height:20px" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="10" cy="10" r="9"/><path d="M2 10h16M10 2c-3 3-5 6-5 10s2 7 5 10"/></svg> 本地化',
+items: [
+'<span class="hl-blue">语言</span>：产品描述、客服、包装文案本地翻译',
+'<span class="hl">包装</span>：颜色/尺寸/设计适配当地文化偏好',
+'<span class="hl-green">文化禁忌</span>：数字、符号、颜色在不同市场有不同的含义',
+'<span class="hl-purple">售后体系</span>：当地退货地址、客服时区、维修服务',
+'本地化不足是差评的常见来源——但投入也最容易被忽视',
+'每个市场的本地化深度独立推进，可随时查看完成度',
+],
+},
+"p3-geo": {
+title: '<svg viewBox="0 0 20 20" style="width:20px;height:20px" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M10 3v14M3 10h14"/><path d="M6 6l8 8M14 6l-8 8"/></svg> 地缘风险 <span class="hl-rose">第三阶段核心</span>',
+items: [
+'<span class="hl">关税变动</span>：每 6-12 个月可能触发，幅度 5-25%',
+'<span class="hl-blue">汇率波动</span>：美元兑人民币月波动 ±3%，极端事件 ±10%',
+'<span class="hl-rose">贸易制裁</span>：小概率事件但影响极大，需提前分散市场',
+'<span class="hl-purple">政局变动</span>：每 4 年大选年触发，政策方向随机',
+'风险对冲手段：远期结汇、期权、跨境保险——消耗资金降低风险敞口',
+'市场集中度越高，地缘风险越大——倒逼玩家分散布局',
+],
+},
+"p3-ma": {
+title: '<svg viewBox="0 0 20 20" style="width:20px;height:20px" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 16l3-3 3 3 3-3 3 3"/><path d="M4 8l3-3 3 3 3-3 3 3"/></svg> 跨国并购',
+items: [
+'三种收购目标：<span class="hl-blue">品牌收购</span>（获得品牌资产）、<span class="hl">渠道收购</span>（获得分销网络）、<span class="hl-green">产能收购</span>（获得海外工厂）',
+'收购消耗大量资金，且需要整合团队和文化',
+'成功收购后立即获得目标在当地的品牌知名度和渠道资源',
+'收购后需投入管理精力整合——整合不当会导致核心团队流失',
+'收购是进入新市场最快的方式，也是最贵的方式',
+],
+},
+"p3-finance": {
+title: '<svg viewBox="0 0 20 20" style="width:20px;height:20px" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="10" cy="10" r="7"/><path d="M10 6v8M6 10h8"/></svg> 金融工具',
+items: [
+'<span class="hl-blue">远期结汇</span>：锁定未来汇率，消除汇率波动风险',
+'<span class="hl">期权</span>：买入看跌/看涨期权对冲极端汇率波动',
+'<span class="hl-green">跨境保险</span>：政治风险保险、货物保险、信用保险',
+'金融工具消耗资金成本（保费/期权费/远期点差）',
+'不使用金融工具 = 暴露于汇率和政治风险之下',
+'风险管理能力是第三阶段的核心竞争力',
+],
+},
+"p3-gov": {
+title: '<svg viewBox="0 0 20 20" style="width:20px;height:20px" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="4" y="5" width="12" height="12" rx="1"/><path d="M7 5V3h6v2"/><path d="M8 9h4M8 12h4"/></svg> 政府关系',
+items: [
+'<span class="hl-blue">游说</span>：雇佣当地说客影响政策走向（消耗资金）',
+'<span class="hl">合规</span>：建立本地合规团队确保运营合法',
+'<span class="hl-green">本地合资</span>：与当地企业合资经营，降低政治风险',
+'政府关系越好，关税/制裁/审查等负面事件的影响越小',
+'在政策风险高的市场，政府关系是必修课而非选修课',
+],
+},
+"side-economy": {
+title: '<svg viewBox="0 0 20 20" style="width:20px;height:20px" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="10" cy="10" r="7"/><path d="M10 6v8M6 10h8"/></svg> 双货币经济 <span class="hl">核心系统</span>',
+items: [
+'<span class="hl-blue">人民币(CNY)</span>：国内采购、供应商付款、员工工资、国内运营',
+'<span class="hl-green">美元(USD)</span>：海外仓租金、广告投放、国际物流、海外运营',
+'单笔订单利润 = 售价 - 采购成本 - 物流成本 - 平台佣金 - 关税 - 广告摊销 - 汇率损失',
+'现金流三关键指标：应收账款账期（14-45天）、应付账款账期（30-90天）、库存周转率',
+'融资渠道：银行贷款（低息需抵押）/ 风险投资（稀释股权）/ 供应链金融（高息）',
+'汇率敞口过大 → 汇率突然波动导致巨额损失',
+],
+},
+"side-events": {
+title: '<svg viewBox="0 0 20 20" style="width:20px;height:20px" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 6l7-3 7 3v9l-7 3-7-3V6z"/><circle cx="10" cy="10" r="2"/></svg> 事件系统',
+items: [
+'<span class="hl-green">利好事件</span>：某产品突然爆火、物流成本下降、汇率利好——每季度 0-1 次',
+'<span class="hl-rose">利空事件</span>：港口罢工、原材料涨价、差评风波、竞争对手降价——每季度 1-2 次',
+'<span class="hl">周期性事件</span>：黑五、Prime Day、圣诞旺季、返校季——每年固定时间',
+'<span class="hl-purple">宏观事件</span>：关税调整、大选年、贸易协定、疫情——1-3 年一次',
+'事件系统是打破均衡的核心——安逸期不会超过 3 个月',
+'提前布局（多供应商、多市场、多品类）是抵御事件的最佳策略',
+],
+},
+"side-risk": {
+title: '<svg viewBox="0 0 20 20" style="width:20px;height:20px" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M10 3v14M3 10h14"/><path d="M6 6l8 8M14 6l-8 8"/></svg> 风险仪表盘',
+items: [
+'实时显示四项风险指数（0-100）：',
+'<span class="hl">汇率敞口</span>：美元资产净敞口占比 → 超标后果：汇率波动巨额损失',
+'<span class="hl-blue">库存风险</span>：滞销库存占比/库龄 → 超标后果：仓储成本侵蚀利润',
+'<span class="hl-rose">政策风险</span>：目标市场集中度 → 超标后果：单一市场政策突变打击全部业务',
+'<span class="hl-green">竞争压力</span>：品类竞争烈度/对手行动 → 超标后果：被迫降价/市场份额萎缩',
+'玩家需保持四项均在安全线内——顾此失彼是常见死法',
+],
+},
+};
+document.addEventListener("DOMContentLoaded", () => {
+const layers = document.querySelectorAll(".layer");
+const arrows = document.querySelectorAll(".arrow-down");
+const flowSteps = document.querySelectorAll(".flow-step");
+const sideModules = document.querySelectorAll(".side-module");
+const userFlow = document.querySelector(".user-flow");
+const phaseBar = document.querySelector(".phase-bar");
+const phaseSteps = document.querySelectorAll(".phase-step");
+const overlays = document.querySelector("#detailOverlay");
+const detailContent = document.querySelector("#detailContent");
+const closeBtn = document.querySelector("#closeDetail");
+const mainTimeline = anime.timeline({ easing: "easeOutCubic" });
+mainTimeline.add({ targets: "#header", opacity: [0, 1], translateY: [-10, 0], duration: 600 });
+mainTimeline.add({ targets: sideModules, opacity: [0, 1], translateX: [15, 0], duration: 400, delay: anime.stagger(120) }, "-=200");
+mainTimeline.add({ targets: layers, opacity: [0, 1], translateY: [20, 0], duration: 500, delay: anime.stagger(150) }, "-=100");
+mainTimeline.add({ targets: arrows, opacity: [0, 1], duration: 400, delay: anime.stagger(200) }, "-=200");
+setTimeout(() => { document.querySelectorAll(".arrow-path").forEach((p) => { anime({ targets: p, strokeDashoffset: [200, 0], duration: 800, delay: 300, easing: "easeInOutCubic" }); }); }, 1500);
+mainTimeline.add({ targets: userFlow, opacity: [0, 1], duration: 500 }, "-=100");
+mainTimeline.add({ targets: flowSteps, opacity: [0, 1], translateX: [-8, 0], duration: 350, delay: anime.stagger(120) }, "-=200");
+mainTimeline.add({ targets: phaseBar, opacity: [0, 1], duration: 500 }, "-=100");
+mainTimeline.add({ targets: phaseSteps, opacity: [0, 1], translateY: [6, 0], duration: 300, delay: anime.stagger(100) }, "-=200");
+let flowIndex = 0;
+function pulseFlow() { flowSteps.forEach((s) => s.querySelector(".dot").classList.remove("active")); flowSteps[flowIndex].querySelector(".dot").classList.add("active"); flowIndex = (flowIndex + 1) % flowSteps.length; }
+pulseFlow(); setInterval(pulseFlow, 2500);
+layers.forEach((l) => { l.addEventListener("mouseenter", () => { anime({ targets: l, borderColor: "var(--accent-gold)", backgroundColor: "rgba(240,180,41,0.05)", duration: 200 }); }); l.addEventListener("mouseleave", () => { anime({ targets: l, borderColor: "var(--surface-light)", backgroundColor: "rgba(26,45,74,0.5)", duration: 300 }); }); });
+function openDetail(id) {
+const data = DETAILS[id]; if (!data) return;
+detailContent.innerHTML = `<h2>${data.title}</h2><ul>${data.items.map((i) => `<li>${i}</li>`).join("")}</ul>`;
+overlays.classList.add("open");
+anime({ targets: "#detailCard", scale: [0.85, 1], opacity: [0, 1], duration: 250, easing: "easeOutCubic" });
+}
+function closeDetail() { anime({ targets: "#detailCard", scale: [1, 0.85], opacity: [1, 0], duration: 200, easing: "easeInCubic", complete: () => { overlays.classList.remove("open"); } }); }
+document.querySelectorAll(".module[data-detail]").forEach((el) => { el.addEventListener("click", () => openDetail(el.dataset.detail)); });
+document.querySelectorAll(".side-module[data-detail]").forEach((el) => { el.addEventListener("click", () => openDetail(el.dataset.detail)); });
+closeBtn.addEventListener("click", closeDetail);
+overlays.addEventListener("click", (e) => { if (e.target === overlays) closeDetail(); });
+const panel = document.getElementById("panel");
+for (let i = 0; i < 20; i++) {
+const dot = document.createElement("div"); dot.className = "chalk-glow";
+dot.style.left = Math.random() * 100 + "%"; dot.style.top = Math.random() * 100 + "%";
+dot.style.width = dot.style.height = 2 + Math.random() * 4 + "px"; dot.style.opacity = 0.04 + Math.random() * 0.08;
+panel.appendChild(dot);
+anime({ targets: dot, translateX: [0, -10 + Math.random() * 20], translateY: [0, -10 + Math.random() * 20], opacity: [0.04, 0.12, 0.04], duration: 3000 + Math.random() * 4000, direction: "alternate", loop: true, easing: "easeInOutSine" });
+}
+});
+</script>
+</body>
+</html>
