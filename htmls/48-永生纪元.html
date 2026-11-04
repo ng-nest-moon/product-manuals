@@ -1,0 +1,426 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>永生纪元</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;600;800;900&family=IBM+Plex+Mono:wght@400;600;700&display=swap" rel="stylesheet" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#0c0c1c;--bg-dark:#050510;--panel:#16163a;--surface:#20204a;--surface-light:#3a3a72;--accent:#9d8bff;--accent-dim:rgba(157,139,255,0.15);--accent-gold:#ffe08a;--accent-green:#6ee7a0;--accent-rose:#ff6b9d;--accent-purple:#c4a8ff;--accent-cyan:#7ee8e0;--accent-blue:#8ab4ff;--accent-plasma:#ff9d6b;--text:#ece9ff;--text-dim:rgba(236,233,255,0.55);--text-dimmer:rgba(236,233,255,0.18);--grid:rgba(157,139,255,0.03);--font-display:"Noto Sans SC","PingFang SC","Microsoft YaHei",sans-serif;--font-mono:"IBM Plex Mono","SFMono-Regular",Menlo,Consolas,"Courier New",monospace}
+html,body{height:100%;background:var(--bg-dark);font-family:var(--font-mono);color:var(--text);overflow-x:hidden}
+.screen-frame{position:relative;min-height:100vh;max-width:1440px;margin:0 auto;background:radial-gradient(ellipse at 50% 0%,rgba(157,139,255,0.06) 0%,var(--bg-dark) 70%);border-radius:20px;box-shadow:inset 0 0 80px rgba(0,0,0,0.8),0 8px 40px rgba(0,0,0,0.6);padding:24px 20px 20px}
+.screen-frame::before{content:"";position:absolute;inset:0;border-radius:20px;background:repeating-linear-gradient(0deg,transparent,transparent 2px,var(--grid) 2px,var(--grid) 4px);pointer-events:none;z-index:100}
+.crt-curve{position:absolute;inset:0;border-radius:20px;background:radial-gradient(ellipse at center,transparent 55%,rgba(0,0,0,0.4) 100%);pointer-events:none;z-index:99}
+.plasma-led{position:absolute;top:10px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:10px;font-size:9px;font-weight:500;color:var(--text-dim);letter-spacing:2px;z-index:101;background:rgba(5,5,16,0.85);padding:3px 16px;border-radius:20px;border:1px solid var(--accent-dim);backdrop-filter:blur(4px);text-transform:uppercase;font-family:var(--font-mono)}
+.plasma-led .core{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--accent-gold);box-shadow:0 0 12px var(--accent-gold);animation:pulse-core 2.5s ease-in-out infinite}
+@keyframes pulse-core{0%,100%{opacity:1;box-shadow:0 0 12px var(--accent-gold)}50%{opacity:0.3;box-shadow:0 0 3px var(--accent-gold)}}
+.panel{position:relative;background:var(--panel);border:1.5px solid var(--surface-light);border-radius:8px;padding:28px 24px 24px;box-shadow:inset 0 0 50px rgba(0,0,0,0.5),0 4px 0 var(--bg-dark);min-height:calc(100vh - 80px);overflow:hidden;z-index:2}
+.panel::after{content:"";position:absolute;inset:0;background-image:radial-gradient(circle at 50% 30%,rgba(157,139,255,0.025) 0,transparent 60%),radial-gradient(circle at 80% 80%,rgba(255,224,138,0.015) 0,transparent 50%),radial-gradient(circle at 20% 60%,rgba(126,232,224,0.015) 0,transparent 50%);pointer-events:none}
+.header{text-align:center;margin-bottom:22px;position:relative;z-index:1}
+.header h1{font-family:var(--font-display);font-size:28px;font-weight:900;color:var(--accent);text-shadow:0 0 30px rgba(157,139,255,0.25),0 0 60px rgba(157,139,255,0.1);letter-spacing:3px;margin-bottom:3px;display:flex;align-items:center;justify-content:center;gap:12px}
+.header h1 svg{width:32px;height:32px;flex-shrink:0;filter:drop-shadow(0 0 8px rgba(255,224,138,0.4))}
+.header .subtitle{font-size:13px;font-weight:300;color:var(--text-dim);letter-spacing:0.5px;max-width:760px;margin:0 auto;line-height:1.8}
+.header .subtitle em{font-style:normal;color:var(--accent-gold);font-weight:500}
+.layout-main{display:flex;gap:16px;position:relative;z-index:1}
+.layers-column{flex:1;min-width:0}
+.side-column{width:220px;flex-shrink:0;display:flex;flex-direction:column;gap:8px}
+.layer{position:relative;background:rgba(32,32,74,0.5);border:1.5px solid var(--surface-light);border-radius:6px;padding:10px 12px 12px;margin-bottom:0;cursor:pointer;transition:border-color 0.3s,background 0.3s;opacity:0;transform:translateY(20px)}
+.layer:hover{border-color:var(--accent);background:rgba(157,139,255,0.05)}
+.layer-label{font-family:var(--font-display);font-size:12px;font-weight:600;color:var(--text-dim);letter-spacing:1px;margin-bottom:6px;display:flex;align-items:center;gap:6px}
+.layer-label .badge{font-size:9px;font-weight:600;background:var(--surface-light);color:var(--text-dim);padding:1px 7px;border-radius:3px;letter-spacing:0}
+.layer-modules{display:flex;flex-wrap:wrap;gap:5px}
+.module{background:rgba(236,233,255,0.03);border:1px solid var(--surface-light);border-radius:4px;padding:4px 10px;font-size:12px;line-height:1.5;color:var(--text);transition:all 0.25s;white-space:nowrap;cursor:pointer;display:inline-flex;align-items:center;gap:5px}
+.module:hover{background:rgba(157,139,255,0.08);border-color:var(--accent);transform:translateY(-1px);box-shadow:0 0 12px rgba(157,139,255,0.08)}
+.module .tag{font-size:9px;font-weight:600;padding:1px 6px;border-radius:3px;margin-left:3px;opacity:0.8}
+.tag-mat{background:var(--accent-dim);color:var(--bg)}
+.tag-inst{background:var(--accent-gold);color:var(--bg)}
+.tag-comm{background:var(--accent-green);color:var(--bg)}
+.tag-goal{background:var(--accent-rose);color:var(--bg)}
+.tag-soft{background:var(--accent-cyan);color:var(--bg)}
+.layer[data-layer="pop"]{border-left:3px solid var(--accent)}
+.layer[data-layer="power"]{border-left:3px solid var(--accent-gold)}
+.layer[data-layer="meaning"]{border-left:3px solid var(--accent-rose)}
+.layer[data-layer="law"]{border-left:3px solid var(--accent-cyan)}
+.layer[data-layer="knowledge"]{border-left:3px solid var(--accent-blue)}
+.layer[data-layer="relation"]{border-left:3px solid var(--accent-green)}
+svg.icon,.module svg,.side-module svg{width:16px;height:16px;flex-shrink:0}
+.module svg{width:14px;height:14px}
+.layer-label>svg:first-child{width:18px;height:18px;flex-shrink:0}
+.header h1 svg{width:32px;height:32px;flex-shrink:0}
+.arrow-down{display:flex;align-items:center;justify-content:center;height:24px;position:relative;opacity:0}
+.arrow-down svg{width:100%;height:24px}
+.arrow-label{position:absolute;font-family:var(--font-mono);font-size:9px;font-weight:500;color:var(--text-dim);background:var(--panel);padding:0 10px;text-align:center;white-space:nowrap;letter-spacing:0.5px}
+.side-module{background:rgba(32,32,74,0.5);border:1.5px solid var(--surface-light);border-left:3px solid var(--accent-purple);border-radius:6px;padding:8px 10px;cursor:pointer;opacity:0;transform:translateX(15px);transition:border-color 0.3s,background 0.3s}
+.side-module:hover{border-color:var(--accent-purple);background:rgba(196,168,255,0.05)}
+.side-module .layer-label{margin-bottom:3px}
+.side-module .desc{font-size:11px;color:var(--text-dim);line-height:1.5}
+.user-flow{margin-top:18px;padding:12px 14px;background:rgba(32,32,74,0.5);border:1.5px solid var(--surface-light);border-radius:6px;position:relative;z-index:1;opacity:0}
+.user-flow-header{font-family:var(--font-display);font-size:11px;font-weight:600;color:var(--accent-gold);letter-spacing:0.5px;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.user-flow-steps{display:flex;align-items:center;flex-wrap:wrap;gap:0}
+.flow-step{display:flex;align-items:center;gap:0;opacity:0}
+.flow-step .dot{width:26px;height:26px;border-radius:50%;border:2px solid var(--surface-light);background:var(--bg-dark);display:flex;align-items:center;justify-content:center;font-size:10px;line-height:1;flex-shrink:0;transition:all 0.3s;font-family:var(--font-mono);font-weight:600;color:var(--text-dim)}
+.flow-step .dot.active{border-color:var(--accent-gold);background:rgba(255,224,138,0.1);box-shadow:0 0 12px rgba(255,224,138,0.15);color:var(--accent-gold)}
+.flow-step .label{font-size:10px;color:var(--text-dim);white-space:nowrap;margin:0 6px 0 4px;line-height:1}
+.flow-step .conn{width:22px;height:2px;background:var(--surface-light);position:relative;flex-shrink:0}
+.flow-step .conn::after{content:"▶";position:absolute;right:-4px;top:-7px;font-size:8px;color:var(--surface-light)}
+.flow-step:last-child .conn{display:none}
+.milestone-bar{margin-top:14px;padding:12px 14px;background:rgba(32,32,74,0.5);border:1.5px solid var(--surface-light);border-radius:6px;position:relative;z-index:1;opacity:0}
+.milestone-bar-header{font-family:var(--font-display);font-size:11px;font-weight:600;color:var(--accent);letter-spacing:0.5px;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.milestone-steps{display:flex;align-items:center;gap:0;flex-wrap:wrap}
+.milestone-step{display:flex;align-items:center;opacity:0}
+.milestone-step .dot-m{width:26px;height:26px;border-radius:50%;border:2px solid var(--surface-light);background:var(--bg-dark);display:flex;align-items:center;justify-content:center;font-size:9px;line-height:1;flex-shrink:0;font-family:var(--font-mono);font-weight:700;color:var(--text-dim);transition:all 0.3s}
+.milestone-step .dot-m.m1{border-color:var(--accent-dim);color:var(--accent)}
+.milestone-step .dot-m.m2{border-color:var(--accent-gold);color:var(--accent-gold)}
+.milestone-step .dot-m.m3{border-color:var(--accent-rose);color:var(--accent-rose)}
+.milestone-step .dot-m.m4{border-color:var(--accent-green);color:var(--accent-green)}
+.milestone-step .label-m{font-size:10px;color:var(--text-dim);white-space:nowrap;margin:0 6px;line-height:1.2}
+.milestone-step .label-m .s{display:block;font-size:8px;color:var(--text-dimmer)}
+.milestone-step .conn-m{width:16px;height:1.5px;background:var(--surface-light);position:relative;flex-shrink:0}
+.milestone-step .conn-m::after{content:"▸";position:absolute;right:-4px;top:-6px;font-size:8px;color:var(--surface-light)}
+.milestone-step:last-child .conn-m{display:none}
+.detail-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:200;display:none;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
+.detail-overlay.open{display:flex}
+.detail-card{background:var(--surface);border:2px solid var(--accent-dim);border-radius:8px;padding:22px 24px;max-width:540px;width:90%;max-height:80vh;overflow-y:auto;position:relative;box-shadow:0 8px 50px rgba(0,0,0,0.7),0 0 30px rgba(157,139,255,0.05);will-change:transform,opacity;backface-visibility:hidden;-webkit-backface-visibility:hidden;transform:translateZ(0);-webkit-transform:translateZ(0)}
+.detail-card h2{margin-top:0;font-family:var(--font-display);font-size:17px;font-weight:700;color:var(--accent);margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--surface-light);display:flex;align-items:center;gap:8px}
+.detail-card h2 svg{width:20px;height:20px;flex-shrink:0}
+.detail-card ul{list-style:none;padding:0}
+.detail-card li{font-size:13px;color:var(--text);padding:4px 0 4px 14px;border-left:2px solid var(--surface-light);margin-bottom:5px;line-height:1.6}
+.detail-card li .hl{color:var(--accent);display:inline-flex;align-items:center;gap:4px}
+.detail-card li .hl-warn{color:var(--accent-rose)}
+.detail-card .close-btn{position:absolute;top:12px;right:14px;font-family:var(--font-mono);font-size:11px;font-weight:600;color:var(--text-dimmer);background:none;border:1px solid var(--surface-light);border-radius:4px;padding:3px 10px;cursor:pointer;transition:all 0.2s}
+.detail-card .close-btn:hover{color:var(--accent-rose);border-color:var(--accent-rose)}
+.detail-card table{width:100%;border-collapse:collapse;margin-top:8px}
+.detail-card th,.detail-card td{text-align:left;padding:5px 8px;font-size:11px;border-bottom:1px solid var(--surface-light)}
+.detail-card th{color:var(--accent-gold);font-weight:600;font-family:var(--font-display)}
+.detail-card td{color:var(--text-dim)}
+@media (max-width:860px){
+.layout-main{flex-direction:column}
+.side-column{width:100%;flex-direction:row;flex-wrap:wrap}
+.side-module{flex:1;min-width:150px}
+.header h1{font-size:22px}
+.header h1 svg{width:24px;height:24px}
+.screen-frame{padding:20px 10px 10px}
+.panel{padding:16px 12px 14px}
+.layer-modules{gap:3px}
+.module{font-size:11px;padding:3px 7px}
+.flow-step .label{font-size:10px}
+.flow-step .dot{width:22px;height:22px;font-size:9px}
+.milestone-step .label-m{font-size:9px}
+}
+@media (max-width:480px){
+.header h1{font-size:18px;letter-spacing:1px}
+.module{font-size:10px;padding:2px 5px;white-space:normal}
+.layer{padding:6px 6px 8px}
+.layer-label{font-size:10px}
+}
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:var(--bg-dark)}
+::-webkit-scrollbar-thumb{background:var(--surface-light);border-radius:2px}
+.arrow-path{stroke-dasharray:200;stroke-dashoffset:200}
+</style>
+</head>
+<body>
+<div class="screen-frame">
+<div class="crt-curve"></div>
+<div class="plasma-led"><span class="core"></span> Immortal Epoch · 永生纪元 <span style="opacity:.5">|</span> 绝对不死·文明重构 <span style="opacity:.5">|</span> 分支B</div>
+<div class="panel" id="panel">
+<div class="header" id="header">
+<h1>
+<svg viewBox="0 0 32 32"><use href="#icon-un" /></svg>
+永生纪元
+</h1>
+<div class="subtitle">当"人都会死"这个文明地基被抽掉 · <em>社会从围绕生存运转，转为围绕稀缺的时间、身份与意义运转</em></div>
+</div>
+<svg style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:0" preserveAspectRatio="none">
+<defs>
+<marker id="arrowHead" markerWidth="6" markerHeight="5" refX="6" refY="2.5" orient="auto"><polygon points="0 0, 6 2.5, 0 5" fill="var(--surface-light)" opacity=".5"/></marker>
+<marker id="arrowHeadFlow" markerWidth="6" markerHeight="5" refX="6" refY="2.5" orient="auto"><polygon points="0 0, 6 2.5, 0 5" fill="var(--accent-gold)"/></marker>
+<symbol id="icon-un" viewBox="0 0 32 32">
+<circle cx="16" cy="16" r="11" stroke="var(--accent)" fill="none" stroke-width="1.5"/>
+<path d="M16 3a13 13 0 0 1 0 26a13 13 0 0 1 0-26z" stroke="var(--accent)" fill="none" stroke-width="1.5" opacity="0.5"/>
+<path d="M6 16h20M13 5c-1 3-1 20 0 22M19 5c1 3 1 20 0 22" stroke="var(--accent-gold)" fill="none" stroke-width="1.2" opacity="0.6"/>
+<circle cx="16" cy="16" r="1.6" fill="var(--accent-gold)"><animate attributeName="r" values="1.2;2;1.2" dur="3s" repeatCount="indefinite"/></circle>
+</symbol>
+<symbol id="icon-sun" viewBox="0 0 20 20">
+<circle cx="10" cy="10" r="4" stroke="currentColor" fill="none" stroke-width="1.2"/>
+<path d="M10 3v2M10 15v2M3 10h2M15 10h2M5.5 5.5l1.4 1.4M13 13l1.4 1.4M14.5 5.5L13 6.9M7 13l-1.4 1.4" stroke="currentColor" stroke-width="1" opacity="0.6" stroke-linecap="round"/>
+</symbol>
+<symbol id="icon-gear" viewBox="0 0 20 20">
+<circle cx="10" cy="10" r="3" stroke="currentColor" fill="none" stroke-width="1.2"/>
+<path d="M10 2l1.2 3.5h2.6l-1 3 2.2 2-3.4 1v2.7l-3-1.7-3 1.7v-2.7l-3.4-1 2.2-2-1-3h2.6L10 2z" stroke="currentColor" fill="none" stroke-width="1" opacity="0.5"/>
+</symbol>
+<symbol id="icon-factory" viewBox="0 0 20 20">
+<path d="M3 17V8l4 3V8l4 3V8l4 3v6" stroke="currentColor" fill="none" stroke-width="1.2" stroke-linejoin="round"/>
+<path d="M3 14h14" stroke="currentColor" stroke-width="1" opacity="0.3"/>
+<rect x="6" y="10" width="2" height="3" fill="currentColor" opacity="0.15"/>
+<rect x="12" y="10" width="2" height="3" fill="currentColor" opacity="0.15"/>
+</symbol>
+<symbol id="icon-ai" viewBox="0 0 20 20">
+<rect x="3" y="3" width="14" height="14" rx="2" stroke="currentColor" fill="none" stroke-width="1.2"/>
+<circle cx="10" cy="10" r="3" stroke="currentColor" fill="none" stroke-width="1.2"/>
+<path d="M10 4v-1M10 17v-1M4 10H3M17 10h-1M6 6L5.2 5.2M15 15l-.8-.8" stroke="currentColor" stroke-width="1" opacity="0.5"/>
+<circle cx="6.5" cy="6.5" r=".5" fill="currentColor" opacity="0.6"/>
+<circle cx="13.5" cy="13.5" r=".5" fill="currentColor" opacity="0.6"/>
+</symbol>
+<symbol id="icon-heart" viewBox="0 0 20 20">
+<path d="M10 17L3.5 10.5a4.2 4.2 0 0 1 6-6L10 5l.5-.5a4.2 4.2 0 0 1 6 6L10 17z" stroke="currentColor" fill="none" stroke-width="1.2" stroke-linejoin="round"/>
+</symbol>
+<symbol id="icon-pool" viewBox="0 0 20 20">
+<circle cx="10" cy="10" r="6.5" stroke="currentColor" fill="none" stroke-width="1.2"/>
+<path d="M7 10h6M10 7v6" stroke="currentColor" stroke-width="1.2" opacity="0.5"/>
+<circle cx="7" cy="13.5" r=".4" fill="currentColor" opacity="0.4"/>
+<circle cx="12.5" cy="6.5" r=".4" fill="currentColor" opacity="0.4"/>
+</symbol>
+<symbol id="icon-share" viewBox="0 0 20 20">
+<circle cx="6" cy="10" r="2.5" stroke="currentColor" fill="none" stroke-width="1.2"/>
+<circle cx="14" cy="5" r="2.5" stroke="currentColor" fill="none" stroke-width="1.2"/>
+<circle cx="14" cy="15" r="2.5" stroke="currentColor" fill="none" stroke-width="1.2"/>
+<path d="M8 9l4-3M8 11l4 3" stroke="currentColor" stroke-width="1" opacity="0.5"/>
+</symbol>
+<symbol id="icon-home" viewBox="0 0 20 20">
+<path d="M3 10l7-6 7 6" stroke="currentColor" fill="none" stroke-width="1.2" stroke-linejoin="round"/>
+<path d="M5 9v7h10V9" stroke="currentColor" fill="none" stroke-width="1.2" stroke-linejoin="round"/>
+</symbol>
+<symbol id="icon-scale" viewBox="0 0 20 20">
+<path d="M10 3v14M10 10l-4-5M10 10l4-5M6 17h8" stroke="currentColor" fill="none" stroke-width="1.2" stroke-linecap="round"/>
+<path d="M2.5 8l3.5-1.5M12 9l4 1" stroke="currentColor" stroke-width="1" opacity="0.4"/>
+</symbol>
+<symbol id="icon-gavel" viewBox="0 0 20 20">
+<path d="M12 5l4 4M15 4l3 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" opacity="0.4"/>
+<rect x="3" y="12" width="14" height="3" stroke="currentColor" fill="none" stroke-width="1.2"/>
+<path d="M10 15v3" stroke="currentColor" stroke-width="1.5" opacity="0.5"/>
+<path d="M10 18l-3 .8M10 18l3 .8" stroke="currentColor" stroke-width="1" opacity="0.4"/>
+</symbol>
+<symbol id="icon-book" viewBox="0 0 20 20">
+<path d="M4 3h8a2 2 0 0 1 2 2v12H6a2 2 0 0 1-2-2V3z" stroke="currentColor" fill="none" stroke-width="1.2" stroke-linejoin="round"/>
+<path d="M14 5h2v13h-2" stroke="currentColor" fill="none" stroke-width="1.2" opacity="0.5"/>
+<path d="M7 7h4M7 10h4" stroke="currentColor" stroke-width="1" opacity="0.4" stroke-linecap="round"/>
+</symbol>
+<symbol id="icon-hand" viewBox="0 0 20 20">
+<path d="M6 10V4h3v5M9 7V3h3v4M12 8V2h3v8" stroke="currentColor" fill="none" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M6 9c-1.5 0-2 .8-2 2s1 2 3 2h2.5c1 0 1.8.4 1.8 1.4 0 .9-.8 1.5-1.8 1.5H5" stroke="currentColor" fill="none" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+</symbol>
+<symbol id="icon-people" viewBox="0 0 20 20">
+<circle cx="7" cy="7" r="2.5" stroke="currentColor" fill="none" stroke-width="1.2"/>
+<circle cx="14" cy="7" r="2" stroke="currentColor" fill="none" stroke-width="1.2" opacity="0.5"/>
+<path d="M2.5 16c.6-3 2.4-4 4.5-4s3.9 1 4.5 4" stroke="currentColor" fill="none" stroke-width="1.2" opacity="0.8"/>
+<path d="M11.5 11.2c.8-.3 1.6-.2 2.5-.2 2 0 3.4 1 4 4" stroke="currentColor" fill="none" stroke-width="1.2" opacity="0.4"/>
+</symbol>
+<symbol id="icon-star" viewBox="0 0 20 20">
+<path d="M10 2l2.3 4.7 5.2.8-3.8 3.7.9 5.2L10 14l-4.6 2.4.9-5.2L2.5 7.5l5.2-.8L10 2z" stroke="currentColor" fill="none" stroke-width="1.2" stroke-linejoin="round"/>
+</symbol>
+<symbol id="icon-leaf" viewBox="0 0 20 20">
+<path d="M10 18C5 18 3 14 3 10c0-4 3-7 7-8 4 1 7 4 7 8 0 4-2 8-7 8z" stroke="currentColor" fill="none" stroke-width="1.2"/>
+<path d="M5 15C8 10 11 7 15 5" stroke="currentColor" stroke-width="1" opacity="0.5" stroke-linecap="round" fill="none"/>
+</symbol>
+<symbol id="icon-rocket" viewBox="0 0 20 20">
+<path d="M10 2c2.5 1 4 3.5 4 7l1 2H5l1-2c0-3.5 1.5-6 4-7z" stroke="currentColor" fill="none" stroke-width="1.2" stroke-linejoin="round"/>
+<path d="M8 14l1 3 1-3M11 11l3 1" stroke="currentColor" stroke-width="1" opacity="0.5"/>
+<circle cx="10" cy="8" r="1.2" stroke="currentColor" opacity="0.6" fill="none"/>
+</symbol>
+<symbol id="icon-econ" viewBox="0 0 20 20">
+<path d="M4 14v-3M7 14V7M10 14v-5M13 14V5M16 14v-2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" opacity="0.3"/>
+<path d="M3 5h14M3 5v11h14V5" stroke="currentColor" fill="none" stroke-width="1.2"/>
+</symbol>
+<symbol id="icon-compass" viewBox="0 0 20 20">
+<circle cx="10" cy="10" r="7" stroke="currentColor" fill="none" stroke-width="1.2"/>
+<path d="M13.5 6.5l-2 5-3 2 2-5 3-2z" stroke="currentColor" fill="none" stroke-width="1.2" stroke-linejoin="round"/>
+</symbol>
+<symbol id="icon-guard" viewBox="0 0 20 20">
+<path d="M10 2l7 3v5c0 4-3.5 7-7 8-3.5-1-7-4-7-8V5l7-3z" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linejoin="round"/>
+<path d="M8 11l1.5 1.5L13 9" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+</symbol>
+<symbol id="icon-flow" viewBox="0 0 20 20">
+<rect x="3" y="4" width="14" height="12" rx="1.5" stroke="currentColor" fill="none" stroke-width="1.2"/>
+<line x1="3" y1="8" x2="17" y2="8" stroke="currentColor" stroke-width="1" opacity="0.4"/>
+<circle cx="7" cy="11" r="1" fill="currentColor" opacity="0.5"/>
+<circle cx="11" cy="11" r="1" fill="currentColor" opacity="0.5"/>
+<circle cx="15" cy="11" r="1" fill="currentColor" opacity="0.5"/>
+</symbol>
+</defs>
+</svg>
+<div class="layout-main">
+<div class="layers-column">
+<div class="layer" data-layer="pop">
+<div class="layer-label"><svg viewBox="0 0 20 20"><use href="#icon-people" /></svg>人口层 <span class="badge">POPULATION</span></div>
+<div class="layer-modules">
+<div class="module" data-detail="absdeath"><svg viewBox="0 0 20 20"><use href="#icon-heart" /></svg>绝对不死 <span class="tag tag-mat">分支B</span></div>
+<div class="module" data-detail="birth"><svg viewBox="0 0 20 20"><use href="#icon-people" /></svg>生育配额制 <span class="tag tag-mat">终极权力</span></div>
+<div class="module" data-detail="caste"><svg viewBox="0 0 20 20"><use href="#icon-scale" /></svg>双 caste 结构 <span class="tag tag-mat">旧/新</span></div>
+</div>
+</div>
+<div class="arrow-down" data-flow="人口封顶">
+<svg viewBox="0 0 100 24"><line class="arrow-path" x1="50" y1="0" x2="50" y2="22" stroke="var(--surface-light)" stroke-width="1.5" marker-end="url(#arrowHead)" opacity=".5"/></svg>
+<div class="arrow-label">不死 + 持续生育 → 人口封顶 · 生育权取代死刑</div>
+</div>
+<div class="layer" data-layer="power">
+<div class="layer-label"><svg viewBox="0 0 20 20"><use href="#icon-star" /></svg>权力层 <span class="badge">POWER</span></div>
+<div class="layer-modules">
+<div class="module" data-detail="age"><svg viewBox="0 0 20 20"><use href="#icon-star" /></svg>年龄阶梯 <span class="tag tag-inst">资历=权力</span></div>
+<div class="module" data-detail="wealth"><svg viewBox="0 0 20 20"><use href="#icon-econ" /></svg>财富复利 <span class="tag tag-inst">无限累积</span></div>
+<div class="module" data-detail="classfix"><svg viewBox="0 0 20 20"><use href="#icon-scale" /></svg>阶层凝固 <span class="tag tag-inst">不可跨越</span></div>
+</div>
+</div>
+<div class="arrow-down" data-flow="资历统治">
+<svg viewBox="0 0 100 24"><line class="arrow-path" x1="50" y1="0" x2="50" y2="22" stroke="var(--surface-light)" stroke-width="1.5" marker-end="url(#arrowHead)" opacity=".5"/></svg>
+<div class="arrow-label">无退休无代际更替 → 最老者无限掌权</div>
+</div>
+<div class="layer" data-layer="meaning">
+<div class="layer-label"><svg viewBox="0 0 20 20"><use href="#icon-compass" /></svg>意义层 <span class="badge">MEANING</span></div>
+<div class="layer-modules">
+<div class="module" data-detail="boredom"><svg viewBox="0 0 20 20"><use href="#icon-compass" /></svg>存在性无聊 <span class="tag tag-goal">精神疾病</span></div>
+<div class="module" data-detail="risk"><svg viewBox="0 0 20 20"><use href="#icon-gear" /></svg>风险两极 <span class="tag tag-goal">保守/纵欲</span></div>
+<div class="module" data-detail="meaningbiz"><svg viewBox="0 0 20 20"><use href="#icon-star" /></svg>意义供给产业 <span class="tag tag-goal">体验经济</span></div>
+</div>
+</div>
+<div class="arrow-down" data-flow="精神结构">
+<svg viewBox="0 0 100 24"><line class="arrow-path" x1="50" y1="0" x2="50" y2="22" stroke="var(--surface-light)" stroke-width="1.5" marker-end="url(#arrowHead)" opacity=".5"/></svg>
+<div class="arrow-label">死亡消失 → 意义感蒸发 · 社会转向意义供给</div>
+</div>
+<div class="layer" data-layer="law">
+<div class="layer-label"><svg viewBox="0 0 20 20"><use href="#icon-gavel" /></svg>法律层 <span class="badge">LAW</span></div>
+<div class="layer-modules">
+<div class="module" data-detail="identity"><svg viewBox="0 0 20 20"><use href="#icon-gavel" /></svg>身份剥夺 <span class="tag tag-soft">永恒流放</span></div>
+<div class="module" data-detail="memory"><svg viewBox="0 0 20 20"><use href="#icon-book" /></svg>记忆篡改 <span class="tag tag-soft">意识隔离</span></div>
+<div class="module" data-detail="selfasset"><svg viewBox="0 0 20 20"><use href="#icon-guard" /></svg>自我即资产 <span class="tag tag-soft">最高保护</span></div>
+</div>
+</div>
+<div class="arrow-down" data-flow="惩罚重构">
+<svg viewBox="0 0 100 24"><line class="arrow-path" x1="50" y1="0" x2="50" y2="22" stroke="var(--surface-light)" stroke-width="1.5" marker-end="url(#arrowHead)" opacity=".5"/></svg>
+<div class="arrow-label">无法用死刑终结 → 惩罚转向身份与记忆</div>
+</div>
+<div class="layer" data-layer="knowledge">
+<div class="layer-label"><svg viewBox="0 0 20 20"><use href="#icon-ai" /></svg>知识层 <span class="badge">KNOWLEDGE</span></div>
+<div class="layer-modules">
+<div class="module" data-detail="depth"><svg viewBox="0 0 20 20"><use href="#icon-ai" /></svg>深度爆炸 <span class="tag tag-comm">零损耗</span></div>
+<div class="module" data-detail="paradigm"><svg viewBox="0 0 20 20"><use href="#icon-factory" /></svg>范式拆除 <span class="tag tag-comm">旧权威不下台</span></div>
+<div class="module" data-detail="stagnate"><svg viewBox="0 0 20 20"><use href="#icon-flow" /></svg>突破停滞 <span class="tag tag-comm">新视角稀缺</span></div>
+</div>
+</div>
+<div class="arrow-down" data-flow="进展悖论">
+<svg viewBox="0 0 100 24"><line class="arrow-path" x1="50" y1="0" x2="50" y2="22" stroke="var(--surface-light)" stroke-width="1.5" marker-end="url(#arrowHead)" opacity=".5"/></svg>
+<div class="arrow-label">知识总量无限 · 但新视角被生育配额 rationed</div>
+</div>
+<div class="layer" data-layer="relation">
+<div class="layer-label"><svg viewBox="0 0 20 20"><use href="#icon-heart" /></svg>关系层 <span class="badge">RELATION</span></div>
+<div class="layer-modules">
+<div class="module" data-detail="intimate"><svg viewBox="0 0 20 20"><use href="#icon-heart" /></svg>亲密关系 <span class="tag tag-comm">永远的锁</span></div>
+<div class="module" data-detail="religion"><svg viewBox="0 0 20 20"><use href="#icon-un" /></svg>宗教消解 <span class="tag tag-comm">此世信仰</span></div>
+<div class="module" data-detail="selfedit"><svg viewBox="0 0 20 20"><use href="#icon-gear" /></svg>自我编辑 <span class="tag tag-comm">可复制人格</span></div>
+</div>
+</div>
+</div>
+<div class="side-column">
+<div class="side-module" data-detail="transition">
+<div class="layer-label"><svg viewBox="0 0 20 20"><use href="#icon-flow" /></svg>过渡临界点</div>
+<div class="desc">不死初现 → 死亡归零 → 意义危机爆发</div>
+</div>
+<div class="side-module" data-detail="econ">
+<div class="layer-label"><svg viewBox="0 0 20 20"><use href="#icon-econ" /></svg>经济与权利模型</div>
+<div class="desc">财富由年龄决定 · 稀缺转向时间/身份/新生命</div>
+</div>
+<div class="side-module" data-detail="values">
+<div class="layer-label"><svg viewBox="0 0 20 20"><use href="#icon-guard" /></svg>边界与价值</div>
+<div class="desc">不讨论弱永生 · 不评判好/坏 · 不作价值定论</div>
+</div>
+</div>
+</div>
+<div class="user-flow">
+<div class="user-flow-header">
+<svg viewBox="0 0 20 20" style="width:14px;height:14px;flex-shrink:0"><use href="#icon-flow"/></svg>
+一个永生者的一生
+<span style="font-size:7px;color:var(--text-dim);font-family:var(--font-mono)">[ 循环动画 ]</span>
+</div>
+<div class="user-flow-steps" id="flowSteps">
+<div class="flow-step"><div class="dot">1</div><span class="label">被授权诞生</span><div class="conn"></div></div>
+<div class="flow-step"><div class="dot">2</div><span class="label">漫长成长</span><div class="conn"></div></div>
+<div class="flow-step"><div class="dot">3</div><span class="label">志业深耕</span><div class="conn"></div></div>
+<div class="flow-step"><div class="dot">4</div><span class="label">权力爬升</span><div class="conn"></div></div>
+<div class="flow-step"><div class="dot">5</div><span class="label">意义管理</span><div class="conn"></div></div>
+<div class="flow-step"><div class="dot">6</div><span class="label">身份维护</span><div class="conn"></div></div>
+<div class="flow-step"><div class="dot">7</div><span class="label">无限延续</span></div>
+</div>
+</div>
+<div class="milestone-bar">
+<div class="milestone-bar-header">
+<svg viewBox="0 0 20 20" style="width:14px;height:14px;flex-shrink:0"><use href="#icon-rocket"/></svg>
+过渡演进路线图（从 mortal 到 immortal）
+</div>
+<div class="milestone-steps" id="milestoneSteps">
+<div class="milestone-step"><div class="dot-m m1">初现</div><span class="label-m">不死初现<span class="s">首批人获绝对不死</span></span><div class="conn-m"></div></div>
+<div class="milestone-step"><div class="dot-m m2">归零</div><span class="label-m">死亡归零<span class="s">自然死亡也消失·配额立法</span></span><div class="conn-m"></div></div>
+<div class="milestone-step"><div class="dot-m m3">危机</div><span class="label-m">意义危机<span class="s">千年老者大规模无聊</span></span><div class="conn-m"></div></div>
+<div class="milestone-step"><div class="dot-m m4">新生</div><span class="label-m">新社会诞生<span class="s">旧社会死亡分界点</span></span></div>
+</div>
+</div>
+</div>
+</div>
+<div class="detail-overlay">
+<div class="detail-card">
+<button class="close-btn">✕ CLOSE</button>
+<div id="detailContent"></div>
+</div>
+</div>
+<script>
+const DETAILS = {
+"absdeath":{title:'<svg viewBox="0 0 20 20"><use href="#icon-heart"/></svg> 绝对不死',items:['采用最极端的 分支B：人不可被衰老、疾病、意外、暴力致死','任何"仍可被杀"的弱永生（分支A）只是今日社会的延伸，不在本设定范围','死亡恐惧消失，风险社会的前提被抽掉','这是整张社会结构图唯一的输入变量','推论：文明重构的全部后果，都从"死亡归零"这一个前提链式导出']},
+"birth":{title:'<svg viewBox="0 0 20 20"><use href="#icon-people"/></svg> 生育配额制',items:['不死 + 持续生育 → 有限空间内人口指数爆炸','繁殖必须停止或严格限量，否则文明被物理空间压垮','"能否创造一个新生命"成为最被严控的终极政治权力','生育权取代死刑，成为社会终极控制杠杆','谁掌握"让新生命存在"的权力，谁就掌握文明本身']},
+"caste":{title:'<svg viewBox="0 0 20 20"><use href="#icon-scale"/></svg> 双 caste 结构',items:['旧永生者：天然公民，占据全部高位与资源','被允许诞生的新人：次级公民，需证明名额正当性','新人通过"极偶发的退出名额"进入，而非自然更替','阶层以"是否天然永生"划分，而非能力或财富','这是权力层"资历即统治"的人口学前提']},
+"age":{title:'<svg viewBox="0 0 20 20"><use href="#icon-star"/></svg> 年龄阶梯',items:['无死亡、无退休、无代际更替，一切可积累之物按时间单调增长','最老者 = 最有权者，年龄成为统治合法性的唯一来源','今日"努力就能上升"的叙事失效','权力不再来自选举或能力，而来自活过的时长','社会从"可跨越的金字塔"变为"凝固的年龄阶梯"']},
+"wealth":{title:'<svg viewBox="0 0 20 20"><use href="#icon-econ"/></svg> 财富与地位的无限复利',items:['财富、知识、地位可无限复利积累且无退休打断','最老者无限富有，年轻人永无赶上之日','继承不再是代际事件，而是同一个人终生的累积','货币差异被年龄完全决定','稀缺性从物质转向时间、身份与新生命']},
+"classfix":{title:'<svg viewBox="0 0 20 20"><use href="#icon-scale"/></svg> 阶层凝固',items:['今天"努力就能上升"的叙事失效','阶层从"可跨越"变为"生物学上不可跨越"','精英构成被千年老者垄断，新鲜血液只靠稀缺配额','上升通道不再是社会流动，而是名额审批','这是永生社会最刺眼的结构性后果']},
+"boredom":{title:'<svg viewBox="0 0 20 20"><use href="#icon-compass"/></svg> 存在性无聊',items:['死亡是紧迫感、英雄主义、爱之珍贵的源头','抽掉死亡，存在性无聊（ennui）成为主流精神疾病','"活太久"比"活不长"更侵蚀意义感','无聊不是懒，而是意义供给系统的失效','社会核心产业因此从制造业转向意义供给']},
+"risk":{title:'<svg viewBox="0 0 20 20"><use href="#icon-gear"/></svg> 风险偏好两极',items:['因失无可失 → 极度保守，拒绝任何风险','因无代价 → 极度纵欲，无限尝试','两种极端共存于同一批永生者身上','风险偏好的分裂重塑保险、金融与关系契约','"冒险"失去青春特有的含义']},
+"meaningbiz":{title:'<svg viewBox="0 0 20 20"><use href="#icon-star"/></svg> 意义供给产业',items:['谁能提供不厌倦的体验，谁就掌握精神命脉','意义建筑师成为新时代的首富职业','体验、叙事、刺激被设计、打包、贩卖','宗教也卷入此竞争：谁的意义供给最不让人厌倦','产业从"制造物品"转向"制造意义"']},
+"identity":{title:'<svg viewBox="0 0 20 20"><use href="#icon-gavel"/></svg> 身份剥夺',items:['无法用死刑或有限刑期"结束"一个人','惩罚转向对"自我"的处置','身份剥夺：抹除社会身份、永恒流放（社死的永恒版）','流放不再是空间放逐，而是关系网络的永久切断','身份成为比生命更值得保护的核心资产']},
+"memory":{title:'<svg viewBox="0 0 20 20"><use href="#icon-book"/></svg> 记忆篡改与意识隔离',items:['记忆篡改：修改或擦除特定记忆，动摇"我是谁"','意识隔离：将意识囚于无交互的容器内','这两类惩罚比死亡更可怕，故被严格限用','惩罚的客体从身体转向人格连续体','法律由此重点防范"记忆被非法改写"']},
+"selfasset":{title:'<svg viewBox="0 0 20 20"><use href="#icon-guard"/></svg> 自我即资产',items:['记忆 / 人格成为比生命更值得保护的最高权益','法律保护客体从"生命权"升级为"身份与记忆的完整权"','记忆公证服务兴起：第三方存证"哪段记忆真实发生"','自我从一次性实体变为可编辑、可复制、可存证的资产','这是永生社会独有的权利基石']},
+"depth":{title:'<svg viewBox="0 0 20 20"><use href="#icon-ai"/></svg> 知识深度爆炸',items:['专家不会死，隐性知识（tacit knowledge）零损耗','单一个体可花千年钻研一域，认知深度远超今人','许多"算不动"的难题被耐心破解','知识总量单调累积，无代际流失','深度是永生文明最耀眼的长板']},
+"paradigm":{title:'<svg viewBox="0 0 20 20"><use href="#icon-factory"/></svg> 范式革命机制拆除',items:['科学突破靠"年轻反叛者 + 代际更替"逼旧范式退场','永生者永不退场，旧权威用无限寿命捍卫旧范式','库恩式范式转移几近不可能','犯错要永恒承担，智识风险偏好下降','大胆假说减少，正统永固化']},
+"stagnate":{title:'<svg viewBox="0 0 20 20"><use href="#icon-flow"/></svg> 突破停滞悖论',items:['知识总量无限累积，但新视角（new mind）被生育配额 rationed','新大脑是稀缺资源，创新瓶颈由此产生','社会从"开拓前沿"退化为"看守知识"的文明','深度爆炸 + 突破停滞并存','永生文明可能极其聪明，却不再有革命']},
+"intimate":{title:'<svg viewBox="0 0 20 20"><use href="#icon-heart"/></svg> 亲密关系：永远的锁',items:['"永远"使任何背叛都被无限记恨，关系更审慎也更脆弱','一次裂痕无法靠"时间冲淡"愈合','繁衍意义减弱，家庭制度可能瓦解','关系形态：永恒契约 / 开放式长伴 / 记忆断联','亲密关系脱离繁殖，退化为陪伴与认同契约']},
+"religion":{title:'<svg viewBox="0 0 20 20"><use href="#icon-un"/></svg> 宗教：死后世界坍塌',items:['"死后审判 / 轮回"的根基被消解（人不会死，也无来世）','信仰从"许诺来世"转为"经营此世"','新形态：此世意义教 / 记忆崇拜 / 过程神圣化','记忆圣地兴起：谁的记忆被最多人朝拜，谁拥有软不朽','宗教不消失，而是竞争"谁的意义供给最不厌倦"']},
+"selfedit":{title:'<svg viewBox="0 0 20 20"><use href="#icon-gear"/></svg> 自我编辑',items:['万年记忆饱和下，"我是谁"不再稳定','自愿记忆重置：定期擦除某段记忆，重获新鲜感','人格分叉：意识复制为多个副本，各自走不同人生','自我从"给定的一次性实体"变为"可编辑资产"','这是身份层最深远的重构']},
+"transition":{title:'<svg viewBox="0 0 20 20"><use href="#icon-flow"/></svg> 过渡临界点',items:['阶段一 · 不死初现：首批人获绝对不死，人口仍靠自然死亡平衡，代际张力初显','阶段二 · 死亡归零：自然死亡也消失，人口只增不减，生育配额制被迫立法，双 caste 成形','阶段三 · 意义危机爆发：第一批千年老者大规模陷入无聊，意义供给产业合法化','关键判断：文明重构不在"人开始不死"那一刻，而在死亡归零 + 人口封顶同时成立','那才是旧社会死亡、新社会诞生的分界点']},
+"econ":{title:'<svg viewBox="0 0 20 20"><use href="#icon-econ"/></svg> 经济与权利模型',items:['货币仍可能存在，但财富差异被年龄完全决定','物理资源仍稀缺；时间、身份、新生命、意义成为最稀缺之物','权力来源：年龄 = 资历 = 合法性，非选举或能力','核心产业：从制造业转向意义与体验供给','惩罚客体：生命权 → 身份与记忆的完整权','一句话：不再缺的是活下去，仍旧稀缺的是时间、身份、新生命，以及不厌倦的意义']},
+"values":{title:'<svg viewBox="0 0 20 20"><use href="#icon-guard"/></svg> 边界与价值',items:['✅ 不讨论弱永生（分支A）：仍可被杀只是今日社会的延伸','✅ 不承诺永生"幸福"：只推演结构后果','✅ 不提供实现永生的技术：这是文明形态推演，非生物技术文档','⚠️ 不评判永生好 / 坏：只描述"若成立会怎样"，不作价值定论','⚠️ 不覆盖所有子结构：仅聚焦六大主线，其余留白','❌ 不写成小说：以结构化说明书呈现，便于复用与延展']}
+};
+document.addEventListener("DOMContentLoaded",()=>{
+const layers=document.querySelectorAll(".layer");
+const arrows=document.querySelectorAll(".arrow-down");
+const flowSteps=document.querySelectorAll(".flow-step");
+const sideModules=document.querySelectorAll(".side-module");
+const userFlow=document.querySelector(".user-flow");
+const milestoneBar=document.querySelector(".milestone-bar");
+const milestoneSteps=document.querySelectorAll(".milestone-step");
+const overlays=document.querySelector(".detail-overlay");
+const detailContent=document.querySelector("#detailContent");
+const closeBtn=document.querySelector(".close-btn");
+const mainTimeline=anime.timeline({easing:"easeOutCubic"});
+mainTimeline.add({targets:"#header",opacity:[0,1],translateY:[-10,0],duration:600});
+mainTimeline.add({targets:sideModules,opacity:[0,1],translateX:[15,0],duration:400,delay:anime.stagger(100)},"-=200");
+mainTimeline.add({targets:layers,opacity:[0,1],translateY:[20,0],duration:450,delay:anime.stagger(130)},"-=100");
+mainTimeline.add({targets:arrows,opacity:[0,1],duration:350,delay:anime.stagger(180)},"-=200");
+setTimeout(()=>{document.querySelectorAll(".arrow-path").forEach((p)=>{anime({targets:p,strokeDashoffset:[200,0],duration:700,delay:300,easing:"easeInOutCubic"});});},1400);
+mainTimeline.add({targets:userFlow,opacity:[0,1],duration:400},"-=100");
+mainTimeline.add({targets:flowSteps,opacity:[0,1],translateX:[-8,0],duration:300,delay:anime.stagger(80)},"-=200");
+mainTimeline.add({targets:milestoneBar,opacity:[0,1],duration:400},"-=100");
+mainTimeline.add({targets:milestoneSteps,opacity:[0,1],translateX:[-6,0],duration:250,delay:anime.stagger(100)},"-=200");
+let flowIndex=0;function pulseFlow(){flowSteps.forEach((s)=>s.querySelector(".dot").classList.remove("active"));flowSteps[flowIndex].querySelector(".dot").classList.add("active");flowIndex=(flowIndex+1)%flowSteps.length;}
+pulseFlow();setInterval(pulseFlow,2500);
+layers.forEach((l)=>{l.addEventListener("mouseenter",()=>{anime({targets:l,borderColor:"var(--accent)",backgroundColor:"rgba(157,139,255,0.05)",duration:200});});l.addEventListener("mouseleave",()=>{anime({targets:l,borderColor:"var(--surface-light)",backgroundColor:"rgba(32,32,74,0.5)",duration:300});});});
+function openDetail(id){const data=DETAILS[id];if(!data)return;detailContent.innerHTML="<h2>"+data.title+"</h2><ul>"+data.items.map(function(i){return "<li>"+i+"</li>";}).join("")+"</ul>";overlays.classList.add("open");anime({targets:".detail-card",scale:[0.85,1],opacity:[0,1],duration:250,easing:"easeOutCubic"});}
+function closeDetail(){anime({targets:".detail-card",scale:[1,0.85],opacity:[1,0],duration:200,easing:"easeInCubic",complete:()=>{overlays.classList.remove("open");}});}
+document.querySelectorAll(".module[data-detail]").forEach((el)=>{el.addEventListener("click",()=>openDetail(el.dataset.detail));});
+document.querySelectorAll(".side-module[data-detail]").forEach((el)=>{el.addEventListener("click",()=>openDetail(el.dataset.detail));});
+closeBtn.addEventListener("click",closeDetail);
+overlays.addEventListener("click",(e)=>{if(e.target===overlays)closeDetail();});
+const board=document.getElementById("panel");
+for(let i=0;i<25;i++){const dot=document.createElement("div");dot.style.cssText=`position:absolute;pointer-events:none;width:${1+Math.random()*2.5}px;height:${1+Math.random()*2.5}px;border-radius:50%;background:rgba(255,224,138,${0.15+Math.random()*0.5});filter:blur(${Math.random()*1.5}px);left:${Math.random()*100}%;top:${Math.random()*100}%;opacity:${0.05+Math.random()*0.3}`;board.appendChild(dot);anime({targets:dot,opacity:[0.05,0.6,0.05],duration:4000+Math.random()*6000,direction:"alternate",loop:true,easing:"easeInOutSine"});}
+});
+</script>
+</body>
+</html>

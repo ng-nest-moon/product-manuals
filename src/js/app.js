@@ -6,13 +6,19 @@
   if (themeToggle) {
     var current = localStorage.getItem('pm-theme') || 'light';
     document.documentElement.setAttribute('data-theme', current);
-    themeToggle.textContent = current === 'dark' ? '\u2600' : '\u263E';
+    /* 图标由 CSS 依据 data-theme 显隐，无需 JS 换字形 */
 
   themeToggle.addEventListener('click', function () {
     var next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+    // 冻结过渡 -> 换主题 -> 下一帧恢复，避免全页明暗拖影
+    document.documentElement.classList.add('pm-theme-switching');
     document.documentElement.setAttribute('data-theme', next);
     localStorage.setItem('pm-theme', next);
-    themeToggle.textContent = next === 'dark' ? '\u2600' : '\u263E';
+    requestAnimationFrame(function () {
+      requestAnimationFrame(function () {
+        document.documentElement.classList.remove('pm-theme-switching');
+      });
+    });
 
     /* Toggle highlight.js theme */
     var hljsLight = document.getElementById('hljs-light');
@@ -63,6 +69,7 @@
   tabbedSets.forEach(function (set) {
     var labels = set.querySelectorAll('.pm-tabbed-label');
     var panels = set.querySelectorAll('.pm-tabbed-panel');
+    if (!labels.length) return;
 
     labels.forEach(function (label, index) {
       label.addEventListener('click', function () {
@@ -74,36 +81,40 @@
     });
   });
 
-  /* ------ Category Filter (homepage) ------ */
+  /* ------ Category Filter (homepage, curated B layout) ------ */
   var filterBar = document.getElementById('pm-filter-bar');
   if (filterBar) {
     var chips = filterBar.querySelectorAll('.pm-filter-chip');
-    var gridCards = document.querySelectorAll('.pm-product-grid .pm-product-card');
+    var sections = document.querySelectorAll('.pm-cat-section');
+    var viewAllBtns = document.querySelectorAll('[data-view-all]');
+
+    function applyFilter(f) {
+      chips.forEach(function (c) {
+        c.classList.toggle('active', c.getAttribute('data-filter') === f);
+      });
+      sections.forEach(function (sec) {
+        var cat = sec.getAttribute('data-category');
+        sec.classList.toggle('is-hidden', !(f === 'all' || cat === f));
+      });
+    }
+
     chips.forEach(function (chip) {
       chip.addEventListener('click', function () {
-        chips.forEach(function (c) { c.classList.remove('active'); });
-        chip.classList.add('active');
-        var f = chip.getAttribute('data-filter');
-        gridCards.forEach(function (card) {
-          var cat = card.getAttribute('data-category');
-          if (f === 'all' || cat === f) {
-            card.classList.remove('is-hidden');
-          } else {
-            card.classList.add('is-hidden');
-          }
-        });
+        applyFilter(chip.getAttribute('data-filter'));
+      });
+    });
+
+    viewAllBtns.forEach(function (btn) {
+      btn.addEventListener('click', function (e) {
+        e.preventDefault();
+        var cat = btn.getAttribute('data-view-all');
+        applyFilter(cat);
+        var target = document.getElementById('cat-' + cat);
+        if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
       });
     });
   }
 
-  /* ------ Mobile Nav Toggle (if exists) ------ */
-  var mobileToggle = document.getElementById('pm-mobile-nav-toggle');
-  var navEl = document.querySelector('.pm-nav');
- if (mobileToggle && navEl) {
-   mobileToggle.addEventListener('click', function () {
-     navEl.style.display = navEl.style.display === 'flex' ? 'none' : 'flex';
-   });
- }
   /* ------ Scroll-spy: highlight active TOC item ------ */
   var tocNav = document.getElementById('pm-toc-nav');
   if (tocNav) {
@@ -133,26 +144,20 @@
   }
 
   /* ------ Back to top button ------ */
-  var backToTop = document.createElement('button');
-  backToTop.className = 'pm-back-to-top';
-  backToTop.setAttribute('aria-label', '���ض���');
-  backToTop.setAttribute('title', '���ض���');
-  document.body.appendChild(backToTop);
+  /* 按钮由 template 静态渲染（见 templates/base.html），此处只接管交互 */
+  var backToTop = document.getElementById('pm-back-to-top');
+  if (backToTop) {
+    var scrollTimer = null;
+    window.addEventListener('scroll', function () {
+      if (scrollTimer) clearTimeout(scrollTimer);
+      scrollTimer = setTimeout(function () {
+        backToTop.classList.toggle('visible', window.scrollY > 300);
+      }, 50);
+    }, { passive: true });
 
-  var scrollTimer = null;
-  window.addEventListener('scroll', function () {
-    if (scrollTimer) clearTimeout(scrollTimer);
-    scrollTimer = setTimeout(function () {
-      if (window.scrollY > 300) {
-        backToTop.classList.add('visible');
-      } else {
-        backToTop.classList.remove('visible');
-      }
-    }, 50);
-  });
-
-  backToTop.addEventListener('click', function () {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  });
+    backToTop.addEventListener('click', function () {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+  }
 
 })();

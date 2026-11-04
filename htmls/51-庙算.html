@@ -1,0 +1,350 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>庙算</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;600;800&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--board:#1a1512;--board-dark:#0d0a08;--chalk:#ece0cd;--chalk-dim:rgba(236,224,205,0.55);--chalk-dimmer:rgba(236,224,205,0.18);--chalk-translucent:rgba(236,224,205,0.06);--accent-red:#bf4034;--accent-gold:#cfa24c;--accent-bronze:#a8624a;--accent-jade:#6f8f5e;--accent-ink:#7d8fa8;--scanline:rgba(0,0,0,0.06);--font-display:"Noto Sans SC","PingFang SC","Microsoft YaHei",sans-serif;--font-mono:"IBM Plex Mono","SFMono-Regular",Menlo,Consolas,"Courier New",monospace}
+html,body{height:100%;background:#080605;font-family:var(--font-mono);color:var(--chalk);overflow-x:hidden}
+.screen-frame{position:relative;min-height:100vh;padding:28px 20px 20px;background:#111;border-radius:20px;box-shadow:inset 0 0 40px rgba(0,0,0,0.8),0 8px 40px rgba(0,0,0,0.6);max-width:1360px;margin:0 auto}
+.screen-frame::before{content:"";position:absolute;inset:0;border-radius:20px;background:repeating-linear-gradient(0deg,transparent,transparent 2px,var(--scanline) 2px,var(--scanline) 4px);pointer-events:none;z-index:100}
+.crt-curve{position:absolute;inset:0;border-radius:20px;background:radial-gradient(ellipse at center,transparent 65%,rgba(0,0,0,0.35) 100%);pointer-events:none;z-index:99}
+.power-led{position:absolute;top:8px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:8px;font-family:var(--font-display);font-size:10px;font-weight:600;color:var(--chalk-dim);letter-spacing:1.5px;z-index:101}
+.power-led span{display:inline-block;width:6px;height:6px;border-radius:50%;background:#cfa24c;box-shadow:0 0 6px #cfa24c;animation:led-pulse 2s ease-in-out infinite}
+@keyframes led-pulse{0%,100%{opacity:1;box-shadow:0 0 6px #cfa24c}50%{opacity:0.5;box-shadow:0 0 2px #cfa24c}}
+.chalkboard{position:relative;background:var(--board);border:3px solid #3a2620;border-radius:4px;padding:32px 28px 28px;box-shadow:inset 0 0 60px rgba(0,0,0,0.5),0 4px 0 #170f0b;min-height:calc(100vh - 80px)}
+.chalkboard::after{content:"";position:absolute;inset:0;background-image:radial-gradient(circle at 20% 30%,rgba(236,224,205,0.02) 0,transparent 60%),radial-gradient(circle at 80% 70%,rgba(236,224,205,0.015) 0,transparent 50%),radial-gradient(circle at 50% 50%,rgba(236,224,205,0.01) 0,transparent 70%);pointer-events:none;border-radius:2px}
+.header{text-align:center;margin-bottom:24px;position:relative;z-index:1}
+.header h1{font-family:var(--font-display);font-size:26px;font-weight:800;color:var(--accent-red);text-shadow:0 0 8px rgba(191,64,52,0.3);letter-spacing:2px;margin-bottom:4px;display:flex;align-items:center;justify-content:center;gap:10px}
+.header .subtitle{font-size:14px;color:var(--chalk-dim);letter-spacing:0.5px}
+.header .subtitle em{font-style:normal;color:var(--accent-jade)}
+.layout-main{display:flex;gap:20px;position:relative;z-index:1}
+.layers-column{flex:1;min-width:0}
+.side-column{width:220px;flex-shrink:0;display:flex;flex-direction:column;gap:10px}
+.svg-connectors{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:0}
+.layer{position:relative;background:var(--chalk-translucent);border:1.5px solid var(--chalk-dimmer);border-radius:6px;padding:12px 14px 14px;margin-bottom:0;cursor:pointer;transition:border-color 0.3s,background 0.3s;opacity:0;transform:translateY(20px)}
+.layer:hover{border-color:var(--accent-gold);background:rgba(207,162,76,0.06)}
+.layer-label{font-family:var(--font-display);font-size:12px;font-weight:600;color:var(--chalk-dim);letter-spacing:1px;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.layer-label .badge{font-size:10px;font-weight:600;background:var(--chalk-dimmer);color:var(--board);padding:1px 7px;border-radius:3px;letter-spacing:0}
+.layer-modules{display:flex;flex-wrap:wrap;gap:6px}
+.module{background:rgba(236,224,205,0.06);border:1px solid var(--chalk-dimmer);border-radius:4px;padding:5px 10px;font-size:12px;line-height:1.5;color:var(--chalk);transition:all 0.25s;white-space:nowrap;cursor:pointer;display:inline-flex;align-items:center;gap:5px}
+.module:hover{background:rgba(236,224,205,0.12);border-color:var(--chalk);transform:translateY(-1px)}
+svg.icon,.module svg,.side-module svg,.dot svg{width:16px;height:16px;flex-shrink:0}
+.module svg{width:15px;height:15px}
+.dot svg{width:14px;height:14px}
+.layer-label>svg:first-child{width:18px;height:18px;flex-shrink:0}
+.header h1 svg{width:28px;height:28px;flex-shrink:0}
+.module .tag{font-size:10px;font-weight:600;padding:1px 6px;border-radius:3px;margin-left:4px;opacity:0.85}
+.tag-surface{background:var(--accent-red);color:var(--board)}
+.tag-engine{background:var(--accent-gold);color:var(--board)}
+.tag-tactics{background:var(--accent-bronze);color:var(--board)}
+.tag-measure{background:var(--accent-jade);color:var(--board)}
+.tag-archive{background:var(--accent-ink);color:var(--board)}
+.layer[data-layer="surface"]{border-left:3px solid var(--accent-red)}
+.layer[data-layer="engine"]{border-left:3px solid var(--accent-gold)}
+.layer[data-layer="tactics"]{border-left:3px solid var(--accent-bronze)}
+.layer[data-layer="measure"]{border-left:3px solid var(--accent-jade)}
+.layer[data-layer="archive"]{border-left:3px solid var(--accent-ink)}
+.arrow-down{display:flex;align-items:center;justify-content:center;height:28px;position:relative;opacity:0}
+.arrow-down svg{width:100%;height:28px}
+.arrow-label{position:absolute;font-family:var(--font-display);font-size:10px;font-weight:600;color:var(--chalk-dim);letter-spacing:0.5px;background:var(--board);padding:0 8px;text-align:center;white-space:nowrap}
+.side-module{background:var(--chalk-translucent);border:1.5px solid var(--chalk-dimmer);border-left:3px solid var(--accent-jade);border-radius:6px;padding:10px 12px;cursor:pointer;opacity:0;transform:translateX(15px);transition:border-color 0.3s,background 0.3s}
+.side-module:hover{border-color:var(--accent-jade);background:rgba(111,143,94,0.08)}
+.side-module .layer-label{margin-bottom:4px}
+.side-module .desc{font-size:12px;color:var(--chalk-dim);line-height:1.5}
+.user-flow{margin-top:22px;padding:14px 16px;background:var(--chalk-translucent);border:1.5px solid var(--chalk-dimmer);border-radius:6px;position:relative;z-index:1;opacity:0}
+.user-flow-header{font-family:var(--font-display);font-size:12px;font-weight:600;color:var(--accent-gold);letter-spacing:0.5px;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.user-flow-steps{display:flex;align-items:center;flex-wrap:wrap;gap:0}
+.flow-step{display:flex;align-items:center;gap:0;opacity:0}
+.flow-step .dot{width:28px;height:28px;border-radius:50%;border:2px solid var(--chalk-dimmer);background:var(--board);display:flex;align-items:center;justify-content:center;font-size:13px;line-height:1;flex-shrink:0;transition:all 0.3s}
+.flow-step .dot.active{border-color:var(--accent-gold);background:rgba(207,162,76,0.12);box-shadow:0 0 10px rgba(207,162,76,0.2)}
+.flow-step .label{font-size:12px;color:var(--chalk-dim);white-space:nowrap;margin:0 8px 0 6px;line-height:1}
+.flow-step .conn{width:24px;height:2px;background:var(--chalk-dimmer);position:relative;flex-shrink:0}
+.flow-step .conn::after{content:"▸";position:absolute;right:-4px;top:-6px;font-size:10px;color:var(--chalk-dimmer)}
+.flow-step:last-child .conn{display:none}
+.detail-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:200;display:none;align-items:center;justify-content:center;backdrop-filter:blur(2px)}
+.detail-overlay.open{display:flex}
+.detail-card{background:var(--board-dark);border:2px solid var(--chalk-dimmer);border-radius:8px;padding:24px 28px;max-width:500px;width:90%;max-height:80vh;overflow-y:auto;position:relative;box-shadow:0 8px 40px rgba(0,0,0,0.6);will-change:transform,opacity;backface-visibility:hidden;-webkit-backface-visibility:hidden;transform:translateZ(0);-webkit-transform:translateZ(0)}
+.detail-card h2{margin-top:0;font-family:var(--font-display);font-size:18px;font-weight:800;color:var(--accent-gold);margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid var(--chalk-dimmer);display:flex;align-items:center;gap:8px}
+.detail-card h2 svg{width:22px;height:22px;flex-shrink:0}
+.detail-card ul{list-style:none;padding:0}
+.detail-card li{font-size:13px;color:var(--chalk);padding:5px 0 5px 14px;border-left:2px solid var(--chalk-dimmer);margin-bottom:6px;line-height:1.6}
+.detail-card li .hl{color:var(--accent-jade);display:inline-flex;align-items:center;gap:4px}
+.detail-card li .hl-warn{color:var(--accent-red)}
+.detail-card .close-btn{position:absolute;top:14px;right:16px;font-family:var(--font-display);font-size:13px;font-weight:600;color:var(--chalk-dimmer);background:none;border:1px solid var(--chalk-dimmer);border-radius:4px;padding:4px 12px;cursor:pointer;transition:all 0.2s}
+.detail-card .close-btn:hover{color:var(--accent-red);border-color:var(--accent-red)}
+@media (max-width:860px){
+.layout-main{flex-direction:column}
+.side-column{width:100%;flex-direction:row;flex-wrap:wrap}
+.side-module{flex:1;min-width:160px}
+.header h1{font-size:20px}
+.screen-frame{padding:24px 12px 12px}
+.chalkboard{padding:20px 14px 16px}
+.layer-modules{gap:4px}
+.module{font-size:11px;padding:4px 8px}
+.flow-step .label{font-size:10px}
+.flow-step .dot{width:24px;height:24px;font-size:11px}
+}
+@media (max-width:480px){
+.header h1{font-size:16px;letter-spacing:1px}
+.module{font-size:10px;padding:3px 6px;white-space:normal}
+.layer{padding:8px 8px 10px}
+.layer-label{font-size:10px}
+}
+.chalk-glow{position:absolute;pointer-events:none;width:4px;height:4px;border-radius:50%;background:rgba(236,224,205,0.15);filter:blur(6px)}
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:var(--board-dark)}
+::-webkit-scrollbar-thumb{background:var(--chalk-dimmer);border-radius:2px}
+.arrow-path{stroke-dasharray:200;stroke-dashoffset:200}
+.layer-label svg{width:16px;height:16px;flex-shrink:0}
+</style>
+</head>
+<body>
+<div class="screen-frame">
+<div class="crt-curve"></div>
+<div class="power-led"><span></span> SYSTEM · MIAOSUAN</div>
+<div class="chalkboard" id="chalkboard">
+<div class="header" id="header">
+<h1>
+<svg class="icon" viewBox="0 0 20 20"><use href="#icon-scroll" /></svg>
+庙算
+</h1>
+<div class="subtitle">按十三篇顺序推演困境的工具 · <em>算完它敢说：这仗别打</em></div>
+</div>
+<svg class="svg-connectors" preserveAspectRatio="none">
+<defs>
+<marker id="arrowHead" markerWidth="6" markerHeight="5" refX="6" refY="2.5" orient="auto"><polygon points="0 0, 6 2.5, 0 5" fill="var(--chalk-dimmer)" opacity=".6"/></marker>
+<marker id="arrowHeadFlow" markerWidth="6" markerHeight="5" refX="6" refY="2.5" orient="auto"><polygon points="0 0, 6 2.5, 0 5" fill="var(--accent-gold)"/></marker>
+<filter id="glow"><feGaussianBlur stdDeviation="1.5" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+<symbol id="icon-scroll" viewBox="0 0 20 20">
+<path d="M5 3h10v14H5z" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linejoin="round"/>
+<path d="M5 3c0-1 .8-1.5 1.6-1.5h8.4M5 17c0 1 .8 1.5 1.6 1.5h8.4" stroke="currentColor" fill="none" stroke-width="1.3" stroke-linecap="round"/>
+<path d="M8 7h4M8 10h4M8 13h2.5" stroke="currentColor" fill="none" stroke-width="1.2" stroke-linecap="round"/>
+</symbol>
+<symbol id="icon-case" viewBox="0 0 20 20">
+<path d="M3 6h14v11H3z" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linejoin="round"/>
+<path d="M7 6V4.2c0-.7.5-1.2 1.2-1.2h3.6c.7 0 1.2.5 1.2 1.2V6" stroke="currentColor" fill="none" stroke-width="1.4" stroke-linejoin="round"/>
+<path d="M3 10h14" stroke="currentColor" fill="none" stroke-width="1.2"/>
+</symbol>
+<symbol id="icon-scale" viewBox="0 0 20 20">
+<path d="M10 3v14M5 17h10" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round"/>
+<path d="M3 7h14" stroke="currentColor" fill="none" stroke-width="1.4" stroke-linecap="round"/>
+<path d="M3 7l-1.5 4h3zM17 7l-1.5 4h3z" stroke="currentColor" fill="none" stroke-width="1.3" stroke-linejoin="round"/>
+</symbol>
+<symbol id="icon-flag" viewBox="0 0 20 20">
+<path d="M5 17V3" stroke="currentColor" fill="none" stroke-width="1.6" stroke-linecap="round"/>
+<path d="M5 4h9l-1.8 3.2L14 10.5H5" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linejoin="round"/>
+</symbol>
+<symbol id="icon-tactic" viewBox="0 0 20 20">
+<path d="M10 2.5l6.5 3.75v7.5L10 17.5 3.5 13.75v-7.5z" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linejoin="round"/>
+<path d="M7 8.6h6M7 11.6h4" stroke="currentColor" fill="none" stroke-width="1.3" stroke-linecap="round"/>
+</symbol>
+<symbol id="icon-path" viewBox="0 0 20 20">
+<path d="M4 16c0-4 3-4 3-7s-3-3-3-5" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round"/>
+<path d="M11 16c0-4 3-4 3-7" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round"/>
+<circle cx="14" cy="6" r="1.6" stroke="currentColor" fill="none" stroke-width="1.3"/>
+</symbol>
+<symbol id="icon-warn" viewBox="0 0 20 20">
+<path d="M10 3l7 13H3z" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linejoin="round"/>
+<path d="M10 8v4" stroke="currentColor" fill="none" stroke-width="1.6" stroke-linecap="round"/>
+<circle cx="10" cy="14.2" r="0.9" fill="currentColor"/>
+</symbol>
+<symbol id="icon-ledger" viewBox="0 0 20 20">
+<path d="M4 3h11v14H4z" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linejoin="round"/>
+<path d="M7 3v14" stroke="currentColor" fill="none" stroke-width="1.3"/>
+<path d="M9 7h4M9 10h4M9 13h2.5" stroke="currentColor" fill="none" stroke-width="1.2" stroke-linecap="round"/>
+</symbol>
+<symbol id="icon-report" viewBox="0 0 20 20">
+<path d="M5 2.5h7l3.5 3.5v11.5H5z" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linejoin="round"/>
+<path d="M12 2.5V6h3.5" stroke="currentColor" fill="none" stroke-width="1.3" stroke-linejoin="round"/>
+<path d="M7.5 10h5M7.5 13h3.5" stroke="currentColor" fill="none" stroke-width="1.2" stroke-linecap="round"/>
+</symbol>
+<symbol id="icon-rule" viewBox="0 0 20 20">
+<path d="M3 5h14M3 10h14M3 15h14" stroke="currentColor" fill="none" stroke-width="1.3" stroke-linecap="round"/>
+<circle cx="7" cy="5" r="1.8" stroke="currentColor" fill="none" stroke-width="1.3"/>
+<circle cx="13" cy="10" r="1.8" stroke="currentColor" fill="none" stroke-width="1.3"/>
+<circle cx="9" cy="15" r="1.8" stroke="currentColor" fill="none" stroke-width="1.3"/>
+</symbol>
+<symbol id="icon-refresh" viewBox="0 0 20 20">
+<path d="M14.5 6C12.5 4 9.5 3.5 7 5 4.5 6.5 3.5 9.5 3.5 12" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M10.5 9.5l4-4 2 3" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M5.5 14c2 2.5 5.5 3 8 1.5C16 14 17 11 16.5 8" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M9.5 11l-4 4-2-3" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+</symbol>
+</defs>
+</svg>
+<div class="layout-main">
+<div class="layers-column">
+<div class="layer" data-layer="surface">
+<div class="layer-label"><svg viewBox="0 0 20 20"><use href="#icon-case" /></svg>表现层 · 推演台 <span class="badge">SURFACE</span></div>
+<div class="layer-modules">
+<div class="module" data-detail="surf-case"><svg viewBox="0 0 20 20"><use href="#icon-case" /></svg>困境立案 <span class="tag tag-surface">一句话</span></div>
+<div class="module" data-detail="surf-walk"><svg viewBox="0 0 20 20"><use href="#icon-path" /></svg>五阶段走查 <span class="tag tag-surface">十三问</span></div>
+<div class="module" data-detail="surf-report"><svg viewBox="0 0 20 20"><use href="#icon-report" /></svg>庙算报告 <span class="tag tag-surface">一页纸</span></div>
+<div class="module" data-detail="surf-object"><svg viewBox="0 0 20 20"><use href="#icon-warn" /></svg>不服备案</div>
+</div>
+</div>
+<div class="arrow-down" data-flow="结构化输入">
+<svg viewBox="0 0 100 28"><line class="arrow-path" x1="50" y1="0" x2="50" y2="26" stroke="var(--chalk-dimmer)" stroke-width="1.5" marker-end="url(#arrowHead)" opacity=".5"/></svg>
+<div class="arrow-label">填的是量，不是感受</div>
+</div>
+<div class="layer" data-layer="engine">
+<div class="layer-label"><svg viewBox="0 0 20 20"><use href="#icon-scroll" /></svg>核心层 · 十三篇引擎 <span class="badge">ENGINE</span></div>
+<div class="layer-modules">
+<div class="module" data-detail="eng-start"><svg viewBox="0 0 20 20"><use href="#icon-rule" /></svg>始计算筹 <span class="tag tag-engine">五事</span></div>
+<div class="module" data-detail="eng-cost"><svg viewBox="0 0 20 20"><use href="#icon-ledger" /></svg>作战成本 <span class="tag tag-engine">久战</span></div>
+<div class="module" data-detail="eng-attack"><svg viewBox="0 0 20 20"><use href="#icon-flag" /></svg>谋攻定性 <span class="tag tag-engine">六档</span></div>
+<div class="module" data-detail="eng-terrain"><svg viewBox="0 0 20 20"><use href="#icon-path" /></svg>地形定场</div>
+<div class="module" data-detail="eng-nine"><svg viewBox="0 0 20 20"><use href="#icon-rule" /></svg>九变清单</div>
+<div class="module" data-detail="eng-check"><svg viewBox="0 0 20 20"><use href="#icon-warn" /></svg>两道自检 <span class="tag tag-engine">火攻·用间</span></div>
+</div>
+</div>
+<div class="arrow-down" data-flow="定性结论">
+<svg viewBox="0 0 100 28"><line class="arrow-path" x1="50" y1="0" x2="50" y2="26" stroke="var(--chalk-dimmer)" stroke-width="1.5" marker-end="url(#arrowHead)" opacity=".5"/></svg>
+<div class="arrow-label">结论：打 / 不打 / 换场域</div>
+</div>
+<div class="layer" data-layer="tactics">
+<div class="layer-label"><svg viewBox="0 0 20 20"><use href="#icon-tactic" /></svg>计层 · 三十六计（定怎么打） <span class="badge">TACTICS</span></div>
+<div class="layer-modules">
+<div class="module" data-detail="tac-eight"><svg viewBox="0 0 20 20"><use href="#icon-tactic" /></svg>脱困八计 <span class="tag tag-tactics">走为上</span></div>
+<div class="module" data-detail="tac-match"><svg viewBox="0 0 20 20"><use href="#icon-path" /></svg>招法匹配 <span class="tag tag-tactics">按处境</span></div>
+<div class="module" data-detail="tac-cost"><svg viewBox="0 0 20 20"><use href="#icon-ledger" /></svg>代价标注 <span class="tag tag-tactics">必标</span></div>
+<div class="module" data-detail="tac-red"><svg viewBox="0 0 20 20"><use href="#icon-warn" /></svg>用计红线 <span class="tag tag-tactics">六不收</span></div>
+</div>
+</div>
+<div class="arrow-down" data-flow="招法">
+<svg viewBox="0 0 100 28"><line class="arrow-path" x1="50" y1="0" x2="50" y2="26" stroke="var(--chalk-dimmer)" stroke-width="1.5" marker-end="url(#arrowHead)" opacity=".5"/></svg>
+<div class="arrow-label">招法与副作用</div>
+</div>
+<div class="layer" data-layer="measure">
+<div class="layer-label"><svg viewBox="0 0 20 20"><use href="#icon-scale" /></svg>判据层 · 量的标准 <span class="badge">MEASURE</span></div>
+<div class="layer-modules">
+<div class="module" data-detail="mea-six"><svg viewBox="0 0 20 20"><use href="#icon-scale" /></svg>六档力量对比 <span class="tag tag-measure">决定性</span></div>
+<div class="module" data-detail="mea-five"><svg viewBox="0 0 20 20"><use href="#icon-rule" /></svg>五事七计评分 <span class="tag tag-measure">看短板</span></div>
+<div class="module" data-detail="mea-thresh"><svg viewBox="0 0 20 20"><use href="#icon-ledger" /></svg>久战阈值 <span class="tag tag-measure">止损线</span></div>
+<div class="module" data-detail="mea-info"><svg viewBox="0 0 20 20"><use href="#icon-warn" /></svg>情报可信度</div>
+</div>
+</div>
+<div class="arrow-down" data-flow="落库">
+<svg viewBox="0 0 100 28"><line class="arrow-path" x1="50" y1="0" x2="50" y2="26" stroke="var(--chalk-dimmer)" stroke-width="1.5" marker-end="url(#arrowHead)" opacity=".5"/></svg>
+<div class="arrow-label">档案与校准</div>
+</div>
+<div class="layer" data-layer="archive">
+<div class="layer-label"><svg viewBox="0 0 20 20"><use href="#icon-ledger" /></svg>数据层 · 推演档案 <span class="badge">ARCHIVE</span></div>
+<div class="layer-modules">
+<div class="module" data-detail="arc-classic"><svg viewBox="0 0 20 20"><use href="#icon-scroll" /></svg>十三篇原典库 <span class="tag tag-archive">公版</span></div>
+<div class="module" data-detail="arc-rule"><svg viewBox="0 0 20 20"><use href="#icon-rule" /></svg>判据规则表</div>
+<div class="module" data-detail="arc-log"><svg viewBox="0 0 20 20"><use href="#icon-ledger" /></svg>推演记录</div>
+<div class="module" data-detail="arc-bias"><svg viewBox="0 0 20 20"><use href="#icon-refresh" /></svg>个人偏差记录 <span class="tag tag-archive">壁垒</span></div>
+</div>
+</div>
+</div>
+<div class="side-column">
+<div class="side-module" data-detail="side-character">
+<div class="layer-label"><svg viewBox="0 0 20 20"><use href="#icon-flag" /></svg>产品性格</div>
+<div class="desc">敢说别打 · 不给加油 · 只给算出来的结论</div>
+</div>
+<div class="side-module" data-detail="side-order">
+<div class="layer-label"><svg viewBox="0 0 20 20"><use href="#icon-tactic" /></svg>境界差 · 顺序不可颠倒</div>
+<div class="desc">十三篇求不必打 · 三十六计求脱身 · 先判后招</div>
+</div>
+<div class="side-module" data-detail="side-boundary">
+<div class="layer-label"><svg viewBox="0 0 20 20"><use href="#icon-warn" /></svg>边界 · 九不做</div>
+<div class="desc">不咨询 · 不命理 · 不裁决 · 不论道德 · 不做变强 · 不收构陷计</div>
+</div>
+<div class="side-module" data-detail="side-review">
+<div class="layer-label"><svg viewBox="0 0 20 20"><use href="#icon-refresh" /></svg>回看校准</div>
+<div class="desc">三个月后回看 · 标记哪步算错 · 沉淀个人判据偏差</div>
+</div>
+</div>
+</div>
+<div class="user-flow">
+<div class="user-flow-header">
+<svg viewBox="0 0 20 20" style="width:16px;height:16px;flex-shrink:0"><use href="#icon-path"/></svg>
+用户流程路径
+<span style="font-size:7px;color:var(--chalk-dim);font-family:var(--font-mono)">[ 动画播放中 ]</span>
+</div>
+<div class="user-flow-steps" id="flowSteps">
+<div class="flow-step"><div class="dot">1</div><span class="label">描述困境</span><div class="conn"></div></div>
+<div class="flow-step"><div class="dot">2</div><span class="label">落成一句话</span><div class="conn"></div></div>
+<div class="flow-step"><div class="dot">3</div><span class="label">五事打分</span><div class="conn"></div></div>
+<div class="flow-step"><div class="dot">4</div><span class="label">定力量对比</span><div class="conn"></div></div>
+<div class="flow-step"><div class="dot">5</div><span class="label">算久战成本</span><div class="conn"></div></div>
+<div class="flow-step"><div class="dot">6</div><span class="label">出庙算报告</span><div class="conn"></div></div>
+<div class="flow-step"><div class="dot">7</div><span class="label">选脱困招法</span></div>
+</div>
+</div>
+</div>
+</div>
+<div class="detail-overlay">
+<div class="detail-card">
+<button class="close-btn">✕ CLOSE</button>
+<div id="detailContent"></div>
+</div>
+</div>
+<script>
+const DETAILS = {
+"surf-case":{title:'<svg viewBox="0 0 20 20" style="width:22px;height:22px;flex-shrink:0"><use href="#icon-case"/></svg> 困境立案',items:['把含糊的抱怨压缩成一句可推演的话，<span class="hl">填不满就不进入推演</span>','固定句式：我在【场域】里，和【阻力】争【具体的东西】，争到【什么】算赢，输了失去【什么】','四个追问：跟谁争 / 争什么 / 什么算赢 / 输了丢什么','不合格回答示例："跟命运争""争口气""过得更好""丢面子"——太虚，无法计价','反复三轮追问，直到每一项都能指认到具体的人、物、数额']},
+"surf-walk":{title:'<svg viewBox="0 0 20 20" style="width:22px;height:22px;flex-shrink:0"><use href="#icon-path"/></svg> 五阶段走查',items:['阶段一 要不要打 → 始计 · 作战 · 谋攻','阶段二 怎么不败 → 军形 · 兵势 · 虚实','阶段三 怎么走直路 → 军争 · 九变 · 行军','阶段四 换什么打法 → 地形 · 九地','阶段五 别让局失控 → 火攻 · 用间','每一问只填量或事实，系统不接受"我感觉"']},
+"surf-report":{title:'<svg viewBox="0 0 20 20" style="width:22px;height:22px;flex-shrink:0"><use href="#icon-report"/></svg> 庙算报告',items:['六个区块：得算 / 定性 / 成本 / 判断 / 下一步 / 撤退线','判断必须三选一：<span class="hl">打、不打、换场域再打</span>，禁止"视情况而定"','下一步只给一个动作，不给清单','撤退线由时间点 + 触发条件组成，写入提醒','结尾固定一行："以上是算出来的，不是感觉出来的。你可以不同意，但你得先算出另一个数。"']},
+"surf-object":{title:'<svg viewBox="0 0 20 20" style="width:22px;height:22px;flex-shrink:0"><use href="#icon-warn"/></svg> 不服备案',items:['系统判定"别打"而用户坚持要打时的承接通道','生成"如果你一定要打"的次优方案，并明写<span class="hl-warn">"这是次优，代价更大"</span>','记录这次不服，三个月回看时优先推送','不服记录累积可识别用户的判据偏差（如惯常低估成本）','不因用户不服而修改结论——这是产品性格的底线']},
+"eng-start":{title:'<svg viewBox="0 0 20 20" style="width:22px;height:22px;flex-shrink:0"><use href="#icon-rule"/></svg> 始计算筹 · 五事七计',items:['道：意义与人心 — 你还信吗？有人真心支持吗','天：时机与周期 — 现在是最佳时点吗？行业在涨在落','地：场域与位置 — 你在这场竞争里的位置有利吗','将：能力与品格 — 核心能力够吗？情绪稳吗','法：制度与流程 — 有章法，还是每次靠临场发挥','<span class="hl-warn">任何一项 ≤1 分直接判定"此处必败"</span>，不看总分看短板']},
+"eng-cost":{title:'<svg viewBox="0 0 20 20" style="width:22px;height:22px;flex-shrink:0"><use href="#icon-ledger"/></svg> 作战成本 · 久战阈值',items:['月耗三项分开记，不折算：时间（小时/月）、金钱（元/月）、心力（1-5 级）','已投入 = 月耗 × 已持续月数，<span class="hl">只用于算清，不用于决定</span>','剩余存量 = 你能承受的总量 − 已投入，要求诚实填','久战阈值 = 剩余存量 ÷ 月耗，系统直接算出还能打几个月','<span class="hl-warn">沉没成本不参与"要不要继续"的计算</span>，这点必须在界面用大字写明','阈值算出后写入止损线，到点强制复盘']},
+"eng-attack":{title:'<svg viewBox="0 0 20 20" style="width:22px;height:22px;flex-shrink:0"><use href="#icon-flag"/></svg> 谋攻定性 · 六档战法',items:['十倍于敌 → 围之：全面碾压，一次解决','五倍于敌 → 攻之：正面推进','两倍于敌 → 分之：分割对手注意力，各个击破','势均力敌 → 战之：只能硬碰，代价高，先算成本','少于对手 → 逃之：<span class="hl-warn">建议撤</span>，换场域、换赛道、换时间','远不如 → 避之：<span class="hl-warn">明确劝退</span>，不接触，彻底绕开','后两档必须正面输出"别打"——这是与所有鼓励型产品的分界线']},
+"eng-terrain":{title:'<svg viewBox="0 0 20 20" style="width:22px;height:22px;flex-shrink:0"><use href="#icon-path"/></svg> 地形定场',items:['通：开放竞争市场 → 先占高地，抢关键位置','挂：进去容易出来难 → 算清退路再进','支：对方主场（他的公司、他的家族）→ 不在此决战，引出来打','隘：关键资源位、核心岗位 → 抢先','险：技术壁垒、牌照、资历 → 有壁垒就守','远：跨行、跨城、跨语言 → 别打持久战']},
+"eng-nine":{title:'<svg viewBox="0 0 20 20" style="width:22px;height:22px;flex-shrink:0"><use href="#icon-rule"/></svg> 九变 · 拒绝清单',items:['途有所不由 — 哪条路我不走（例：不走继续考公这条路）','军有所不击 — 哪个机会我不接（例：不接涨薪但常驻外地的 offer）','城有所不攻 — 哪个位置我不抢（例：不争名义上的负责人）','地有所不争 — 哪块好处我不要（例：不要分红优先权，换时间自由）','四项必填，且必须落到具体，"暂时没想好"不接受','困境往往不是选择太少，是全都想要']},
+"eng-check":{title:'<svg viewBox="0 0 20 20" style="width:22px;height:22px;flex-shrink:0"><use href="#icon-warn"/></svg> 火攻与用间 · 两道自检',items:['火攻自检：主不可以怒而兴师，将不可以愠而致战','一道题：<span class="hl">这个决定，等我情绪过去还成立吗？</span>','答"不成立"→ 挂起 72 小时，不允许当天出报告','用间盘点：先知者不可取于鬼神，不可象于事，必取于人','每条判断标来源：亲眼看到 / 当事人说过 / 第三方转述 / 我自己推测','<span class="hl-warn">推测占比过半时，报告结论全部标注"未经证实"</span>']},
+"mea-six":{title:'<svg viewBox="0 0 20 20" style="width:22px;height:22px;flex-shrink:0"><use href="#icon-scale"/></svg> 六档力量对比',items:['全系统最硬的一步：把力量对比换算成战法','十则围之 / 五则攻之 / 倍则分之 / 敌则能战 / 少则能逃 / 不若则能避','孙子的标准是<span class="hl">量，不是质</span>——从不问够不够努力、够不够正义','只问：你比他多几倍','"逃"与"避"是与"围""攻"并列的正规战法，不是失败','产品价值的一半，在于替用户摘掉"撤退=失败"这个污名']},
+"mea-five":{title:'<svg viewBox="0 0 20 20" style="width:22px;height:22px;flex-shrink:0"><use href="#icon-rule"/></svg> 五事七计评分',items:['五项各 0-5 分，附打分依据，不给模糊选项','<span class="hl-warn">任一 ≤1 分直接标红"此处必败"</span>','原典依据："不知彼不知己，每战必殆"——短板不补，长板无意义','评分是自评，系统会对照历史推演检查是否自欺','得分高低不影响结论，短板位置决定结论']},
+"mea-thresh":{title:'<svg viewBox="0 0 20 20" style="width:22px;height:22px;flex-shrink:0"><use href="#icon-ledger"/></svg> 久战阈值',items:['原典依据：日费千金，久暴师则国用不足；钝兵挫锐，屈力殚货','阈值 = 剩余存量 ÷ 月耗，得出还能打几个月','写入止损线，到点强制复盘，不允许无限期拖着','<span class="hl-warn">沉没成本只记账，不决策</span>','用户最常犯的错："都投了三年了不能停"——这条规则直接对冲它']},
+"mea-info":{title:'<svg viewBox="0 0 20 20" style="width:22px;height:22px;flex-shrink:0"><use href="#icon-warn"/></svg> 情报可信度',items:['把每条判断打上来源标记：亲眼 / 当事人 / 转述 / 推测','推测占比过半，报告结论全部标"未经证实"','提示动作：先去问人，再回来算','原典依据：先知者，不可取于鬼神，不可象于事，不可验于度，必取于人','这条判据专门对冲"我觉得他应该是这么想的"']},
+"tac-eight":{title:'<svg viewBox="0 0 20 20" style="width:22px;height:22px;flex-shrink:0"><use href="#icon-tactic"/></svg> 脱困八计',items:['<span class="hl">走为上</span> — 全师避敌，左次无咎：主动撤退，保住本金。副作用：承担"半途而废"的舆论','<span class="hl">金蝉脱壳</span> — 存其形，完其势：保持表面完整地退出。副作用：长期伪装消耗心力','<span class="hl">李代桃僵</span> — 损阴以益阳：用小损失换大保全。副作用：被牺牲的那部分会有怨','<span class="hl">假痴不癫</span> — 宁伪作不知不为：该示弱时示弱，藏锋。副作用：长期示弱会被真的低估','<span class="hl">以逸待劳 + 釜底抽薪</span> — 不主动消耗，等对方犯错；解决根本而非表面。副作用：等待有窗口，抽薪见效慢','<span class="hl">反客为主 + 空城计</span> — 夺回议程与节奏；资源不足时的信息管理。副作用：会被视为越界，被看穿则信用归零']},
+"tac-match":{title:'<svg viewBox="0 0 20 20" style="width:22px;height:22px;flex-shrink:0"><use href="#icon-path"/></svg> 招法匹配',items:['<span class="hl">劣势脱身</span>（力量悬殊）→ 走为上、金蝉脱壳','<span class="hl">僵持破局</span>（谁都不动）→ 反客为主、釜底抽薪','<span class="hl">资源不足</span>（硬实力不够）→ 空城计、李代桃僵','<span class="hl">关系失衡</span>（长期被支配）→ 假痴不癫、以逸待劳','匹配依据是判据层的结论，不是用户的偏好','<span class="hl-warn">结论为"不打"时不进这一层</span>——没仗可打，无招可用']},
+"tac-cost":{title:'<svg viewBox="0 0 20 20" style="width:22px;height:22px;flex-shrink:0"><use href="#icon-ledger"/></svg> 代价标注',items:['每一计必须挂一条副作用，<span class="hl-warn">没副作用的不许入库</span>','副作用不是免责声明，是决策信息：用户要逐条确认能否接受','确认不了的计直接排除，不给"先试试"这个选项','只讲计不讲代价，就是把人从一个困境推进下一个困境','报告里招法与副作用并列显示，不允许折叠隐藏']},
+"tac-red":{title:'<svg viewBox="0 0 20 20" style="width:22px;height:22px;flex-shrink:0"><use href="#icon-warn"/></svg> 用计红线 · 六不收',items:['<span class="hl-warn">借刀杀人</span> — 借他人之手除去对手：把第三方当工具，且不可控','<span class="hl-warn">趁火打劫</span> — 趁对方危难取利：以他人灾难为机会，越界','<span class="hl-warn">上层抽梯</span> — 诱人深入再断其退路：主动制造他人绝境','<span class="hl-warn">无中生有 / 笑里藏刀 / 隔岸观火</span> — 建立在谎言上、破坏信任基础、不作为也是加害','判定原则：这一计如果登在报纸上，用户会不会羞于承认？<span class="hl">会，就不收</span>','命中红线直接拦截，不给替代方案——替代方案等于变相保留']},
+"side-order":{title:'<svg viewBox="0 0 20 20" style="width:22px;height:22px;flex-shrink:0"><use href="#icon-tactic"/></svg> 境界差 · 顺序不可颠倒',items:['十三篇的最高标准是<span class="hl">不战而屈人之兵</span>——赢，但不打','三十六计的最高标准是<span class="hl">走为上</span>——打不赢，就撤','前者讲如何不必进入战场，后者讲已经陷进去怎么出来','市面内容把两本书混着讲，导致"该不该打"和"怎么打"纠缠不清','顺序颠倒会变成"手上拿着锤子，看什么都像钉子"','<span class="hl-warn">学了一堆计的人，最容易把每件事都当仗打</span>']},
+"arc-classic":{title:'<svg viewBox="0 0 20 20" style="width:22px;height:22px;flex-shrink:0"><use href="#icon-scroll"/></svg> 十三篇原典库',items:['十三篇原文 + 白话 + 现代映射三层并列','每篇只提炼 1-2 条可量化的判据，不追求全覆盖','<span class="hl">宁可少一条，不硬凑</span>——硬套会让工具变成穿古装的问卷','每条判据必须配一个反例校验，防止误用','原典公版，可自由引用；判据设计是产品自有资产']},
+"arc-rule":{title:'<svg viewBox="0 0 20 20" style="width:22px;height:22px;flex-shrink:0"><use href="#icon-rule"/></svg> 判据规则表',items:['七条主判据：该不该打 / 打得起吗 / 胜算多少 / 情绪合规 / 谁在控节奏 / 情报够不够 / 该守该变','每条判据绑定一个输入字段与一个输出结论','判据之间有权重：力量对比 > 五事短板 > 成本 > 其余','规则表可版本化，旧推演按当时版本解释','不做机器学习黑箱，所有结论可回溯到具体判据']},
+"arc-log":{title:'<svg viewBox="0 0 20 20" style="width:22px;height:22px;flex-shrink:0"><use href="#icon-ledger"/></svg> 推演记录',items:['每次推演存：立案句、五事得分、力量档位、月耗、阈值、结论','按时间倒序，可展开完整报告','支持对比两次推演同一困境的变化','止损线到点自动推送复盘','数据本地优先，不强制登录']},
+"arc-bias":{title:'<svg viewBox="0 0 20 20" style="width:22px;height:22px;flex-shrink:0"><use href="#icon-refresh"/></svg> 个人偏差记录',items:['回看时逐条标记：当初哪一步算错了','常见偏差类型：高估对手、低估成本、高估自己耐力、情报全靠推测','偏差累积成个人画像，下次推演时前置提示','<span class="hl">这是唯一的真壁垒</span>——越用越准，迁移成本越高','不与第三方共享，不出现在任何对外报告中']},
+"side-character":{title:'<svg viewBox="0 0 20 20" style="width:22px;height:22px;flex-shrink:0"><use href="#icon-flag"/></svg> 产品性格 · 敢说别打',items:['核心差异：唯一把"该不该打"当可计算问题处理、并允许输出"别打"的工具','十三篇六千字里"赢"几乎不出现，它本质是<span class="hl">风险控制手册，不是成功学</span>','报告不给"加油""相信自己"这类句子','用户来找它，恰恰因为别处都在哄他','性格一旦立住，中立型产品抢不走']},
+"side-boundary":{title:'<svg viewBox="0 0 20 20" style="width:22px;height:22px;flex-shrink:0"><use href="#icon-warn"/></svg> 边界 · 七不做',items:['不做情绪安抚与心理咨询 — 会稀释判断的锐度','不做命理与吉凶预测 — 孙子明说不可取于鬼神','不替用户做最终决定 — 最后一步必须自己迈','不评价道德对错 — 兵法只管胜负与代价','不做"如何变强" — 十三篇假设力量已给定','不服务团队与组织决策 — 第一版只做个人困境','不提供无限期陪伴 — 它是一个回合，不是一段关系']},
+"side-review":{title:'<svg viewBox="0 0 20 20" style="width:22px;height:22px;flex-shrink:0"><use href="#icon-refresh"/></svg> 回看校准',items:['三个月后回看，标记哪一步算错了','沉淀个人判据偏差，形成可复用的自我认知','下次推演时前置提示："你上次在成本这项低估了 40%"','低频产品的留存抓手——不靠日活，靠每次回看都有新发现','验证指标不是留存率，是"回看后是否修正了下一次推演"']}
+};
+document.addEventListener("DOMContentLoaded",()=>{
+const layers=document.querySelectorAll(".layer");
+const arrows=document.querySelectorAll(".arrow-down");
+const flowSteps=document.querySelectorAll(".flow-step");
+const sideModules=document.querySelectorAll(".side-module");
+const userFlow=document.querySelector(".user-flow");
+const overlays=document.querySelector(".detail-overlay");
+const detailContent=document.querySelector("#detailContent");
+const closeBtn=document.querySelector(".close-btn");
+const mainTimeline=anime.timeline({easing:"easeOutCubic"});
+mainTimeline.add({targets:"#header",opacity:[0,1],translateY:[-10,0],duration:600});
+mainTimeline.add({targets:sideModules,opacity:[0,1],translateX:[15,0],duration:400,delay:anime.stagger(120)},"-=200");
+mainTimeline.add({targets:layers,opacity:[0,1],translateY:[20,0],duration:500,delay:anime.stagger(150)},"-=100");
+mainTimeline.add({targets:arrows,opacity:[0,1],duration:400,delay:anime.stagger(200)},"-=200");
+setTimeout(()=>{document.querySelectorAll(".arrow-path").forEach((p)=>{anime({targets:p,strokeDashoffset:[200,0],duration:800,delay:300,easing:"easeInOutCubic"});});},1500);
+mainTimeline.add({targets:userFlow,opacity:[0,1],duration:500},"-=100");
+mainTimeline.add({targets:flowSteps,opacity:[0,1],translateX:[-8,0],duration:350,delay:anime.stagger(120)},"-=200");
+let flowIndex=0;function pulseFlow(){flowSteps.forEach((s)=>s.querySelector(".dot").classList.remove("active"));flowSteps[flowIndex].querySelector(".dot").classList.add("active");flowIndex=(flowIndex+1)%flowSteps.length;}
+pulseFlow();setInterval(pulseFlow,2500);
+layers.forEach((l)=>{l.addEventListener("mouseenter",()=>{anime({targets:l,borderColor:"var(--accent-gold)",backgroundColor:"rgba(207,162,76,0.06)",duration:200});});l.addEventListener("mouseleave",()=>{anime({targets:l,borderColor:"var(--chalk-dimmer)",backgroundColor:"rgba(236,224,205,0.06)",duration:300});});});
+function openDetail(id){const data=DETAILS[id];if(!data)return;detailContent.innerHTML=`<h2>${data.title}</h2><ul>${data.items.map((i)=>`<li>${i}</li>`).join("")}</ul>`;overlays.classList.add("open");anime({targets:".detail-card",scale:[0.85,1],opacity:[0,1],duration:250,easing:"easeOutCubic"});}
+function closeDetail(){anime({targets:".detail-card",scale:[1,0.85],opacity:[1,0],duration:200,easing:"easeInCubic",complete:()=>{overlays.classList.remove("open");}});}
+document.querySelectorAll(".module[data-detail]").forEach((el)=>{el.addEventListener("click",()=>openDetail(el.dataset.detail));});
+document.querySelectorAll(".side-module[data-detail]").forEach((el)=>{el.addEventListener("click",()=>openDetail(el.dataset.detail));});
+closeBtn.addEventListener("click",closeDetail);
+overlays.addEventListener("click",(e)=>{if(e.target===overlays)closeDetail();});
+const board=document.getElementById("chalkboard");
+for(let i=0;i<20;i++){const dot=document.createElement("div");dot.className="chalk-glow";dot.style.left=Math.random()*100+"%";dot.style.top=Math.random()*100+"%";dot.style.width=dot.style.height=2+Math.random()*4+"px";dot.style.opacity=0.05+Math.random()*0.1;board.appendChild(dot);anime({targets:dot,translateX:[0,-10+Math.random()*20],translateY:[0,-10+Math.random()*20],opacity:[0.05,0.15,0.05],duration:3000+Math.random()*4000,direction:"alternate",loop:true,easing:"easeInOutSine"});}
+});
+</script>
+</body>
+</html>

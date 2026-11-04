@@ -383,21 +383,6 @@ function buildHomepage() {
 
   /* Stats */
   const catCount = new Set(PRODUCTS.map(p => p[2])).size;
-  const statsHtml = `
-<div class="pm-stats pm-fade-in">
-  <div class="pm-stat-item">
-    <div class="pm-stat-number">${PRODUCTS.length}</div>
-    <div class="pm-stat-label">产品说明书</div>
-  </div>
-  <div class="pm-stat-item">
-    <div class="pm-stat-number">${catCount}</div>
-    <div class="pm-stat-label">产品分类</div>
-  </div>
-  <div class="pm-stat-item">
-    <div class="pm-stat-number">1</div>
-    <div class="pm-stat-label">写作规范 Skill</div>
-  </div>
-</div>`;
 
   /* Product grid */
   const cards = PRODUCTS.map(p => {
@@ -405,83 +390,152 @@ function buildHomepage() {
     const url = getProductUrl(num, name);
     const badgeClass = `pm-category-badge--${cat}`;
     return `<div class="pm-product-card pm-fade-in" data-category="${cat}">
-   <div class="pm-card-header">
+  <div class="pm-card-header">
     <div class="pm-card-number">${String(num).padStart(2, '0')}</div>
     <h3 class="pm-card-title">${name}</h3>
+  </div>
+  <p class="pm-card-desc">${desc}</p>
+  <div class="pm-card-footer">
     <span class="pm-category-badge ${badgeClass}">${CAT_NAMES[cat]}</span>
+    <a href="${url}" class="pm-card-link">阅读详情</a>
+  </div>
+</div>`;
+  }).join('\n');
+
+  /* Category counts */
+  const catOrder = ['tool', 'game', 'setting', 'future'];
+  const catCounts = {};
+  catOrder.forEach(k => catCounts[k] = 0);
+  PRODUCTS.forEach(p => { catCounts[p[2]] = (catCounts[p[2]] || 0) + 1; });
+
+  /* Category filter tabs (with real counts) */
+  const tabItem = (key, label, count) => `<button class="pm-filter-chip${key === 'all' ? ' active' : ''}" data-filter="${key}"><span>${label}</span><span class="pm-chip-count">${count}</span></button>`;
+  const filterHtml = `
+<div class="pm-filter-bar" id="pm-filter-bar">
+  ${tabItem('all', '全部', PRODUCTS.length)}
+  ${catOrder.map(k => tabItem(k, CAT_NAMES[k], catCounts[k])).join('\n  ')}
+</div>`;
+
+  /* Grouped category sections */
+  const catSections = catOrder.map(catKey => {
+    const items = PRODUCTS.filter(p => p[2] === catKey);
+    const grid = items.map(p => {
+      const [num, name, cat, desc] = p;
+      const url = getProductUrl(num, name);
+      return `<div class="pm-product-card pm-fade-in" data-category="${cat}">
+  <div class="pm-card-header">
+    <div class="pm-card-number">${String(num).padStart(2, '0')}</div>
+    <h3 class="pm-card-title">${name}</h3>
+    <span class="pm-category-badge pm-category-badge--${cat}">${CAT_NAMES[cat]}</span>
   </div>
   <p class="pm-card-desc">${desc}</p>
   <div class="pm-card-footer">
     <a href="${url}" class="pm-card-link">阅读详情</a>
   </div>
 </div>`;
+    }).join('\n');
+    return `<section class="pm-cat-section pm-fade-in" id="cat-${catKey}" data-category="${catKey}">
+  <div class="pm-cat-header">
+    <div class="pm-cat-title-wrap">
+      <h2 class="pm-cat-title">${CAT_NAMES[catKey]}</h2>
+      <span class="pm-cat-count"><span class="pm-num">${items.length}</span> 份</span>
+    </div>
+    <button class="pm-cat-viewall" data-view-all="${catKey}">查看全部 →</button>
+  </div>
+  <div class="pm-product-grid">
+${grid}
+  </div>
+</section>`;
   }).join('\n');
 
-  const filterHtml = `
-<div class="pm-filter-bar" id="pm-filter-bar">
-  <button class="pm-filter-chip active" data-filter="all">全部</button>
-  <button class="pm-filter-chip" data-filter="game">游戏</button>
-  <button class="pm-filter-chip" data-filter="tool">工具</button>
-  <button class="pm-filter-chip" data-filter="setting">设定</button>
-  <button class="pm-filter-chip" data-filter="future">未来</button>
-</div>`;
-
-  const gridHtml = `<div class="pm-product-grid">\n${cards}\n</div>`;
-
-  /* Features section */
-  const featuresHtml = `
+  /* Editor's picks */
+  const pickNums = [1, 37, 36];
+  const picks = pickNums.map(n => PRODUCTS.find(p => p[0] === n)).filter(Boolean);
+  const pickCards = picks.map(p => {
+    const [num, name, cat, desc] = p;
+    const url = getProductUrl(num, name);
+    return `<a href="${url}" class="pm-product-card pm-pick pm-fade-in" data-category="${cat}">
+  <div class="pm-card-header">
+    <div class="pm-card-number">${String(num).padStart(2, '0')}</div>
+    <h3 class="pm-card-title">${name}</h3>
+    <span class="pm-pick-ribbon">编辑推荐</span>
+  </div>
+  <p class="pm-card-desc">${desc}</p>
+  <div class="pm-card-footer">
+    <span class="pm-category-badge pm-category-badge--${cat}">${CAT_NAMES[cat]}</span>
+    <span class="pm-card-link">阅读</span>
+  </div>
+</a>`;
+  }).join('\n');
+  const picksHtml = `
 <div class="pm-section pm-fade-in">
-  <div class="pm-section-header">
-    <h2 class="pm-section-title pm-section-title-underline">为什么使用 product-manuals</h2>
-    <p class="pm-section-desc">标准化的产品定义文档，AI 驱动，人人可写</p>
+  <div class="pm-section-header pm-section-header--left">
+    <span class="pm-eyebrow">EDITOR'S PICKS</span>
+    <h2 class="pm-section-title">编辑推荐</h2>
+    <p class="pm-section-desc">编辑从 ${PRODUCTS.length} 份里挑出的三份</p>
   </div>
-  <div class="pm-features">
-    <div class="pm-feature-card">
-      <div class="pm-feature-icon">📋</div>
-      <h3 class="pm-feature-title">标准化模板</h3>
-      <p class="pm-feature-desc">每份说明书遵循统一格式——一句话定义、系统架构、核心功能、用户流程、边界声明。</p>
-    </div>
-    <div class="pm-feature-card">
-      <div class="pm-feature-icon">🤖</div>
-      <h3 class="pm-feature-title">AI 驱动</h3>
-      <p class="pm-feature-desc">每个产品说明书均由 AI 辅助编写，聚焦产品做什么而非怎么做。</p>
-    </div>
-    <div class="pm-feature-card">
-      <div class="pm-feature-icon">📐</div>
-      <h3 class="pm-feature-title">架构优先</h3>
-      <p class="pm-feature-desc">每个说明包含完整的系统架构总览，树状结构清晰展示功能模块。</p>
-    </div>
-    <div class="pm-feature-card">
-      <div class="pm-feature-icon">🔗</div>
-      <h3 class="pm-feature-title">开源协作</h3>
-      <p class="pm-feature-desc">基于 GitHub 维护，欢迎提交 PR 贡献新的产品说明书。</p>
-    </div>
+  <div class="pm-picks-grid">
+${pickCards}
   </div>
 </div>`;
 
-  /* CTA section */
-  const ctaHtml = `
+  /* Related topics */
+  const topics = ['亲子', '能源', '游戏化叙事', '人机边界', '职业成长', '健康', '城市', '记忆'];
+  const topicsHtml = `
 <div class="pm-section pm-fade-in">
-  <div class="pm-cta-section">
-    <h2>想贡献一份说明书？</h2>
-    <p>本仓库使用标准化的 Markdown 模板编写产品功能说明书，每份文档均包含完整的产品定义模块。</p>
-    <a href="https://github.com/ng-nest-moon/product-manuals/tree/main/.github/skills/writing-product-specs" class="pm-btn pm-btn-primary" target="_blank">查看写作规范</a>
+  <div class="pm-section-header pm-section-header--left">
+    <span class="pm-eyebrow">CROSS-TOPIC</span>
+    <h2 class="pm-section-title">相关主题</h2>
+    <p class="pm-section-desc">跨品类线索，帮你换一个角度重新逛</p>
+  </div>
+  <div class="pm-topic-wrap">
+${topics.map(t => `    <button class="pm-topic-chip">${t}</button>`).join('\n')}
   </div>
 </div>`;
 
-  /* Hero */
+  /* Closing curation band */
+  const closingHtml = `
+<section class="pm-curation-band pm-fade-in">
+  <h2>当 AI 能替你做「做」，产品该长什么样？</h2>
+  <p><span class="pm-num">${PRODUCTS.length}</span> 份「做什么而非怎么做」的产品说明书 · 由 AI 生成，按品类与主题策展</p>
+</section>`;
+
   const heroHtml = `
-<div class="pm-hero">
-  <div class="pm-hero-badge">📚 ${PRODUCTS.length} 份产品说明书</div>
-  <h1>产品功能说明书合集</h1>
-  <p class="pm-subtitle">AI 驱动的产品定义文档——每个文档描述一个产品<strong>做什么</strong>，而非<strong>怎么做</strong>。</p>
-  <div class="pm-hero-cta">
-    <a href="#产品说明书" class="pm-btn pm-btn-primary">浏览全部产品</a>
-    <a href="https://github.com/ng-nest-moon/product-manuals" class="pm-btn pm-btn-outline" target="_blank">GitHub 仓库</a>
+<section class="pm-hero pm-hero--curated">
+  <div class="pm-hero-grid">
+    <div class="pm-hero-left">
+      <span class="pm-eyebrow pm-eyebrow--accent">CURATED</span>
+      <h1>当 AI 能替你做「做」，<br/>产品该长什么样？</h1>
+      <p class="pm-subtitle">每个文档只描述产品做什么，不做技术实现。</p>
+      <div class="pm-hero-cta">
+        <a href="#browse" class="pm-btn pm-btn-primary">浏览全部产品</a>
+        <a href="https://github.com/ng-nest-moon/product-manuals" class="pm-btn pm-btn-outline" target="_blank">GitHub 仓库</a>
+      </div>
+    </div>
+    <aside class="pm-curation-board" aria-label="策展看板">
+      <span class="pm-cb-eyebrow">CURATION BOARD</span>
+      <div class="pm-cb-number">${PRODUCTS.length}</div>
+      <div class="pm-cb-desc">份「做什么而非怎么做」的产品说明书</div>
+      <div class="pm-cb-divider"></div>
+      <div class="pm-cb-stats">
+        <div class="pm-cb-stat"><span class="pm-cb-num">${catCounts.tool}</span><span class="pm-cb-label">工具</span></div>
+        <div class="pm-cb-stat"><span class="pm-cb-num">${catCounts.game}</span><span class="pm-cb-label">游戏</span></div>
+        <div class="pm-cb-stat"><span class="pm-cb-num">${catCounts.setting}</span><span class="pm-cb-label">设定</span></div>
+        <div class="pm-cb-stat"><span class="pm-cb-num">${catCounts.future}</span><span class="pm-cb-label">未来</span></div>
+      </div>
+    </aside>
   </div>
-</div>`;
+</section>`;
 
-  const content = heroHtml + statsHtml + `<div class="pm-section" id="产品说明书">\n<h2 class="pm-section-title pm-section-title-underline" style="text-align:center;">产品说明书</h2>\n` + filterHtml + gridHtml + `\n</div>` + featuresHtml + ctaHtml;
+  const content = heroHtml + picksHtml + `
+<div class="pm-section" id="browse">
+  <div class="pm-section-header pm-section-header--left">
+    <span class="pm-eyebrow">BROWSE</span>
+    <h2 class="pm-section-title">按品类浏览</h2>
+  </div>
+${filterHtml}
+${catSections}
+</div>` + topicsHtml + closingHtml;
 
   const desc = '产品功能说明书合集 — AI 驱动的产品定义文档';
   const homeUrl = fullUrl(BASE_PATH + '/');
@@ -509,8 +563,7 @@ function buildHomepage() {
     .replace(/{jsonld}/g, jsonld)
     .replace(/{basePath}/g, BASE_PATH)
     .replace(/{content}/g, content)
-    .replace(/{homeActive}/g, 'active')
-    .replace(/{themeIcon}/g, '\u263E');
+    .replace(/{homeActive}/g, 'active');
 
   writeFile(path.join(DIST_DIR, 'index.html'), html);
   console.log('  ✓ Homepage built');
@@ -594,7 +647,7 @@ function buildManualPages() {
     if (interactiveDiagram) {
       bodyContent = `<div class="pm-manual-download">
   <p>本产品另提供交互式架构图（页面上方），下方为完整文字版说明书；也可下载 Markdown 源文件离线阅读。</p>
-  <a href="${BASE_PATH}/manuals/${numberedName}/${numberedName}.md" class="pm-btn pm-btn-outline" download>📄 下载 Markdown 源文件</a>
+  <a href="${BASE_PATH}/manuals/${numberedName}/${numberedName}.md" class="pm-btn pm-btn-outline" download>下载 Markdown 源文件</a>
 </div>\n` + bodyContent;
       /* Copy .md source for download */
       const mdOutDir = path.join(DIST_DIR, 'manuals', numberedName);
@@ -656,8 +709,7 @@ function buildManualPages() {
       .replace(/{jsonld}/g, jsonld)
       .replace(/{basePath}/g, BASE_PATH)
       .replace(/{content}/g, manualContentHtml)
-      .replace(/{homeActive}/g, '')
-      .replace(/{themeIcon}/g, '\u263E');
+      .replace(/{homeActive}/g, '');
 
     const outDir = path.join(DIST_DIR, 'manuals', numberedName);
     writeFile(path.join(outDir, 'index.html'), html);

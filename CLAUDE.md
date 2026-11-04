@@ -29,9 +29,13 @@ AI 驱动的产品功能说明书合集。每个文档描述一个产品**做什
 在 `README.md` 的产品表格中追加一行，保持表格格式一致：
 `| {nn} | [{产品名}](docs/{nn}-{产品名}.md) | 类型 | 一句话定义 |`
 
-### 步骤 4：构建验证
+### 步骤 4：生成交互式 HTML（必做）
 
-运行 `npm run build`，确认无报错。
+按 `writing-product-specs` skill 中的「交互式 HTML（htmls/）生成规范」，在 `htmls/{nn}-{产品名}.html` 生成与文档同名的交互式架构图页面。该文件会被 `npm run build` 自动嵌入到对应的产品详情页。
+
+### 步骤 5：构建验证
+
+运行 `npm run build`，确认日志出现 `✓ interactive diagram embedded for {nn}-{产品名}`，且整体无报错。
 
 ## 规则
 

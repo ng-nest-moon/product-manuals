@@ -4,6 +4,17 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="pm-base" content="{basePath}" />
+    <!-- 同步应用主题：必须早于样式表，否则深色模式首屏会闪白 -->
+    <script>
+      (function () {
+        try {
+          var t = localStorage.getItem('pm-theme');
+          if (t === 'dark' || t === 'light') {
+            document.documentElement.setAttribute('data-theme', t);
+          }
+        } catch (e) {}
+      })();
+    </script>
     <title>{title} — Product Manuals</title>
     <meta name="description" content="{description}" />
     <!-- Open Graph -->
@@ -30,14 +41,14 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
       rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Sans+SC:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;600;700&display=swap"
       media="print"
       onload="this.media='all'"
     />
     <noscript>
       <link
         rel="stylesheet"
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Sans+SC:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;600;700&display=swap"
       />
     </noscript>
     <link
@@ -59,28 +70,47 @@
       <div class="pm-header-inner">
         <a href="{basePath}/" class="pm-logo">
           <span class="pm-logo-icon">PM</span>
-          Product Manuals
+          <span class="pm-logo-text">Product Manuals</span>
         </a>
         <nav class="pm-nav">
-          <a href="{basePath}/" class="pm-nav-link {homeActive}">首页</a>
-          <a href="{basePath}/#产品说明书" class="pm-nav-link">产品说明书</a>
+          <a href="{basePath}/" class="pm-nav-link {homeActive}"><span class="pm-nav-index">01</span>首页</a>
+          <a href="{basePath}/#browse" class="pm-nav-link"><span class="pm-nav-index">02</span>产品说明书</a>
           <a
             href="https://github.com/ng-nest-moon/product-manuals"
             class="pm-nav-link"
-            target="_blank"
-            >GitHub</a
+            target="_blank"><span class="pm-nav-index">03</span>GitHub</a
           >
         </nav>
         <div class="pm-header-actions">
           <button
             class="pm-search-btn"
             id="pm-search-btn"
+            type="button"
             title="搜索 (Ctrl+K)"
+            aria-label="搜索"
           >
-            ⌕
+            <svg class="pm-icon" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true" focusable="false">
+              <circle cx="6.75" cy="6.75" r="4.25" fill="none" stroke="currentColor" stroke-width="1.5" />
+              <path d="M9.9 9.9 13.5 13.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+            </svg>
           </button>
-          <button class="pm-theme-toggle" id="pm-theme-toggle" title="切换主题">
-            {themeIcon}
+          <button
+            class="pm-theme-toggle"
+            id="pm-theme-toggle"
+            type="button"
+            title="切换主题"
+            aria-label="切换主题"
+          >
+            <svg class="pm-icon pm-icon-moon" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true" focusable="false">
+              <path d="M13 9.6A5.3 5.3 0 0 1 6.4 3a5.5 5.5 0 1 0 6.6 6.6Z" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round" />
+            </svg>
+            <svg class="pm-icon pm-icon-sun" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true" focusable="false">
+              <circle cx="8" cy="8" r="3.25" fill="none" stroke="currentColor" stroke-width="1.5" />
+              <g stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+                <path d="M8 1.25v1.6M8 13.15v1.6M1.25 8h1.6M13.15 8h1.6" />
+                <path d="M3.6 3.6l1.1 1.1M11.3 11.3l1.1 1.1M12.4 3.6l-1.1 1.1M4.7 11.3l-1.1 1.1" />
+              </g>
+            </svg>
           </button>
         </div>
       </div>
@@ -93,7 +123,10 @@
     <div class="pm-search-overlay" id="pm-search-overlay">
       <div class="pm-search-modal">
         <div class="pm-search-input-wrap">
-          <span>⌕</span>
+          <svg class="pm-icon" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true" focusable="false">
+            <circle cx="6.75" cy="6.75" r="4.25" fill="none" stroke="currentColor" stroke-width="1.5" />
+            <path d="M9.9 9.9 13.5 13.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+          </svg>
           <input
             type="text"
             class="pm-search-input"
@@ -113,7 +146,18 @@
     </div>
 
     <!-- ===== BACK TO TOP ===== -->
-    <button class="pm-back-to-top" id="pm-back-to-top" title="返回顶部"></button>
+    <button
+      class="pm-back-to-top"
+      id="pm-back-to-top"
+      type="button"
+      title="返回顶部"
+      aria-label="返回顶部"
+    >
+      <svg class="pm-icon" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true" focusable="false">
+        <path d="M8 13V3.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+        <path d="M3.75 7.5 8 3.25l4.25 4.25" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+      </svg>
+    </button>
 
     <!-- ===== FOOTER ===== -->
     <footer class="pm-footer">
@@ -122,7 +166,7 @@
           <div class="pm-footer-brand">
             <a href="{basePath}/" class="pm-logo">
               <span class="pm-logo-icon">PM</span>
-              product-manuals
+              <span class="pm-logo-text">product-manuals</span>
             </a>
             <p>
               AI

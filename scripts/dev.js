@@ -10,6 +10,7 @@ const BASE_PATH = '/product-manuals';
 /* Watched directories */
 const WATCH_DIRS = [
   path.join(ROOT, 'docs'),
+  path.join(ROOT, 'htmls'),
   path.join(ROOT, 'templates'),
   path.join(ROOT, 'src'),
   path.join(ROOT, 'README.md')

@@ -1,0 +1,398 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>共产主义纪元</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;600;800;900&family=IBM+Plex+Mono:wght@400;600;700&display=swap" rel="stylesheet" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#1a0e0c;--bg-dark:#0c0404;--panel:#2a120f;--surface:#3d1712;--surface-light:#5e2916;--accent:#ff6b3d;--accent-dim:rgba(255,107,61,0.15);--accent-gold:#ffd360;--accent-green:#6ee7a0;--accent-rose:#ff5577;--accent-purple:#c4a8ff;--accent-cyan:#3ee6c8;--accent-blue:#8ab4ff;--accent-plasma:#ff7a3c;--text:#f2e3d6;--text-dim:rgba(242,227,214,0.55);--text-dimmer:rgba(242,227,214,0.18);--grid:rgba(255,180,120,0.03);--font-display:"Noto Sans SC","PingFang SC","Microsoft YaHei",sans-serif;--font-mono:"IBM Plex Mono","SFMono-Regular",Menlo,Consolas,"Courier New",monospace}
+html,body{height:100%;background:var(--bg-dark);font-family:var(--font-mono);color:var(--text);overflow-x:hidden}
+.screen-frame{position:relative;min-height:100vh;max-width:1440px;margin:0 auto;background:radial-gradient(ellipse at 50% 0%,rgba(255,139,61,0.05) 0%,var(--bg-dark) 70%);border-radius:20px;box-shadow:inset 0 0 80px rgba(0,0,0,0.8),0 8px 40px rgba(0,0,0,0.6);padding:24px 20px 20px}
+.screen-frame::before{content:"";position:absolute;inset:0;border-radius:20px;background:repeating-linear-gradient(0deg,transparent,transparent 2px,var(--grid) 2px,var(--grid) 4px);pointer-events:none;z-index:100}
+.crt-curve{position:absolute;inset:0;border-radius:20px;background:radial-gradient(ellipse at center,transparent 55%,rgba(0,0,0,0.4) 100%);pointer-events:none;z-index:99}
+.plasma-led{position:absolute;top:10px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:10px;font-size:9px;font-weight:500;color:var(--text-dim);letter-spacing:2px;z-index:101;background:rgba(12,4,4,0.85);padding:3px 16px;border-radius:20px;border:1px solid var(--accent-dim);backdrop-filter:blur(4px);text-transform:uppercase;font-family:var(--font-mono)}
+.plasma-led .core{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--accent-gold);box-shadow:0 0 12px var(--accent-gold);animation:pulse-core 2.5s ease-in-out infinite}
+@keyframes pulse-core{0%,100%{opacity:1;box-shadow:0 0 12px var(--accent-gold)}50%{opacity:0.3;box-shadow:0 0 3px var(--accent-gold)}}
+.panel{position:relative;background:var(--panel);border:1.5px solid var(--surface-light);border-radius:8px;padding:28px 24px 24px;box-shadow:inset 0 0 50px rgba(0,0,0,0.5),0 4px 0 var(--bg-dark);min-height:calc(100vh - 80px);overflow:hidden;z-index:2}
+.panel::after{content:"";position:absolute;inset:0;background-image:radial-gradient(circle at 50% 30%,rgba(255,139,61,0.025) 0,transparent 60%),radial-gradient(circle at 80% 80%,rgba(255,211,96,0.015) 0,transparent 50%),radial-gradient(circle at 20% 60%,rgba(255,85,119,0.015) 0,transparent 50%);pointer-events:none}
+.header{text-align:center;margin-bottom:22px;position:relative;z-index:1}
+.header h1{font-family:var(--font-display);font-size:28px;font-weight:900;color:var(--accent);text-shadow:0 0 30px rgba(255,107,61,0.25),0 0 60px rgba(255,107,61,0.1);letter-spacing:3px;margin-bottom:3px;display:flex;align-items:center;justify-content:center;gap:12px}
+.header h1 svg{width:32px;height:32px;flex-shrink:0;filter:drop-shadow(0 0 8px rgba(255,211,96,0.4))}
+.header .subtitle{font-size:13px;font-weight:300;color:var(--text-dim);letter-spacing:0.5px;max-width:760px;margin:0 auto;line-height:1.8}
+.header .subtitle em{font-style:normal;color:var(--accent-gold);font-weight:500}
+.layout-main{display:flex;gap:16px;position:relative;z-index:1}
+.layers-column{flex:1;min-width:0}
+.side-column{width:220px;flex-shrink:0;display:flex;flex-direction:column;gap:8px}
+.layer{position:relative;background:rgba(61,23,18,0.5);border:1.5px solid var(--surface-light);border-radius:6px;padding:10px 12px 12px;margin-bottom:0;cursor:pointer;transition:border-color 0.3s,background 0.3s;opacity:0;transform:translateY(20px)}
+.layer:hover{border-color:var(--accent);background:rgba(255,107,61,0.05)}
+.layer-label{font-family:var(--font-display);font-size:12px;font-weight:600;color:var(--text-dim);letter-spacing:1px;margin-bottom:6px;display:flex;align-items:center;gap:6px}
+.layer-label .badge{font-size:9px;font-weight:600;background:var(--surface-light);color:var(--text-dim);padding:1px 7px;border-radius:3px;letter-spacing:0}
+.layer-modules{display:flex;flex-wrap:wrap;gap:5px}
+.module{background:rgba(242,227,214,0.03);border:1px solid var(--surface-light);border-radius:4px;padding:4px 10px;font-size:12px;line-height:1.5;color:var(--text);transition:all 0.25s;white-space:nowrap;cursor:pointer;display:inline-flex;align-items:center;gap:5px}
+.module:hover{background:rgba(255,139,61,0.08);border-color:var(--accent);transform:translateY(-1px);box-shadow:0 0 12px rgba(255,139,61,0.08)}
+.module .tag{font-size:9px;font-weight:600;padding:1px 6px;border-radius:3px;margin-left:3px;opacity:0.8}
+.tag-mat{background:var(--accent-dim);color:var(--bg)}
+.tag-inst{background:var(--accent-gold);color:var(--bg)}
+.tag-comm{background:var(--accent-green);color:var(--bg)}
+.tag-goal{background:var(--accent-rose);color:var(--bg)}
+.tag-soft{background:var(--accent-cyan);color:var(--bg)}
+.layer[data-layer="mat"]{border-left:3px solid var(--accent)}
+.layer[data-layer="institution"]{border-left:3px solid var(--accent-gold)}
+.layer[data-layer="people"]{border-left:3px solid var(--accent-green)}
+.layer[data-layer="goal"]{border-left:3px solid var(--accent-rose)}
+svg.icon,.module svg,.side-module svg{width:16px;height:16px;flex-shrink:0}
+.module svg{width:14px;height:14px}
+.layer-label>svg:first-child{width:18px;height:18px;flex-shrink:0}
+.header h1 svg{width:32px;height:32px;flex-shrink:0}
+.arrow-down{display:flex;align-items:center;justify-content:center;height:24px;position:relative;opacity:0}
+.arrow-down svg{width:100%;height:24px}
+.arrow-label{position:absolute;font-family:var(--font-mono);font-size:9px;font-weight:500;color:var(--text-dim);background:var(--panel);padding:0 10px;text-align:center;white-space:nowrap;letter-spacing:0.5px}
+.side-module{background:rgba(61,23,18,0.5);border:1.5px solid var(--surface-light);border-left:3px solid var(--accent-purple);border-radius:6px;padding:8px 10px;cursor:pointer;opacity:0;transform:translateX(15px);transition:border-color 0.3s,background 0.3s}
+.side-module:hover{border-color:var(--accent-purple);background:rgba(196,168,255,0.05)}
+.side-module .layer-label{margin-bottom:3px}
+.side-module .desc{font-size:11px;color:var(--text-dim);line-height:1.5}
+.user-flow{margin-top:18px;padding:12px 14px;background:rgba(61,23,18,0.5);border:1.5px solid var(--surface-light);border-radius:6px;position:relative;z-index:1;opacity:0}
+.user-flow-header{font-family:var(--font-display);font-size:11px;font-weight:600;color:var(--accent-gold);letter-spacing:0.5px;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.user-flow-steps{display:flex;align-items:center;flex-wrap:wrap;gap:0}
+.flow-step{display:flex;align-items:center;gap:0;opacity:0}
+.flow-step .dot{width:26px;height:26px;border-radius:50%;border:2px solid var(--surface-light);background:var(--bg-dark);display:flex;align-items:center;justify-content:center;font-size:10px;line-height:1;flex-shrink:0;transition:all 0.3s;font-family:var(--font-mono);font-weight:600;color:var(--text-dim)}
+.flow-step .dot.active{border-color:var(--accent-gold);background:rgba(255,211,96,0.1);box-shadow:0 0 12px rgba(255,211,96,0.15);color:var(--accent-gold)}
+.flow-step .label{font-size:10px;color:var(--text-dim);white-space:nowrap;margin:0 6px 0 4px;line-height:1}
+.flow-step .conn{width:22px;height:2px;background:var(--surface-light);position:relative;flex-shrink:0}
+.flow-step .conn::after{content:"▶";position:absolute;right:-4px;top:-7px;font-size:8px;color:var(--surface-light)}
+.flow-step:last-child .conn{display:none}
+.milestone-bar{margin-top:14px;padding:12px 14px;background:rgba(61,23,18,0.5);border:1.5px solid var(--surface-light);border-radius:6px;position:relative;z-index:1;opacity:0}
+.milestone-bar-header{font-family:var(--font-display);font-size:11px;font-weight:600;color:var(--accent);letter-spacing:0.5px;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.milestone-steps{display:flex;align-items:center;gap:0;flex-wrap:wrap}
+.milestone-step{display:flex;align-items:center;opacity:0}
+.milestone-step .dot-m{width:26px;height:26px;border-radius:50%;border:2px solid var(--surface-light);background:var(--bg-dark);display:flex;align-items:center;justify-content:center;font-size:9px;line-height:1;flex-shrink:0;font-family:var(--font-mono);font-weight:700;color:var(--text-dim);transition:all 0.3s}
+.milestone-step .dot-m.m1{border-color:var(--accent-dim);color:var(--accent)}
+.milestone-step .dot-m.m2{border-color:var(--accent-gold);color:var(--accent-gold)}
+.milestone-step .dot-m.m3{border-color:var(--accent-rose);color:var(--accent-rose)}
+.milestone-step .dot-m.m4{border-color:var(--accent-green);color:var(--accent-green)}
+.milestone-step .label-m{font-size:10px;color:var(--text-dim);white-space:nowrap;margin:0 6px;line-height:1.2}
+.milestone-step .label-m .s{display:block;font-size:8px;color:var(--text-dimmer)}
+.milestone-step .conn-m{width:16px;height:1.5px;background:var(--surface-light);position:relative;flex-shrink:0}
+.milestone-step .conn-m::after{content:"▸";position:absolute;right:-4px;top:-6px;font-size:8px;color:var(--surface-light)}
+.milestone-step:last-child .conn-m{display:none}
+.detail-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:200;display:none;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
+.detail-overlay.open{display:flex}
+.detail-card{background:var(--surface);border:2px solid var(--accent-dim);border-radius:8px;padding:22px 24px;max-width:540px;width:90%;max-height:80vh;overflow-y:auto;position:relative;box-shadow:0 8px 50px rgba(0,0,0,0.7),0 0 30px rgba(255,139,61,0.05);will-change:transform,opacity;backface-visibility:hidden;-webkit-backface-visibility:hidden;transform:translateZ(0);-webkit-transform:translateZ(0)}
+.detail-card h2{margin-top:0;font-family:var(--font-display);font-size:17px;font-weight:700;color:var(--accent);margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--surface-light);display:flex;align-items:center;gap:8px}
+.detail-card h2 svg{width:20px;height:20px;flex-shrink:0}
+.detail-card ul{list-style:none;padding:0}
+.detail-card li{font-size:13px;color:var(--text);padding:4px 0 4px 14px;border-left:2px solid var(--surface-light);margin-bottom:5px;line-height:1.6}
+.detail-card li .hl{color:var(--accent);display:inline-flex;align-items:center;gap:4px}
+.detail-card li .hl-warn{color:var(--accent-rose)}
+.detail-card .close-btn{position:absolute;top:12px;right:14px;font-family:var(--font-mono);font-size:11px;font-weight:600;color:var(--text-dimmer);background:none;border:1px solid var(--surface-light);border-radius:4px;padding:3px 10px;cursor:pointer;transition:all 0.2s}
+.detail-card .close-btn:hover{color:var(--accent-rose);border-color:var(--accent-rose)}
+.detail-card table{width:100%;border-collapse:collapse;margin-top:8px}
+.detail-card th,.detail-card td{text-align:left;padding:5px 8px;font-size:11px;border-bottom:1px solid var(--surface-light)}
+.detail-card th{color:var(--accent-gold);font-weight:600;font-family:var(--font-display)}
+.detail-card td{color:var(--text-dim)}
+@media (max-width:860px){
+.layout-main{flex-direction:column}
+.side-column{width:100%;flex-direction:row;flex-wrap:wrap}
+.side-module{flex:1;min-width:150px}
+.header h1{font-size:22px}
+.header h1 svg{width:24px;height:24px}
+.screen-frame{padding:20px 10px 10px}
+.panel{padding:16px 12px 14px}
+.layer-modules{gap:3px}
+.module{font-size:11px;padding:3px 7px}
+.flow-step .label{font-size:10px}
+.flow-step .dot{width:22px;height:22px;font-size:9px}
+.milestone-step .label-m{font-size:9px}
+}
+@media (max-width:480px){
+.header h1{font-size:18px;letter-spacing:1px}
+.module{font-size:10px;padding:2px 5px;white-space:normal}
+.layer{padding:6px 6px 8px}
+.layer-label{font-size:10px}
+}
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:var(--bg-dark)}
+::-webkit-scrollbar-thumb{background:var(--surface-light);border-radius:2px}
+.arrow-path{stroke-dasharray:200;stroke-dashoffset:200}
+</style>
+</head>
+<body>
+<div class="screen-frame">
+<div class="crt-curve"></div>
+<div class="plasma-led"><span class="core"></span> Communist Epoch · 共产主义纪元 <span style="opacity:.5">|</span> 各尽所能·按需分配 <span style="opacity:.5">|</span> 2226</div>
+<div class="panel" id="panel">
+<div class="header" id="header">
+<h1>
+<svg viewBox="0 0 32 32"><use href="#icon-epoch" /></svg>
+共产主义纪元
+</h1>
+<div class="subtitle">200 年后的人类大同 · <em>人不再为生存而劳动，自由而全面地成为自己</em></div>
+</div>
+<svg style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:0" preserveAspectRatio="none">
+<defs>
+<marker id="arrowHead" markerWidth="6" markerHeight="5" refX="6" refY="2.5" orient="auto"><polygon points="0 0, 6 2.5, 0 5" fill="var(--surface-light)" opacity=".5"/></marker>
+<marker id="arrowHeadFlow" markerWidth="6" markerHeight="5" refX="6" refY="2.5" orient="auto"><polygon points="0 0, 6 2.5, 0 5" fill="var(--accent-gold)"/></marker>
+<symbol id="icon-un" viewBox="0 0 32 32">
+<circle cx="16" cy="16" r="11" stroke="var(--accent)" fill="none" stroke-width="1.5"/>
+<path d="M16 3a13 13 0 0 1 0 26a13 13 0 0 1 0-26z" stroke="var(--accent)" fill="none" stroke-width="1.5" opacity="0.5"/>
+<path d="M6 16h20M13 5c-1 3-1 20 0 22M19 5c1 3 1 20 0 22" stroke="var(--accent-gold)" fill="none" stroke-width="1.2" opacity="0.6"/>
+<circle cx="16" cy="16" r="1.6" fill="var(--accent-gold)"><animate attributeName="r" values="1.2;2;1.2" dur="3s" repeatCount="indefinite"/></circle>
+</symbol>
+<symbol id="icon-sun" viewBox="0 0 20 20">
+<circle cx="10" cy="10" r="4" stroke="currentColor" fill="none" stroke-width="1.2"/>
+<path d="M10 3v2M10 15v2M3 10h2M15 10h2M5.5 5.5l1.4 1.4M13 13l1.4 1.4M14.5 5.5L13 6.9M7 13l-1.4 1.4" stroke="currentColor" stroke-width="1" opacity="0.6" stroke-linecap="round"/>
+</symbol>
+<symbol id="icon-gear" viewBox="0 0 20 20">
+<circle cx="10" cy="10" r="3" stroke="currentColor" fill="none" stroke-width="1.2"/>
+<path d="M10 2l1.2 3.5h2.6l-1 3 2.2 2-3.4 1v2.7l-3-1.7-3 1.7v-2.7l-3.4-1 2.2-2-1-3h2.6L10 2z" stroke="currentColor" fill="none" stroke-width="1" opacity="0.5"/>
+</symbol>
+<symbol id="icon-factory" viewBox="0 0 20 20">
+<path d="M3 17V8l4 3V8l4 3V8l4 3v6" stroke="currentColor" fill="none" stroke-width="1.2" stroke-linejoin="round"/>
+<path d="M3 14h14" stroke="currentColor" stroke-width="1" opacity="0.3"/>
+<rect x="6" y="10" width="2" height="3" fill="currentColor" opacity="0.15"/>
+<rect x="12" y="10" width="2" height="3" fill="currentColor" opacity="0.15"/>
+</symbol>
+<symbol id="icon-ai" viewBox="0 0 20 20">
+<rect x="3" y="3" width="14" height="14" rx="2" stroke="currentColor" fill="none" stroke-width="1.2"/>
+<circle cx="10" cy="10" r="3" stroke="currentColor" fill="none" stroke-width="1.2"/>
+<path d="M10 4v-1M10 17v-1M4 10H3M17 10h-1M6 6L5.2 5.2M15 15l-.8-.8" stroke="currentColor" stroke-width="1" opacity="0.5"/>
+<circle cx="6.5" cy="6.5" r=".5" fill="currentColor" opacity="0.6"/>
+<circle cx="13.5" cy="13.5" r=".5" fill="currentColor" opacity="0.6"/>
+</symbol>
+<symbol id="icon-heart" viewBox="0 0 20 20">
+<path d="M10 17L3.5 10.5a4.2 4.2 0 0 1 6-6L10 5l.5-.5a4.2 4.2 0 0 1 6 6L10 17z" stroke="currentColor" fill="none" stroke-width="1.2" stroke-linejoin="round"/>
+</symbol>
+<symbol id="icon-pool" viewBox="0 0 20 20">
+<circle cx="10" cy="10" r="6.5" stroke="currentColor" fill="none" stroke-width="1.2"/>
+<path d="M7 10h6M10 7v6" stroke="currentColor" stroke-width="1.2" opacity="0.5"/>
+<circle cx="7" cy="13.5" r=".4" fill="currentColor" opacity="0.4"/>
+<circle cx="12.5" cy="6.5" r=".4" fill="currentColor" opacity="0.4"/>
+</symbol>
+<symbol id="icon-share" viewBox="0 0 20 20">
+<circle cx="6" cy="10" r="2.5" stroke="currentColor" fill="none" stroke-width="1.2"/>
+<circle cx="14" cy="5" r="2.5" stroke="currentColor" fill="none" stroke-width="1.2"/>
+<circle cx="14" cy="15" r="2.5" stroke="currentColor" fill="none" stroke-width="1.2"/>
+<path d="M8 9l4-3M8 11l4 3" stroke="currentColor" stroke-width="1" opacity="0.5"/>
+</symbol>
+<symbol id="icon-home" viewBox="0 0 20 20">
+<path d="M3 10l7-6 7 6" stroke="currentColor" fill="none" stroke-width="1.2" stroke-linejoin="round"/>
+<path d="M5 9v7h10V9" stroke="currentColor" fill="none" stroke-width="1.2" stroke-linejoin="round"/>
+</symbol>
+<symbol id="icon-scale" viewBox="0 0 20 20">
+<path d="M10 3v14M10 10l-4-5M10 10l4-5M6 17h8" stroke="currentColor" fill="none" stroke-width="1.2" stroke-linecap="round"/>
+<path d="M2.5 8l3.5-1.5M12 9l4 1" stroke="currentColor" stroke-width="1" opacity="0.4"/>
+</symbol>
+<symbol id="icon-gavel" viewBox="0 0 20 20">
+<path d="M12 5l4 4M15 4l3 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" opacity="0.4"/>
+<rect x="3" y="12" width="14" height="3" stroke="currentColor" fill="none" stroke-width="1.2"/>
+<path d="M10 15v3" stroke="currentColor" stroke-width="1.5" opacity="0.5"/>
+<path d="M10 18l-3 .8M10 18l3 .8" stroke="currentColor" stroke-width="1" opacity="0.4"/>
+</symbol>
+<symbol id="icon-book" viewBox="0 0 20 20">
+<path d="M4 3h8a2 2 0 0 1 2 2v12H6a2 2 0 0 1-2-2V3z" stroke="currentColor" fill="none" stroke-width="1.2" stroke-linejoin="round"/>
+<path d="M14 5h2v13h-2" stroke="currentColor" fill="none" stroke-width="1.2" opacity="0.5"/>
+<path d="M7 7h4M7 10h4" stroke="currentColor" stroke-width="1" opacity="0.4" stroke-linecap="round"/>
+</symbol>
+<symbol id="icon-hand" viewBox="0 0 20 20">
+<path d="M6 10V4h3v5M9 7V3h3v4M12 8V2h3v8" stroke="currentColor" fill="none" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M6 9c-1.5 0-2 .8-2 2s1 2 3 2h2.5c1 0 1.8.4 1.8 1.4 0 .9-.8 1.5-1.8 1.5H5" stroke="currentColor" fill="none" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+</symbol>
+<symbol id="icon-people" viewBox="0 0 20 20">
+<circle cx="7" cy="7" r="2.5" stroke="currentColor" fill="none" stroke-width="1.2"/>
+<circle cx="14" cy="7" r="2" stroke="currentColor" fill="none" stroke-width="1.2" opacity="0.5"/>
+<path d="M2.5 16c.6-3 2.4-4 4.5-4s3.9 1 4.5 4" stroke="currentColor" fill="none" stroke-width="1.2" opacity="0.8"/>
+<path d="M11.5 11.2c.8-.3 1.6-.2 2.5-.2 2 0 3.4 1 4 4" stroke="currentColor" fill="none" stroke-width="1.2" opacity="0.4"/>
+</symbol>
+<symbol id="icon-star" viewBox="0 0 20 20">
+<path d="M10 2l2.3 4.7 5.2.8-3.8 3.7.9 5.2L10 14l-4.6 2.4.9-5.2L2.5 7.5l5.2-.8L10 2z" stroke="currentColor" fill="none" stroke-width="1.2" stroke-linejoin="round"/>
+</symbol>
+<symbol id="icon-leaf" viewBox="0 0 20 20">
+<path d="M10 18C5 18 3 14 3 10c0-4 3-7 7-8 4 1 7 4 7 8 0 4-2 8-7 8z" stroke="currentColor" fill="none" stroke-width="1.2"/>
+<path d="M5 15C8 10 11 7 15 5" stroke="currentColor" stroke-width="1" opacity="0.5" stroke-linecap="round" fill="none"/>
+</symbol>
+<symbol id="icon-rocket" viewBox="0 0 20 20">
+<path d="M10 2c2.5 1 4 3.5 4 7l1 2H5l1-2c0-3.5 1.5-6 4-7z" stroke="currentColor" fill="none" stroke-width="1.2" stroke-linejoin="round"/>
+<path d="M8 14l1 3 1-3M11 11l3 1" stroke="currentColor" stroke-width="1" opacity="0.5"/>
+<circle cx="10" cy="8" r="1.2" stroke="currentColor" opacity="0.6" fill="none"/>
+</symbol>
+<symbol id="icon-econ" viewBox="0 0 20 20">
+<path d="M4 14v-3M7 14V7M10 14v-5M13 14V5M16 14v-2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" opacity="0.3"/>
+<path d="M3 5h14M3 5v11h14V5" stroke="currentColor" fill="none" stroke-width="1.2"/>
+</symbol>
+<symbol id="icon-compass" viewBox="0 0 20 20">
+<circle cx="10" cy="10" r="7" stroke="currentColor" fill="none" stroke-width="1.2"/>
+<path d="M13.5 6.5l-2 5-3 2 2-5 3-2z" stroke="currentColor" fill="none" stroke-width="1.2" stroke-linejoin="round"/>
+</symbol>
+<symbol id="icon-guard" viewBox="0 0 20 20">
+<path d="M10 2l7 3v5c0 4-3.5 7-7 8-3.5-1-7-4-7-8V5l7-3z" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linejoin="round"/>
+<path d="M8 11l1.5 1.5L13 9" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+</symbol>
+<symbol id="icon-flow" viewBox="0 0 20 20">
+<rect x="3" y="4" width="14" height="12" rx="1.5" stroke="currentColor" fill="none" stroke-width="1.2"/>
+<line x1="3" y1="8" x2="17" y2="8" stroke="currentColor" stroke-width="1" opacity="0.4"/>
+<circle cx="7" cy="11" r="1" fill="currentColor" opacity="0.5"/>
+<circle cx="11" cy="11" r="1" fill="currentColor" opacity="0.5"/>
+<circle cx="15" cy="11" r="1" fill="currentColor" opacity="0.5"/>
+</symbol>
+</defs>
+</svg>
+<div class="layout-main">
+<div class="layers-column">
+<div class="layer" data-layer="mat">
+<div class="layer-label"><svg viewBox="0 0 20 20"><use href="#icon-sun" /></svg>物质基础层 <span class="badge">TECHNOLOGY</span></div>
+<div class="layer-modules">
+<div class="module" data-detail="energy"><svg viewBox="0 0 20 20"><use href="#icon-sun" /></svg>能源供给 <span class="tag tag-inst">聚变纪元</span></div>
+<div class="module" data-detail="production"><svg viewBox="0 0 20 20"><use href="#icon-factory" /></svg>无人生产 <span class="tag tag-inst">自动化</span></div>
+<div class="module" data-detail="intelligence"><svg viewBox="0 0 20 20"><use href="#icon-ai" /></svg>通用智能 <span class="tag tag-inst">AI 统筹</span></div>
+<div class="module" data-detail="medicine"><svg viewBox="0 0 20 20"><use href="#icon-heart" /></svg>生命保障 <span class="tag tag-inst">医疗仓</span></div>
+</div>
+</div>
+<div class="arrow-down" data-flow="关系重组">
+<svg viewBox="0 0 100 24"><line class="arrow-path" x1="50" y1="0" x2="50" y2="22" stroke="var(--surface-light)" stroke-width="1.5" marker-end="url(#arrowHead)" opacity=".5"/></svg>
+<div class="arrow-label">物质丰裕 → 生产性资料公有化</div>
+</div>
+<div class="layer" data-layer="institution">
+<div class="layer-label"><svg viewBox="0 0 20 20"><use href="#icon-pool" /></svg>制度层 <span class="badge">INSTITUTION</span></div>
+<div class="layer-modules">
+<div class="module" data-detail="pool"><svg viewBox="0 0 20 20"><use href="#icon-pool" /></svg>全球资源公共池 <span class="tag tag-inst">公共</span></div>
+<div class="module" data-detail="allocate"><svg viewBox="0 0 20 20"><use href="#icon-share" /></svg>按需分配 <span class="tag tag-inst">基础免费</span></div>
+<div class="module" data-detail="property"><svg viewBox="0 0 20 20"><use href="#icon-home" /></svg>财产演化 <span class="tag tag-inst">私有意义化</span></div>
+<div class="module" data-detail="coordination"><svg viewBox="0 0 20 20"><use href="#icon-gavel" /></svg>协调治理 <span class="tag tag-inst">算法+民主</span></div>
+</div>
+</div>
+<div class="arrow-down" data-flow="共同体">
+<svg viewBox="0 0 100 24"><line class="arrow-path" x1="50" y1="0" x2="50" y2="22" stroke="var(--surface-light)" stroke-width="1.5" marker-end="url(#arrowHead)" opacity=".5"/></svg>
+<div class="arrow-label">制度保障 → 人与人自由协作</div>
+</div>
+<div class="layer" data-layer="people">
+<div class="layer-label"><svg viewBox="0 0 20 20"><use href="#icon-people" /></svg>人与社区层 <span class="badge">COMMUNITY</span></div>
+<div class="layer-modules">
+<div class="module" data-detail="work"><svg viewBox="0 0 20 20"><use href="#icon-hand" /></svg>劳动即创造 <span class="tag tag-comm">志愿志业</span></div>
+<div class="module" data-detail="education"><svg viewBox="0 0 20 20"><use href="#icon-book" /></svg>终身教育 <span class="tag tag-comm">自由探索</span></div>
+<div class="module" data-detail="community"><svg viewBox="0 0 20 20"><use href="#icon-leaf" /></svg>多元共同体 <span class="tag tag-comm">身份多样</span></div>
+</div>
+</div>
+<div class="arrow-down" data-flow="人文愿景">
+<svg viewBox="0 0 100 24"><line class="arrow-path" x1="50" y1="0" x2="50" y2="22" stroke="var(--surface-light)" stroke-width="1.5" marker-end="url(#arrowHead)" opacity=".5"/></svg>
+<div class="arrow-label">解放劳动力 → 自由而全面发展</div>
+</div>
+<div class="layer" data-layer="goal">
+<div class="layer-label"><svg viewBox="0 0 20 20"><use href="#icon-star" /></svg>文明目标层 <span class="badge">GOAL</span></div>
+<div class="layer-modules">
+<div class="module" data-detail="freedom"><svg viewBox="0 0 20 20"><use href="#icon-star" /></svg>自由全面发展 <span class="tag tag-goal">人的解放</span></div>
+<div class="module" data-detail="destiny"><svg viewBox="0 0 20 20"><use href="#icon-hand" /></svg>共同命运 <span class="tag tag-goal">共担共进</span></div>
+<div class="module" data-detail="starward"><svg viewBox="0 0 20 20"><use href="#icon-rocket" /></svg>面向星辰 <span class="tag tag-goal">开放探索</span></div>
+</div>
+</div>
+</div>
+<div class="side-column">
+<div class="side-module" data-detail="econ">
+<div class="layer-label"><svg viewBox="0 0 20 20"><use href="#icon-econ" /></svg>经济与权利模型</div>
+<div class="desc">货币一定程度退场 · 物质按需 · 稀缺统筹 · 财产回归生活意义</div>
+</div>
+<div class="side-module" data-detail="scenes">
+<div class="layer-label"><svg viewBox="0 0 20 20"><use href="#icon-compass" /></svg>未来场景</div>
+<div class="desc">无人车间 · 医疗仓照护 · 太空电梯探星</div>
+</div>
+<div class="side-module" data-detail="values">
+<div class="layer-label"><svg viewBox="0 0 20 20"><use href="#icon-guard" /></svg>边界与价值</div>
+<div class="desc">保留个体差异 · 物理稀缺仍统筹 · 自由允许多元</div>
+</div>
+</div>
+</div>
+<div class="user-flow">
+<div class="user-flow-header">
+<svg viewBox="0 0 20 20" style="width:14px;height:14px;flex-shrink:0"><use href="#icon-flow"/></svg>
+人的一生
+<span style="font-size:7px;color:var(--text-dim);font-family:var(--font-mono)">[ 循环动画 ]</span>
+</div>
+<div class="user-flow-steps" id="flowSteps">
+<div class="flow-step"><div class="dot">1</div><span class="label">出生</span><div class="conn"></div></div>
+<div class="flow-step"><div class="dot">2</div><span class="label">抚育教育</span><div class="conn"></div></div>
+<div class="flow-step"><div class="dot">3</div><span class="label">多向试错</span><div class="conn"></div></div>
+<div class="flow-step"><div class="dot">4</div><span class="label">志业选择</span><div class="conn"></div></div>
+<div class="flow-step"><div class="dot">5</div><span class="label">自由创造</span><div class="conn"></div></div>
+<div class="flow-step"><div class="dot">6</div><span class="label">共担事务</span><div class="conn"></div></div>
+<div class="flow-step"><div class="dot">7</div><span class="label">老年传承</span></div>
+</div>
+</div>
+<div class="milestone-bar">
+<div class="milestone-bar-header">
+<svg viewBox="0 0 20 20" style="width:14px;height:14px;flex-shrink:0"><use href="#icon-rocket"/></svg>
+过渡演进路线图（2026 → 2226）
+</div>
+<div class="milestone-steps" id="milestoneSteps">
+<div class="milestone-step"><div class="dot-m m1">膨胀</div><span class="label-m">技术膨胀<span class="s">聚变·AI·医疗普及</span></span><div class="conn-m"></div></div>
+<div class="milestone-step"><div class="dot-m m2">转型</div><span class="label-m">结构性转型<span class="s">基本保障扩展</span></span><div class="conn-m"></div></div>
+<div class="milestone-step"><div class="dot-m m3">重塑</div><span class="label-m">关系重塑<span class="s">公共池·按需主流</span></span><div class="conn-m"></div></div>
+<div class="milestone-step"><div class="dot-m m4">大同</div><span class="label-m">大同落地<span class="s">2218-2226 成型</span></span></div>
+</div>
+</div>
+</div>
+</div>
+<div class="detail-overlay">
+<div class="detail-card">
+<button class="close-btn">✕ CLOSE</button>
+<div id="detailContent"></div>
+</div>
+</div>
+<script>
+const DETAILS = {
+"energy":{title:'<svg viewBox="0 0 20 20"><use href="#icon-sun"/></svg> 能源供给',items:['聚变纪元（本仓库 37 号）交付近乎免费的电与热','能源进入全球公共池，按需求调配，余热梯级利用','电力不再成为算力、工业、居住的门槛','能源丰裕是"生存不再紧张"的第一块基石','过渡路径：聚变普及(2070s) → 工业电价趋零 → 生产自由化']},
+"production":{title:'<svg viewBox="0 0 20 20"><use href="#icon-factory"/></svg> 无人生产',items:['机器人农业、无人化工厂、在线制造（接单即造）昼夜运转','产能按需订单调度，杜绝过剩与积压','产品积淀进入公共资源池，成为他人创造原料','人类从"生产者"退后为"提出者、照料者与把关者"','交通、物流、仓储高度自动化，物质在需要处即时可达']},
+"intelligence":{title:'<svg viewBox="0 0 20 20"><use href="#icon-ai"/></svg> 通用智能',items:['通用人工智能承担大量体力与重复智力劳动','智能系统维护公共池账本：调度、审计、排程','信息加权与执行由算法辅助，决策仍归人','减少滞涩、偏见与信息差，提升集体效率','明确边界：算法不代行人的意志与价值判断']},
+"medicine":{title:'<svg viewBox="0 0 20 20"><use href="#icon-heart"/></svg> 生命保障',items:['医疗仓（仓库 43）使大病慢性病不再是一生性负担','医疗与健康保健进入公共按需供给','"身体自由"从个人风险变为公共基础','寿命与健康不再是机会分化的来源','让人能真正"自由而全面地发展"']},
+"pool":{title:'<svg viewBox="0 0 20 20"><use href="#icon-pool"/></svg> 全球资源公共池',items:['能源、原材、土地、知识、算力进入统一公共池','智能系统维护账本、调度与分配，全程透明可追溯','终结"把公共资源据为己有"的垄断激励','允许全民监督，防徇私倾斜','专利/学术/工艺知识域无限开放，创造力不被版权锁定']},
+"allocate":{title:'<svg viewBox="0 0 20 20"><use href="#i-share"/></svg> 按需分配机制',items:['遵循层级原则：基础免费 + 稀缺统筹','日常必需（食物、住房、能源、医疗、教育、出行）完全免费','真稀缺（稀有行星资源、超大演出容量等）按贡献+意愿+机会均等排序','资源直达个性化追求，限度宽松','面向未来的大额投入由公民共治决定先后']},
+"property":{title:'<svg viewBox="0 0 20 20"><use href="#icon-home"/></svg> 财产演化',items:['生存资料与生产性资料公有共享','私人保有承载意义与情感的生活物品（家、器物、创作）','终结的是"出卖自己时间换钱"的机制，不是私有生活','财产不再是我们互为异类的分界线','"有产/无产"的二元在此瓦解']},
+"coordination":{title:'<svg viewBox="0 0 20 20"><use href="#icon-gavel"/></svg> 协调治理',items:['直接参与 + 智能辅助双支柱','重大决策（能源布局、开矿、迁移、探索）由相关公民直接投票','琐碎事务由算法归纳、辅助处置，减少滞涩与偏见','目标：让每个声音被听见，又不让整体拖沓','监督来自透明账本 + 直接参与 + 算法审计三重保险']},
+"work":{title:'<svg viewBox="0 0 20 20"><use href="#icon-hand"/></svg> 劳动即创造',items:['机器与 AI 承接几乎全部不受欢迎的重复劳动','人类劳动以志愿创造为主：技术、艺术、照护、探索、教学','贡献发自内心，不服从生存压力','被他人喜爱的真创造获得社会认可','工作从"出卖时间"变为"成就自我"，职业即志业']},
+"education":{title:'<svg viewBox="0 0 20 20"><use href="#icon-book"/></svg> 终身教育',items:['教育终身免费，任何阶段可转换方向','生存不被绑定，探索不再是精英特权','60 岁重学天体物理与 20 岁学酿酒被同样重视','知识自由通共，学习成为生活方式','人的才能可以被反复重新定义']},
+"community":{title:'<svg viewBox="0 0 20 20"><use href="#icon-leaf"/></svg> 多元共同体',items:['按兴趣、地域、目标自由组成多元共同体','身份从单一职业标签转向多重可能','互通有无、养育、共学、一起创造','鸡社交滤波恢复为自主选择而非生存竞争','共同体是"我属于哪里"的自由答案']},
+"freedom":{title:'<svg viewBox="0 0 20 20"><use href="#icon-star"/></svg> 自由全面发展',items:['人不再被长时段捆绑于单一生存劳动','可自由尝试不同方向、角色与生活方式','按需分配支撑起的自由，是人作为目的而非手段','从"怎样活下去"转向"我想成为谁"','共产主义的本质目标：每个人的自由发展是一切人的自由发展的条件']},
+"destiny":{title:'<svg viewBox="0 0 20 20"><use href="#icon-hand"/></svg> 共同命运',items:['继承人类共同面对气候、资源、地缘的分担责任','公共决策面向共同挑战与未来投入','承认局限明智于优：共同承担而非彼此转嫁','生存层面的合作取代生存层面的竞争','社会作为"我们的共同体"而非"我的发放平台"']},
+"starward":{title:'<svg viewBox="0 0 20 20"><use href="#icon-rocket"/></svg> 面向星辰',items:['生存之忧解一次，探索欲转向更广阔的可能','太空电梯（仓库 32）让天地往返日常化','公共探索资金资助志愿者系外生态测绘','石头与疆界不再是争夺物，而是共观星空的方式','开放性让共产主义纪元不成为一种"封闭的终点"']},
+"econ":{title:'<svg viewBox="0 0 20 20"><use href="#icon-econ"/></svg> 经济与权利模型',items:['货币泛化体系在经济意义上退场（以积分/信用作稀缺排序）','价格在物质丰裕后失去意义','剩余/劳动报酬被消灭——劳动自由所成即意义','财产梯度保生活必要物私有、生产性资源公共','稀缺性物理极限的时间、稀有体验、稀有信息仍统筹','一句话：不再缺的是够用的物质，仍旧稀缺的是时间、注意力与若干物理极限']},
+"scenes":{title:'<svg viewBox="0 0 20 20"><use href="#icon-compass"/></svg> 未来场景',items:['场景一 · 无人车间里的空与满：多余产品进公共池变成下一项目原料，人退为 提出者与照料者','场景二 · 医疗仓照护自由：健康不再挡住任何人的未来，"身体自由"从奢侈品变为公共基础','场景三 · 太空电梯把星辰变通途：公共探索基金资助志愿者测绘，石头与疆界从争夺物变共观','场景四 · 中年工程师的一天：晨阅月亮实验室轮班，午后社区线上共商会被AI归纳成三条共识，夜里做开源音乐——没有"加班"只有"我想做"']},
+"values":{title:'<svg viewBox="0 0 20 20"><use href="#icon-guard"/></svg> 边界与价值',items:['✅ 保留个体差异：自由与本真的可贵在于不同而非一律','✅ 保留自由多元：精神生活、创造、家庭、个人空间完全保留','✅ 仍统筹真稀缺：物理极限的时间与稀有资源有序分配','⚠️ 不承诺人人时时幸福的保证','⚠️ 不是"人人躺平"——而是"人人可尽所能"','⚠️ 任何活着的文明都有张力，共产主义不是终点而是又一次起步','❌ 不统一思想、不消灭一切稀缺、不把社会做成封闭的绝对理想国']}
+};
+document.addEventListener("DOMContentLoaded",()=>{
+const layers=document.querySelectorAll(".layer");
+const arrows=document.querySelectorAll(".arrow-down");
+const flowSteps=document.querySelectorAll(".flow-step");
+const sideModules=document.querySelectorAll(".side-module");
+const userFlow=document.querySelector(".user-flow");
+const milestoneBar=document.querySelector(".milestone-bar");
+const milestoneSteps=document.querySelectorAll(".milestone-step");
+const overlays=document.querySelector(".detail-overlay");
+const detailContent=document.querySelector("#detailContent");
+const closeBtn=document.querySelector(".close-btn");
+const mainTimeline=anime.timeline({easing:"easeOutCubic"});
+mainTimeline.add({targets:"#header",opacity:[0,1],translateY:[-10,0],duration:600});
+mainTimeline.add({targets:sideModules,opacity:[0,1],translateX:[15,0],duration:400,delay:anime.stagger(100)},"-=200");
+mainTimeline.add({targets:layers,opacity:[0,1],translateY:[20,0],duration:450,delay:anime.stagger(130)},"-=100");
+mainTimeline.add({targets:arrows,opacity:[0,1],duration:350,delay:anime.stagger(180)},"-=200");
+setTimeout(()=>{document.querySelectorAll(".arrow-path").forEach((p)=>{anime({targets:p,strokeDashoffset:[200,0],duration:700,delay:300,easing:"easeInOutCubic"});});},1400);
+mainTimeline.add({targets:userFlow,opacity:[0,1],duration:400},"-=100");
+mainTimeline.add({targets:flowSteps,opacity:[0,1],translateX:[-8,0],duration:300,delay:anime.stagger(80)},"-=200");
+mainTimeline.add({targets:milestoneBar,opacity:[0,1],duration:400},"-=100");
+mainTimeline.add({targets:milestoneSteps,opacity:[0,1],translateX:[-6,0],duration:250,delay:anime.stagger(100)},"-=200");
+let flowIndex=0;function pulseFlow(){flowSteps.forEach((s)=>s.querySelector(".dot").classList.remove("active"));flowSteps[flowIndex].querySelector(".dot").classList.add("active");flowIndex=(flowIndex+1)%flowSteps.length;}
+pulseFlow();setInterval(pulseFlow,2500);
+layers.forEach((l)=>{l.addEventListener("mouseenter",()=>{anime({targets:l,borderColor:"var(--accent)",backgroundColor:"rgba(255,107,61,0.05)",duration:200});});l.addEventListener("mouseleave",()=>{anime({targets:l,borderColor:"var(--surface-light)",backgroundColor:"rgba(61,23,18,0.5)",duration:300});});});
+function openDetail(id){const data=DETAILS[id];if(!data)return;detailContent.innerHTML="<h2>"+data.title+"</h2><ul>"+data.items.map(function(i){return "<li>"+i+"</li>";}).join("")+"</ul>";overlays.classList.add("open");anime({targets:".detail-card",scale:[0.85,1],opacity:[0,1],duration:250,easing:"easeOutCubic"});}
+function closeDetail(){anime({targets:".detail-card",scale:[1,0.85],opacity:[1,0],duration:200,easing:"easeInCubic",complete:()=>{overlays.classList.remove("open");}});}
+document.querySelectorAll(".module[data-detail]").forEach((el)=>{el.addEventListener("click",()=>openDetail(el.dataset.detail));});
+document.querySelectorAll(".side-module[data-detail]").forEach((el)=>{el.addEventListener("click",()=>openDetail(el.dataset.detail));});
+closeBtn.addEventListener("click",closeDetail);
+overlays.addEventListener("click",(e)=>{if(e.target===overlays)closeDetail();});
+const board=document.getElementById("panel");
+for(let i=0;i<25;i++){const dot=document.createElement("div");dot.style.cssText=`position:absolute;pointer-events:none;width:${1+Math.random()*2.5}px;height:${1+Math.random()*2.5}px;border-radius:50%;background:rgba(255,210,160,${0.15+Math.random()*0.5});filter:blur(${Math.random()*1.5}px);left:${Math.random()*100}%;top:${Math.random()*100}%;opacity:${0.05+Math.random()*0.3}`;board.appendChild(dot);anime({targets:dot,opacity:[0.05,0.6,0.05],duration:4000+Math.random()*6000,direction:"alternate",loop:true,easing:"easeInOutSine"});}
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,375 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>验厂</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;600;800&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--board:#12181b;--board-dark:#080c0e;--chalk:#e6e2d6;--chalk-dim:rgba(230,226,214,0.55);--chalk-dimmer:rgba(230,226,214,0.18);--chalk-translucent:rgba(230,226,214,0.06);--accent-gold:#d2a24c;--accent-red:#c04a3e;--accent-green:#5f8f63;--accent-blue:#6d8ba8;--accent-slate:#8a9096;--scanline:rgba(0,0,0,0.06);--font-display:"Noto Sans SC","PingFang SC","Microsoft YaHei",sans-serif;--font-mono:"IBM Plex Mono","SFMono-Regular",Menlo,Consolas,"Courier New",monospace}
+html,body{height:100%;background:#06090a;font-family:var(--font-mono);color:var(--chalk);overflow-x:hidden}
+.screen-frame{position:relative;min-height:100vh;padding:28px 20px 20px;background:#0d1214;border-radius:20px;box-shadow:inset 0 0 40px rgba(0,0,0,0.8),0 8px 40px rgba(0,0,0,0.6);max-width:1360px;margin:0 auto}
+.screen-frame::before{content:"";position:absolute;inset:0;border-radius:20px;background:repeating-linear-gradient(0deg,transparent,transparent 2px,var(--scanline) 2px,var(--scanline) 4px);pointer-events:none;z-index:100}
+.crt-curve{position:absolute;inset:0;border-radius:20px;background:radial-gradient(ellipse at center,transparent 65%,rgba(0,0,0,0.35) 100%);pointer-events:none;z-index:99}
+.power-led{position:absolute;top:8px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:8px;font-family:var(--font-display);font-size:10px;font-weight:600;color:var(--chalk-dim);letter-spacing:1.5px;z-index:101}
+.power-led span{display:inline-block;width:6px;height:6px;border-radius:50%;background:#d2a24c;box-shadow:0 0 6px #d2a24c;animation:led-pulse 2s ease-in-out infinite}
+@keyframes led-pulse{0%,100%{opacity:1;box-shadow:0 0 6px #d2a24c}50%{opacity:0.5;box-shadow:0 0 2px #d2a24c}}
+.chalkboard{position:relative;background:var(--board);border:3px solid #223034;border-radius:4px;padding:32px 28px 28px;box-shadow:inset 0 0 60px rgba(0,0,0,0.5),0 4px 0 #0a1114;min-height:calc(100vh - 80px)}
+.chalkboard::after{content:"";position:absolute;inset:0;background-image:radial-gradient(circle at 20% 30%,rgba(230,226,214,0.02) 0,transparent 60%),radial-gradient(circle at 80% 70%,rgba(230,226,214,0.015) 0,transparent 50%),radial-gradient(circle at 50% 50%,rgba(230,226,214,0.01) 0,transparent 70%);pointer-events:none;border-radius:2px}
+.header{text-align:center;margin-bottom:24px;position:relative;z-index:1}
+.header h1{font-family:var(--font-display);font-size:26px;font-weight:800;color:var(--accent-gold);text-shadow:0 0 8px rgba(210,162,76,0.3);letter-spacing:2px;margin-bottom:4px;display:flex;align-items:center;justify-content:center;gap:10px}
+.header .subtitle{font-size:14px;color:var(--chalk-dim);letter-spacing:0.5px}
+.header .subtitle em{font-style:normal;color:var(--accent-green)}
+.layout-main{display:flex;gap:20px;position:relative;z-index:1}
+.layers-column{flex:1;min-width:0}
+.side-column{width:220px;flex-shrink:0;display:flex;flex-direction:column;gap:10px}
+.svg-connectors{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:0}
+.layer{position:relative;background:var(--chalk-translucent);border:1.5px solid var(--chalk-dimmer);border-radius:6px;padding:12px 14px 14px;margin-bottom:0;cursor:pointer;transition:border-color 0.3s,background 0.3s;opacity:0;transform:translateY(20px)}
+.layer:hover{border-color:var(--accent-gold);background:rgba(210,162,76,0.06)}
+.layer-label{font-family:var(--font-display);font-size:12px;font-weight:600;color:var(--chalk-dim);letter-spacing:1px;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.layer-label .badge{font-size:10px;font-weight:600;background:var(--chalk-dimmer);color:var(--board);padding:1px 7px;border-radius:3px;letter-spacing:0}
+.layer-modules{display:flex;flex-wrap:wrap;gap:6px}
+.module{background:rgba(230,226,214,0.06);border:1px solid var(--chalk-dimmer);border-radius:4px;padding:5px 10px;font-size:12px;line-height:1.5;color:var(--chalk);transition:all 0.25s;white-space:nowrap;cursor:pointer;display:inline-flex;align-items:center;gap:5px}
+.module:hover{background:rgba(230,226,214,0.12);border-color:var(--chalk);transform:translateY(-1px)}
+svg.icon,.module svg,.side-module svg,.dot svg{width:16px;height:16px;flex-shrink:0}
+.module svg{width:15px;height:15px}
+.dot svg{width:14px;height:14px}
+.layer-label>svg:first-child{width:18px;height:18px;flex-shrink:0}
+.header h1 svg{width:28px;height:28px;flex-shrink:0}
+.module .tag{font-size:10px;font-weight:600;padding:1px 6px;border-radius:3px;margin-left:4px;opacity:0.85}
+.tag-surface{background:var(--accent-red);color:var(--board)}
+.tag-engine{background:var(--accent-gold);color:var(--board)}
+.tag-measure{background:var(--accent-green);color:var(--board)}
+.tag-archive{background:var(--accent-blue);color:var(--board)}
+.tag-check{background:var(--accent-slate);color:var(--board)}
+.layer[data-layer="surface"]{border-left:3px solid var(--accent-red)}
+.layer[data-layer="engine"]{border-left:3px solid var(--accent-gold)}
+.layer[data-layer="measure"]{border-left:3px solid var(--accent-green)}
+.layer[data-layer="archive"]{border-left:3px solid var(--accent-blue)}
+.layer[data-layer="check"]{border-left:3px solid var(--accent-slate)}
+.arrow-down{display:flex;align-items:center;justify-content:center;height:28px;position:relative;opacity:0}
+.arrow-down svg{width:100%;height:28px}
+.arrow-label{position:absolute;font-family:var(--font-display);font-size:10px;font-weight:600;color:var(--chalk-dim);letter-spacing:0.5px;background:var(--board);padding:0 8px;text-align:center;white-space:nowrap}
+.side-module{background:var(--chalk-translucent);border:1.5px solid var(--chalk-dimmer);border-left:3px solid var(--accent-green);border-radius:6px;padding:10px 12px;cursor:pointer;opacity:0;transform:translateX(15px);transition:border-color 0.3s,background 0.3s}
+.side-module:hover{border-color:var(--accent-green);background:rgba(95,143,99,0.08)}
+.side-module .layer-label{margin-bottom:4px}
+.side-module .desc{font-size:12px;color:var(--chalk-dim);line-height:1.5}
+.user-flow{margin-top:22px;padding:14px 16px;background:var(--chalk-translucent);border:1.5px solid var(--chalk-dimmer);border-radius:6px;position:relative;z-index:1;opacity:0}
+.user-flow-header{font-family:var(--font-display);font-size:12px;font-weight:600;color:var(--accent-gold);letter-spacing:0.5px;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.user-flow-steps{display:flex;align-items:center;flex-wrap:wrap;gap:0}
+.flow-step{display:flex;align-items:center;gap:0;opacity:0}
+.flow-step .dot{width:28px;height:28px;border-radius:50%;border:2px solid var(--chalk-dimmer);background:var(--board);display:flex;align-items:center;justify-content:center;font-size:13px;line-height:1;flex-shrink:0;transition:all 0.3s}
+.flow-step .dot.active{border-color:var(--accent-gold);background:rgba(210,162,76,0.12);box-shadow:0 0 10px rgba(210,162,76,0.2)}
+.flow-step .label{font-size:12px;color:var(--chalk-dim);white-space:nowrap;margin:0 8px 0 6px;line-height:1}
+.flow-step .conn{width:24px;height:2px;background:var(--chalk-dimmer);position:relative;flex-shrink:0}
+.flow-step .conn::after{content:"▸";position:absolute;right:-4px;top:-6px;font-size:10px;color:var(--chalk-dimmer)}
+.flow-step:last-child .conn{display:none}
+.detail-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:200;display:none;align-items:center;justify-content:center;backdrop-filter:blur(2px)}
+.detail-overlay.open{display:flex}
+.detail-card{background:var(--board-dark);border:2px solid var(--chalk-dimmer);border-radius:8px;padding:24px 28px;max-width:500px;width:90%;max-height:80vh;overflow-y:auto;position:relative;box-shadow:0 8px 40px rgba(0,0,0,0.6);will-change:transform,opacity;backface-visibility:hidden;-webkit-backface-visibility:hidden;transform:translateZ(0);-webkit-transform:translateZ(0)}
+.detail-card h2{margin-top:0;font-family:var(--font-display);font-size:18px;font-weight:800;color:var(--accent-gold);margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid var(--chalk-dimmer);display:flex;align-items:center;gap:8px}
+.detail-card h2 svg{width:22px;height:22px;flex-shrink:0}
+.detail-card ul{list-style:none;padding:0}
+.detail-card li{font-size:13px;color:var(--chalk);padding:5px 0 5px 14px;border-left:2px solid var(--chalk-dimmer);margin-bottom:6px;line-height:1.6}
+.detail-card li .hl{color:var(--accent-green);display:inline-flex;align-items:center;gap:4px}
+.detail-card li .hl-warn{color:var(--accent-red)}
+.detail-card .close-btn{position:absolute;top:14px;right:16px;font-family:var(--font-display);font-size:13px;font-weight:600;color:var(--chalk-dimmer);background:none;border:1px solid var(--chalk-dimmer);border-radius:4px;padding:4px 12px;cursor:pointer;transition:all 0.2s}
+.detail-card .close-btn:hover{color:var(--accent-red);border-color:var(--accent-red)}
+@media (max-width:860px){
+.layout-main{flex-direction:column}
+.side-column{width:100%;flex-direction:row;flex-wrap:wrap}
+.side-module{flex:1;min-width:160px}
+.header h1{font-size:20px}
+.screen-frame{padding:24px 12px 12px}
+.chalkboard{padding:20px 14px 16px}
+.layer-modules{gap:4px}
+.module{font-size:11px;padding:4px 8px}
+.flow-step .label{font-size:10px}
+.flow-step .dot{width:24px;height:24px;font-size:11px}
+}
+@media (max-width:480px){
+.header h1{font-size:16px;letter-spacing:1px}
+.module{font-size:10px;padding:3px 6px;white-space:normal}
+.layer{padding:8px 8px 10px}
+.layer-label{font-size:10px}
+}
+.chalk-glow{position:absolute;pointer-events:none;width:4px;height:4px;border-radius:50%;background:rgba(230,226,214,0.15);filter:blur(6px)}
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:var(--board-dark)}
+::-webkit-scrollbar-thumb{background:var(--chalk-dimmer);border-radius:2px}
+.arrow-path{stroke-dasharray:200;stroke-dashoffset:200}
+.layer-label svg{width:16px;height:16px;flex-shrink:0}
+</style>
+</head>
+<body>
+<div class="screen-frame">
+<div class="crt-curve"></div>
+<div class="power-led"><span></span> SYSTEM · YANCHANG</div>
+<div class="chalkboard" id="chalkboard">
+<div class="header" id="header">
+<h1>
+<svg class="icon" viewBox="0 0 20 20"><use href="#icon-building" /></svg>
+验厂
+</h1>
+<div class="subtitle">offer 到手后的四表核查 · <em>验不过就谈，谈不拢就走</em></div>
+</div>
+<svg class="svg-connectors" preserveAspectRatio="none">
+<defs>
+<marker id="arrowHead" markerWidth="6" markerHeight="5" refX="6" refY="2.5" orient="auto"><polygon points="0 0, 6 2.5, 0 5" fill="var(--chalk-dimmer)" opacity=".6"/></marker>
+<filter id="glow"><feGaussianBlur stdDeviation="1.5" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+<symbol id="icon-building" viewBox="0 0 20 20">
+<path d="M3 17V4.5c0-.6.5-1 1-1h7c.6 0 1 .4 1 1V17" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linejoin="round"/>
+<path d="M12 9h4c.6 0 1 .4 1 1v7" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linejoin="round"/>
+<path d="M2 17h16" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round"/>
+<path d="M5.5 7h1.5M8.5 7H10M5.5 10.5h1.5M8.5 10.5H10M5.5 14h1.5M8.5 14H10" stroke="currentColor" fill="none" stroke-width="1.3" stroke-linecap="round"/>
+</symbol>
+<symbol id="icon-case" viewBox="0 0 20 20">
+<path d="M3 6h14v11H3z" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linejoin="round"/>
+<path d="M7 6V4.2c0-.7.5-1.2 1.2-1.2h3.6c.7 0 1.2.5 1.2 1.2V6" stroke="currentColor" fill="none" stroke-width="1.4" stroke-linejoin="round"/>
+<path d="M3 10h14" stroke="currentColor" fill="none" stroke-width="1.2"/>
+</symbol>
+<symbol id="icon-lock" viewBox="0 0 20 20">
+<rect x="4" y="8.5" width="12" height="8.5" rx="1.5" stroke="currentColor" fill="none" stroke-width="1.5"/>
+<path d="M7 8.5V6.5a3 3 0 0 1 6 0v2" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round"/>
+<circle cx="10" cy="12.6" r="1.1" fill="currentColor"/>
+</symbol>
+<symbol id="icon-doc" viewBox="0 0 20 20">
+<path d="M5 2.5h7l3.5 3.5v11.5H5z" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linejoin="round"/>
+<path d="M12 2.5V6h3.5" stroke="currentColor" fill="none" stroke-width="1.3" stroke-linejoin="round"/>
+<path d="M7.5 10h5M7.5 13h3.5" stroke="currentColor" fill="none" stroke-width="1.2" stroke-linecap="round"/>
+</symbol>
+<symbol id="icon-clause" viewBox="0 0 20 20">
+<path d="M4 3h9.5L17 6.5V17H4z" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linejoin="round"/>
+<path d="M7 7.5h6M7 11h6M7 14.5h3" stroke="currentColor" fill="none" stroke-width="1.2" stroke-linecap="round"/>
+<path d="M13.6 13.2l2.2-2.2 1.2 1.2-2.2 2.2-1.7.5z" stroke="currentColor" fill="none" stroke-width="1.2" stroke-linejoin="round"/>
+</symbol>
+<symbol id="icon-clock" viewBox="0 0 20 20">
+<circle cx="10" cy="10" r="7" stroke="currentColor" fill="none" stroke-width="1.5"/>
+<path d="M10 6v4.2l2.8 1.7" stroke="currentColor" fill="none" stroke-width="1.4" stroke-linecap="round"/>
+<path d="M10 3V1.6" stroke="currentColor" fill="none" stroke-width="1.3" stroke-linecap="round"/>
+</symbol>
+<symbol id="icon-money" viewBox="0 0 20 20">
+<path d="M6.5 5.5C4 6.5 2.6 9 3.2 12.2c.6 3.2 3 5.3 5.8 5.3h2c2.8 0 5.2-2.1 5.8-5.3.6-3.2-.8-5.7-3.3-6.7" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linejoin="round"/>
+<path d="M7.5 3.6h5" stroke="currentColor" fill="none" stroke-width="1.4" stroke-linecap="round"/>
+<path d="M10 7.5v5M8 9h4M8 11h4" stroke="currentColor" fill="none" stroke-width="1.3" stroke-linecap="round"/>
+</symbol>
+<symbol id="icon-person" viewBox="0 0 20 20">
+<circle cx="10" cy="6.5" r="3" stroke="currentColor" fill="none" stroke-width="1.5"/>
+<path d="M4 17c0-3.3 2.7-5.5 6-5.5s6 2.2 6 5.5" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round"/>
+</symbol>
+<symbol id="icon-ban" viewBox="0 0 20 20">
+<circle cx="10" cy="10" r="7" stroke="currentColor" fill="none" stroke-width="1.5"/>
+<path d="M5.2 14.8L14.8 5.2" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round"/>
+</symbol>
+<symbol id="icon-scale" viewBox="0 0 20 20">
+<path d="M10 3v14M5 17h10" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round"/>
+<path d="M3 7h14" stroke="currentColor" fill="none" stroke-width="1.4" stroke-linecap="round"/>
+<path d="M3 7l-1.5 4h3zM17 7l-1.5 4h3z" stroke="currentColor" fill="none" stroke-width="1.3" stroke-linejoin="round"/>
+</symbol>
+<symbol id="icon-rule" viewBox="0 0 20 20">
+<path d="M3 5h14M3 10h14M3 15h14" stroke="currentColor" fill="none" stroke-width="1.3" stroke-linecap="round"/>
+<circle cx="7" cy="5" r="1.8" stroke="currentColor" fill="none" stroke-width="1.3"/>
+<circle cx="13" cy="10" r="1.8" stroke="currentColor" fill="none" stroke-width="1.3"/>
+<circle cx="9" cy="15" r="1.8" stroke="currentColor" fill="none" stroke-width="1.3"/>
+</symbol>
+<symbol id="icon-ledger" viewBox="0 0 20 20">
+<path d="M4 3h11v14H4z" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linejoin="round"/>
+<path d="M7 3v14" stroke="currentColor" fill="none" stroke-width="1.3"/>
+<path d="M9 7h4M9 10h4M9 13h2.5" stroke="currentColor" fill="none" stroke-width="1.2" stroke-linecap="round"/>
+</symbol>
+<symbol id="icon-ladder" viewBox="0 0 20 20">
+<path d="M3 16V5M17 16V5" stroke="currentColor" fill="none" stroke-width="1.4" stroke-linecap="round"/>
+<path d="M3 8h14M3 11.5h14M3 15h14" stroke="currentColor" fill="none" stroke-width="1.3" stroke-linecap="round"/>
+<path d="M9 3.5l2-1.5 2 1.5" stroke="currentColor" fill="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+</symbol>
+<symbol id="icon-refresh" viewBox="0 0 20 20">
+<path d="M14.5 6C12.5 4 9.5 3.5 7 5 4.5 6.5 3.5 9.5 3.5 12" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M10.5 9.5l4-4 2 3" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M5.5 14c2 2.5 5.5 3 8 1.5C16 14 17 11 16.5 8" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M9.5 11l-4 4-2-3" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+</symbol>
+<symbol id="icon-warn" viewBox="0 0 20 20">
+<path d="M10 3l7 13H3z" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linejoin="round"/>
+<path d="M10 8v4" stroke="currentColor" fill="none" stroke-width="1.6" stroke-linecap="round"/>
+<circle cx="10" cy="14.2" r="0.9" fill="currentColor"/>
+</symbol>
+<symbol id="icon-flow" viewBox="0 0 20 20">
+<path d="M3 10h4M9 10h3M14 10h3" stroke="currentColor" fill="none" stroke-width="1.4" stroke-linecap="round"/>
+<circle cx="8" cy="10" r="2" stroke="currentColor" fill="none" stroke-width="1.3"/>
+<path d="M15 7.6l2 2.4-2 2.4" stroke="currentColor" fill="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+</symbol>
+</defs>
+</svg>
+<div class="layout-main">
+<div class="layers-column">
+<div class="layer" data-layer="surface">
+<div class="layer-label"><svg viewBox="0 0 20 20"><use href="#icon-case" /></svg>表现层 · 验厂台 <span class="badge">SURFACE</span></div>
+<div class="layer-modules">
+<div class="module" data-detail="surf-offer"><svg viewBox="0 0 20 20"><use href="#icon-case" /></svg>OFFER 立案 <span class="tag tag-surface">8 字段</span></div>
+<div class="module" data-detail="surf-gate"><svg viewBox="0 0 20 20"><use href="#icon-lock" /></svg>48 小时冷静闸 <span class="tag tag-surface">不可跳过</span></div>
+<div class="module" data-detail="surf-report"><svg viewBox="0 0 20 20"><use href="#icon-doc" /></svg>红黄绿灯报告 <span class="tag tag-surface">一页纸</span></div>
+<div class="module" data-detail="surf-nego"><svg viewBox="0 0 20 20"><use href="#icon-clause" /></svg>谈条件清单 <span class="tag tag-surface">黄灯出口</span></div>
+<div class="module" data-detail="surf-pace"><svg viewBox="0 0 20 20"><use href="#icon-clock" /></svg>谈判节奏表</div>
+</div>
+</div>
+<div class="arrow-down" data-flow="立案">
+<svg viewBox="0 0 100 28"><line class="arrow-path" x1="50" y1="0" x2="50" y2="26" stroke="var(--chalk-dimmer)" stroke-width="1.5" marker-end="url(#arrowHead)" opacity=".5"/></svg>
+<div class="arrow-label">先写下来，再谈感受</div>
+</div>
+<div class="layer" data-layer="engine">
+<div class="layer-label"><svg viewBox="0 0 20 20"><use href="#icon-rule" /></svg>核心层 · 五路核查 <span class="badge">ENGINE</span></div>
+<div class="layer-modules">
+<div class="module" data-detail="eng-entity"><svg viewBox="0 0 20 20"><use href="#icon-building" /></svg>主体核查 <span class="tag tag-engine">四项</span></div>
+<div class="module" data-detail="eng-money"><svg viewBox="0 0 20 20"><use href="#icon-money" /></svg>钱袋推演 <span class="tag tag-engine">跑道</span></div>
+<div class="module" data-detail="eng-post"><svg viewBox="0 0 20 20"><use href="#icon-clock" /></svg>岗位考古 <span class="tag tag-engine">在挂时长</span></div>
+<div class="module" data-detail="eng-people"><svg viewBox="0 0 20 20"><use href="#icon-person" /></svg>人链验证 <span class="tag tag-engine">5 人</span></div>
+<div class="module" data-detail="eng-redline"><svg viewBox="0 0 20 20"><use href="#icon-ban" /></svg>红线扫描 <span class="tag tag-engine">七条</span></div>
+</div>
+</div>
+<div class="arrow-down" data-flow="剥离">
+<svg viewBox="0 0 100 28"><line class="arrow-path" x1="50" y1="0" x2="50" y2="26" stroke="var(--chalk-dimmer)" stroke-width="1.5" marker-end="url(#arrowHead)" opacity=".5"/></svg>
+<div class="arrow-label">只留事实，其余丢掉</div>
+</div>
+<div class="layer" data-layer="measure">
+<div class="layer-label"><svg viewBox="0 0 20 20"><use href="#icon-scale" /></svg>判据层 · 四维评分 <span class="badge">MEASURE</span></div>
+<div class="layer-modules">
+<div class="module" data-detail="mea-four"><svg viewBox="0 0 20 20"><use href="#icon-scale" /></svg>四维打分 <span class="tag tag-measure">看短板</span></div>
+<div class="module" data-detail="mea-weight"><svg viewBox="0 0 20 20"><use href="#icon-rule" /></svg>权重规则 <span class="tag tag-measure">两维不可调</span></div>
+<div class="module" data-detail="mea-conf"><svg viewBox="0 0 20 20"><use href="#icon-warn" /></svg>置信度</div>
+<div class="module" data-detail="mea-flip"><svg viewBox="0 0 20 20"><use href="#icon-refresh" /></svg>翻转条件</div>
+</div>
+</div>
+<div class="arrow-down" data-flow="落库">
+<svg viewBox="0 0 100 28"><line class="arrow-path" x1="50" y1="0" x2="50" y2="26" stroke="var(--chalk-dimmer)" stroke-width="1.5" marker-end="url(#arrowHead)" opacity=".5"/></svg>
+<div class="arrow-label">每条结论挂信源</div>
+</div>
+<div class="layer" data-layer="archive">
+<div class="layer-label"><svg viewBox="0 0 20 20"><use href="#icon-ledger" /></svg>数据层 · 证据库 <span class="badge">ARCHIVE</span></div>
+<div class="layer-modules">
+<div class="module" data-detail="arc-source"><svg viewBox="0 0 20 20"><use href="#icon-ladder" /></svg>信源分级表 <span class="tag tag-archive">七级</span></div>
+<div class="module" data-detail="arc-jd"><svg viewBox="0 0 20 20"><use href="#icon-clock" /></svg>JD 历史档案</div>
+<div class="module" data-detail="arc-tenure"><svg viewBox="0 0 20 20"><use href="#icon-person" /></svg>留任图谱 <span class="tag tag-archive">壁垒</span></div>
+<div class="module" data-detail="arc-clause"><svg viewBox="0 0 20 20"><use href="#icon-clause" /></svg>条款对照库 <span class="tag tag-archive">36 条</span></div>
+<div class="module" data-detail="arc-backfill"><svg viewBox="0 0 20 20"><use href="#icon-refresh" /></svg>回填校准 <span class="tag tag-archive">复利</span></div>
+</div>
+</div>
+<div class="arrow-down" data-flow="反哺">
+<svg viewBox="0 0 100 28"><line class="arrow-path" x1="50" y1="0" x2="50" y2="26" stroke="var(--chalk-dimmer)" stroke-width="1.5" marker-end="url(#arrowHead)" opacity=".5"/></svg>
+<div class="arrow-label">校准的权重回到下一份报告</div>
+</div>
+<div class="layer" data-layer="check">
+<div class="layer-label"><svg viewBox="0 0 20 20"><use href="#icon-ban" /></svg>校验层 · 两条硬规则 <span class="badge">CHECK</span></div>
+<div class="layer-modules">
+<div class="module" data-detail="chk-fact"><svg viewBox="0 0 20 20"><use href="#icon-rule" /></svg>只陈述事实 <span class="tag tag-check">不下判决</span></div>
+<div class="module" data-detail="chk-anon"><svg viewBox="0 0 20 20"><use href="#icon-warn" /></svg>匿名只作假设</div>
+<div class="module" data-detail="chk-switch"><svg viewBox="0 0 20 20"><use href="#icon-ban" /></svg>红线是开关 <span class="tag tag-check">不参与加权</span></div>
+</div>
+</div>
+</div>
+<div class="side-column">
+<div class="side-module" data-detail="side-character">
+<div class="layer-label"><svg viewBox="0 0 20 20"><use href="#icon-building" /></svg>产品性格</div>
+<div class="desc">敢给三选一 · 不说"看你自己" · 只答"你扛不扛得住"</div>
+</div>
+<div class="side-module" data-detail="side-diff">
+<div class="layer-label"><svg viewBox="0 0 20 20"><use href="#icon-flow" /></svg>与背调方向相反</div>
+<div class="desc">背调是企业查你 · 验厂是你查企业</div>
+</div>
+<div class="side-module" data-detail="side-boundary">
+<div class="layer-label"><svg viewBox="0 0 20 20"><use href="#icon-ban" /></svg>边界 · 十不做</div>
+<div class="desc">不评好坏 · 不做企业服务 · 不预测生死 · 不替用户签字</div>
+</div>
+<div class="side-module" data-detail="side-90">
+<div class="layer-label"><svg viewBox="0 0 20 20"><use href="#icon-refresh" /></svg>回填即复利</div>
+<div class="desc">第 90 天填 12 题 · 三年后这套权重别人抄不走</div>
+</div>
+</div>
+</div>
+<div class="user-flow">
+<div class="user-flow-header">
+<svg viewBox="0 0 20 20" style="width:16px;height:16px;flex-shrink:0"><use href="#icon-flow"/></svg>
+用户流程路径
+<span style="font-size:7px;color:var(--chalk-dim);font-family:var(--font-mono)">[ 动画播放中 ]</span>
+</div>
+<div class="user-flow-steps" id="flowSteps">
+<div class="flow-step"><div class="dot">1</div><span class="label">立案 8 字段</span><div class="conn"></div></div>
+<div class="flow-step"><div class="dot">2</div><span class="label">48 小时冷静</span><div class="conn"></div></div>
+<div class="flow-step"><div class="dot">3</div><span class="label">五路核查</span><div class="conn"></div></div>
+<div class="flow-step"><div class="dot">4</div><span class="label">人链验证</span><div class="conn"></div></div>
+<div class="flow-step"><div class="dot">5</div><span class="label">红线扫描</span><div class="conn"></div></div>
+<div class="flow-step"><div class="dot">6</div><span class="label">出报告</span><div class="conn"></div></div>
+<div class="flow-step"><div class="dot">7</div><span class="label">谈条件</span></div>
+</div>
+</div>
+</div>
+</div>
+<div class="detail-overlay">
+<div class="detail-card">
+<button class="close-btn">✕ CLOSE</button>
+<div id="detailContent"></div>
+</div>
+</div>
+<script>
+const DETAILS = {
+"surf-offer":{title:'<svg viewBox="0 0 20 20" style="width:22px;height:22px;flex-shrink:0"><use href="#icon-case"/></svg> OFFER 立案 · 8 个字段',items:['签约主体 — 决定你的合同相对方、社保缴纳地、仲裁管辖地','岗位与职级 — 口头说"总监"、合同写"高级经理"，是两件事','汇报对象 — 只写"向老板汇报"，可能意味着没有中层','薪资构成 — 总包 40 万，其中 12 万标着<span class="hl-warn">"绩效，视公司效益"</span>','试用期 / 答复期限 / 竞业条款 / 期权四项缺任何一项即标黄','<span class="hl">第一次让"我到底拿到了什么"变成一页可读的东西</span>']},
+"surf-gate":{title:'<svg viewBox="0 0 20 20" style="width:22px;height:22px;flex-shrink:0"><use href="#icon-lock"/></svg> 48 小时冷静闸',items:['立案完成即计时，<span class="hl-warn">答复按钮置灰 48 小时</span>，不可跳过、不可缩短','期间可做：查证、提问、约人聊、读合同','期间不可做：回复 HR、签字、口头承诺、向家人宣布决定','唯一提前解锁：命中硬红线（此时不需要再想，直接进拒绝流程）','到期推送一句："两天前你很想签，现在还一样想吗？"','设计依据：兴奋期的人只搜索支持自己的证据，两天足以让激素落地']},
+"surf-report":{title:'<svg viewBox="0 0 20 20" style="width:22px;height:22px;flex-shrink:0"><use href="#icon-doc"/></svg> 红黄绿灯报告',items:['六个区块：拿到了什么 / 四维分数 / 红线结果 / 三条最大风险 / 结论 / 翻转条件','结论必须三选一：<span class="hl">去、谈条件再去、不去</span>，禁止"看你自己"','三条风险按「发生概率 × 你承受不了的程度」排序，只给三条','每条结论挂信源等级，末尾给总体置信度','结尾固定一句："以上是查到的事实，权重是你自己给的。"']},
+"surf-nego":{title:'<svg viewBox="0 0 20 20" style="width:22px;height:22px;flex-shrink:0"><use href="#icon-clause"/></svg> 谈条件清单',items:['黄灯项 → 可谈判项 → 书面化要求，三级映射','薪资低于预期 → 签字费 / 6 个月调薪评估 → 写进 offer letter','职级模糊 → 职级代码 + 汇报人姓名 → 写进合同附件','试用期 6 个月 → 缩至 3 个月或 100% 薪资 → 写进合同条款','话术原则：<span class="hl">不说"我不信任你们"，说"想把约定写清楚"</span>','对方拒绝一切书面化 → 该项从黄灯降为红灯']},
+"surf-pace":{title:'<svg viewBox="0 0 20 20" style="width:22px;height:22px;flex-shrink:0"><use href="#icon-clock"/></svg> 谈判节奏表',items:['按答复期剩余天数倒排优先级，解决"来不及查"','剩余 5 天：先跑自动核查，当天出初稿','剩余 3 天：约直属上级 + 同组同事，只问事实','剩余 2 天：补最关键的一个未验证项','剩余 1 天：出报告，谈条件，或直接拒绝','最后一天不做新调查——那天只做决定']},
+"eng-entity":{title:'<svg viewBox="0 0 20 20" style="width:22px;height:22px;flex-shrink:0"><use href="#icon-building"/></svg> 主体核查 · 四项',items:['工商主体：成立年限、注册资本实缴、参保人数 — 号称 300 人但参保 12 人','股权结构：大股东变更频率、质押、代持痕迹','司法风险：被执行人、失信、劳动仲裁案件数与<span class="hl">年份分布</span>','行政处罚：主营业务被处罚后是否仍在继续经营','<span class="hl-warn">劳动争议案件的年份分布是全系统最强的单一信号</span>','三年前 2 起正常；今年同一季度 11 起 — 比任何匿名评价都准']},
+"eng-money":{title:'<svg viewBox="0 0 20 20" style="width:22px;height:22px;flex-shrink:0"><use href="#icon-money"/></svg> 钱袋推演',items:['现金跑道 =（最近融资 + 已知营收）÷ 月均人力成本，<span class="hl-warn">&lt; 9 个月高危</span>','融资间隔 &gt; 24 个月且未盈利 = 现金紧张，在靠营收硬扛','客户集中度 &gt; 60% = 丢一个大客户就要裁一轮','社保基数 &lt; 实际工资 60% = 在压成本，且赔偿金按低基数算','裁员史：用 N+1 还是变相逼退 — <span class="hl">这一项权重最高</span>','判断一家公司怎么对待人，不看它说文化，看它上次怎么裁的']},
+"eng-post":{title:'<svg viewBox="0 0 20 20" style="width:22px;height:22px;flex-shrink:0"><use href="#icon-clock"/></svg> 岗位考古',items:['JD 在挂时长 &gt; 6 个月持续在挂 = 流动性极大，或根本没编制','薪资区间下调 = 压成本；上调 = 招不到人，标准有问题','一年改三版职责描述 = 内部没想清楚，你进去要替他们想','前任在任中位数 &lt; 12 个月高危，&lt; 6 个月红灯','编制归属：项目制 = 项目结束你就结束','必问：<span class="hl">"这个岗位是新增还是补缺？上一任做了多久、现在在做什么？"</span>','问完对方的停顿长度就是答案']},
+"eng-people":{title:'<svg viewBox="0 0 20 20" style="width:22px;height:22px;flex-shrink:0"><use href="#icon-person"/></svg> 人链验证 · 五个必问对象',items:['直属上级 — 这个岗位过去两年换过几个人 / 团队目标现在完成到几成','同组同事（非面试官）— 你上周最晚几点走 / 你入职时几个人，现在几个人','前任 — 你离开的真实原因 / 这个岗位交接给了谁','协作方 — 和他们合作最常卡在哪个环节','离职半年以上的人 — 你走后公司有什么变化','<span class="hl">整个产品的枢纽：不问评价，只问事实</span>。问"文化怎么样"得到形容词，问"几点走"得到数据']},
+"eng-redline":{title:'<svg viewBox="0 0 20 20" style="width:22px;height:22px;flex-shrink:0"><use href="#icon-ban"/></svg> 硬红线 · 七条开关',items:['近 12 个月有欠薪或延迟发薪','社保未按实际工资缴，且拒绝写入合同','公司或实控人有未履行的失信被执行记录','主营业务在无牌照或已处罚状态下继续经营','签约主体与实际用工主体不一致且无法解释','试用期超法定上限，或试用期不缴社保','要求签空白合同、阴阳合同、自愿放弃社保承诺书','<span class="hl-warn">命中任一即红灯，不进入四维评分</span>']},
+"mea-four":{title:'<svg viewBox="0 0 20 20" style="width:22px;height:22px;flex-shrink:0"><use href="#icon-scale"/></svg> 四维打分',items:['生存分 — 公司能不能活过你的第一个合同期','稳定分 — 这个岗位会不会在你的试用期后消失','增值分 — 三年后你带走什么','环境分 — 你每天要忍受什么','每维 0-5 分，<span class="hl">不看总分，只看短板</span>','任一维 ≤1 分，结论不得为"去"','四维之外还有<span class="hl-warn">置信度</span>：证据不够时分数只是占位符']},
+"mea-weight":{title:'<svg viewBox="0 0 20 20" style="width:22px;height:22px;flex-shrink:0"><use href="#icon-rule"/></svg> 权重规则 · 两维不可调',items:['生存分与稳定分 — <span class="hl-warn">不可调低</span>，公司能不能活不由你的偏好决定','增值分与环境分 — 用户自定，有人要成长，有人要稳定','这条规则同时解决两个难题：主观无法标准化、产品凭什么定义好工作','<span class="hl">客观的不许改，主观的权重自己定</span>','硬红线零容忍同样不可调 — 三种人群完全一致','这个一致性本身是一种表达：有些底线不该因为你更需要这份工作就降低']},
+"mea-conf":{title:'<svg viewBox="0 0 20 20" style="width:22px;height:22px;flex-shrink:0"><use href="#icon-warn"/></svg> 置信度',items:['置信度 = 高权重证据条数 ÷ 结论依赖的总条数','≥70% 高置信 — 结论可直接执行','40-70% 中置信 — 附"建议补证项"','<span class="hl-warn">&lt;40% 低置信 — 全部结论标"仅假设，补证后重算"</span>','低置信时不允许给出"不去"的强结论','这是产品敢下判断的前提：知道自己什么时候不知道']},
+"mea-flip":{title:'<svg viewBox="0 0 20 20" style="width:22px;height:22px;flex-shrink:0"><use href="#icon-refresh"/></svg> 翻转条件',items:['报告最后一行不是结论，是"什么情况下结论会改"','例："若对方同意把调薪评估写入 offer，结论从不去改为谈条件再去"','例："若查到劳动争议案件集中在近 6 个月，结论改为不去"','让用户看见判断的边界，而不是接受一个黑箱结果','<span class="hl">可复核的结论，才值得付钱</span>']},
+"arc-source":{title:'<svg viewBox="0 0 20 20" style="width:22px;height:22px;flex-shrink:0"><use href="#icon-ladder"/></svg> 信源分级 · 七级阶梯',items:['<span class="hl">1.0</span> 你自己看到的事实：工商、司法、合同文本、办公现场','<span class="hl">0.9</span> 在职且无利益关系的人：非同部门、非 HR、非招聘官','<span class="hl">0.8</span> 已离职超过 6 个月的人（情绪已平复）','<span class="hl">0.7</span> 公开可验证数据：JD 历史、招投标、专利、行政处罚','不计分：匿名社区 — 只生成假设','不计分：面试官与 HR 的说法 — 这是卖方陈述','<span class="hl-warn">不计分：你自己的直觉 — 可记录，不可计分</span>']},
+"arc-jd":{title:'<svg viewBox="0 0 20 20" style="width:22px;height:22px;flex-shrink:0"><use href="#icon-clock"/></svg> JD 历史档案',items:['同一公司同一岗位的历史招聘信息，拉成时间轴','记录四项：发布日期、薪资区间、职责描述、在挂天数','<span class="hl">在挂 18 个月还在招 = 这个位置留不住人，或根本没编制</span>','职责描述一年改三版 = 内部对这个岗位没想清楚','薪资区间下调 = 在压成本；上调 = 招不到人','MVP 阶段靠用户上传截图，二版再做自动抓取']},
+"arc-tenure":{title:'<svg viewBox="0 0 20 20" style="width:22px;height:22px;flex-shrink:0"><use href="#icon-person"/></svg> 岗位留任图谱',items:['反查同岗位近三年历任，算在任时长中位数','中位数 &lt; 12 个月标高危，&lt; 6 个月标红灯','<span class="hl">一个岗位三年换四个人，不需要再问公司文化了</span>','需要长期抓取 + 交叉验证，数据以年为单位积累','<span class="hl-warn">这是护城河的第一处</span>：后来者从零开始要等三年','不与第三方共享，不出现在任何对外内容中']},
+"arc-clause":{title:'<svg viewBox="0 0 20 20" style="width:22px;height:22px;flex-shrink:0"><use href="#icon-clause"/></svg> 条款对照库 · 36 条',items:['"半年后给你调薪" → <span class="hl">"2027 年 1 月 31 日前完成薪资评估，幅度不低于 10%"</span>','"这个项目你主导" → "对项目范围、排期、人员有决定权，直接向 CTO 汇报"','"我们不怎么加班" → "19:00 后及周末加班按 1:1 调休，当季度内使用"','"做得好会有期权" → "X 股，行权价 Y，四年成熟，离职后 90 天内可行权"','免费公开，作为获客资产与信任背书','<span class="hl">愿意把这些写下来的公司，本身就是正向信号</span>']},
+"arc-backfill":{title:'<svg viewBox="0 0 20 20" style="width:22px;height:22px;flex-shrink:0"><use href="#icon-refresh"/></svg> 回填校准记录',items:['第 90 天推 12 道题，3 分钟填完','"报告说会加班，实际加了吗""标黄的三条风险，哪几条真发生了"','回填解锁一次免费核验额度','偏差记入个人校准档案，下次核验时前置提示','<span class="hl">没有回填，所有判据只是"看起来有道理"的猜测</span>','<span class="hl-warn">这是护城河的第二处</span>：三年后这套权重表别人拿不到']},
+"chk-fact":{title:'<svg viewBox="0 0 20 20" style="width:22px;height:22px;flex-shrink:0"><use href="#icon-rule"/></svg> 只陈述事实，不下判决',items:['报告里绝不出现"这家公司不行""不建议去"','只出现"以下事实与你的权重对照后，结论是……"','<span class="hl-warn">判决会被告，也因为判决对个体没意义</span>','把判决权留在用户手里，产品只负责把事实摆整齐','这套表达体系抄不走 — 抄的人通常第一年就被起诉了','它决定了这类产品能活多久']},
+"chk-anon":{title:'<svg viewBox="0 0 20 20" style="width:22px;height:22px;flex-shrink:0"><use href="#icon-warn"/></svg> 匿名只能生成假设',items:['看到"这家公司拖欠工资"，正确动作是去查仲裁案件 + 问两个在职者','错误动作是把"欠薪"两个字直接抄进报告','<span class="hl">前者是调查，后者是转述谣言</span>','绝大多数求职判断，就死在把线索当结论这一步','匿名帖只回答"我该去查什么"，不回答"结论是什么"','这条规则是整个产品可信度的来源']},
+"chk-switch":{title:'<svg viewBox="0 0 20 20" style="width:22px;height:22px;flex-shrink:0"><use href="#icon-ban"/></svg> 红线是开关，不是权重',items:['一直允许加权，"月薪多给 8000"就能把"拖欠工资"抵掉','现实里这两件事从不对冲 — 欠薪的伤害不会被高薪补偿，只会被掩盖','所以七条红线命中任一，直接红灯，不进四维评分','<span class="hl-warn">不给"综合评估"留任何和稀泥的空间</span>','这条规则会被用户抱怨太死板 — 它就该被抱怨','因为被抱怨的那部分，正是它保护你的那部分']},
+"side-character":{title:'<svg viewBox="0 0 20 20" style="width:22px;height:22px;flex-shrink:0"><use href="#icon-building"/></svg> 产品性格 · 敢给结论',items:['核心差异：不说"这家公司怎么样"，只说"有哪些你扛不住的东西"','前一句需要一个客观好坏标准，而那个标准不存在','后一句只需要用户回答一个问题：这七条里哪几条我受不了','<span class="hl">第二个差异是敢下判断</span>：所有求职工具最后都落到"看你自己"，因为给结论要担责','必须三选一，并写明什么情况下结论会翻转','敢下判断，是用户愿意付费的直接原因']},
+"side-diff":{title:'<svg viewBox="0 0 20 20" style="width:22px;height:22px;flex-shrink:0"><use href="#icon-flow"/></svg> 与背调方向相反',items:['背调是企业查你 — 你被动，信息是你交出去的','验厂是你查企业 — 你主动，信息是你去挖的','名字就来自这里：买方派人到工厂看生产线，那个动作叫验厂','现在是你要把自己投进去，当然应该先去验一遍','<span class="hl">猎头的利益与你严格相反</span>：成交才收费，他一定说"这机会很难得"','本产品不成交、不返佣、不做内推']},
+"side-boundary":{title:'<svg viewBox="0 0 20 20" style="width:22px;height:22px;flex-shrink:0"><use href="#icon-ban"/></svg> 边界 · 十不做',items:['不回答"这家公司好不好" — 同公司对不同人是不同答案','不做企业端服务 — 从企业收钱就无法中立评价企业','不做个人背景调查 — 那是企业的事，且涉及隐私','不代理薪资谈判 — 只给清单和话术，谈判是人的事','不给法律意见 — 只提示"建议问律师"','不预测公司未来 — 只算现金跑道与风险敞口','不替用户做最终决定 —<span class="hl-warn">签字的手永远是用户的</span>','不做公司红黑榜 — 榜单必然被公关，且对个体没意义','不因为用户坚持而改结论 — 可以给次优方案，不能假装红灯是绿灯']},
+"side-90":{title:'<svg viewBox="0 0 20 20" style="width:22px;height:22px;flex-shrink:0"><use href="#icon-refresh"/></svg> 回填即复利',items:['第 90 天推 12 道题，3 分钟填完，解锁一次免费核验','"报告说会加班，实际加了吗""标黄的三条风险，哪几条真发生了"','"如果重新选一次，还会去吗"','偏差记入个人校准档案，下次核验前置提示','<span class="hl">回填率是这个产品的生命线</span>','没有回填，三年后它和匿名评价没有本质区别','有回填，三年后这套权重表就是别人拿不到的东西']}
+};
+document.addEventListener("DOMContentLoaded",()=>{
+const layers=document.querySelectorAll(".layer");
+const arrows=document.querySelectorAll(".arrow-down");
+const flowSteps=document.querySelectorAll(".flow-step");
+const sideModules=document.querySelectorAll(".side-module");
+const userFlow=document.querySelector(".user-flow");
+const overlays=document.querySelector(".detail-overlay");
+const detailContent=document.querySelector("#detailContent");
+const closeBtn=document.querySelector(".close-btn");
+const mainTimeline=anime.timeline({easing:"easeOutCubic"});
+mainTimeline.add({targets:"#header",opacity:[0,1],translateY:[-10,0],duration:600});
+mainTimeline.add({targets:sideModules,opacity:[0,1],translateX:[15,0],duration:400,delay:anime.stagger(120)},"-=200");
+mainTimeline.add({targets:layers,opacity:[0,1],translateY:[20,0],duration:500,delay:anime.stagger(150)},"-=100");
+mainTimeline.add({targets:arrows,opacity:[0,1],duration:400,delay:anime.stagger(200)},"-=200");
+setTimeout(()=>{document.querySelectorAll(".arrow-path").forEach((p)=>{anime({targets:p,strokeDashoffset:[200,0],duration:800,delay:300,easing:"easeInOutCubic"});});},1500);
+mainTimeline.add({targets:userFlow,opacity:[0,1],duration:500},"-=100");
+mainTimeline.add({targets:flowSteps,opacity:[0,1],translateX:[-8,0],duration:350,delay:anime.stagger(120)},"-=200");
+let flowIndex=0;function pulseFlow(){flowSteps.forEach((s)=>s.querySelector(".dot").classList.remove("active"));flowSteps[flowIndex].querySelector(".dot").classList.add("active");flowIndex=(flowIndex+1)%flowSteps.length;}
+pulseFlow();setInterval(pulseFlow,2500);
+layers.forEach((l)=>{l.addEventListener("mouseenter",()=>{anime({targets:l,borderColor:"var(--accent-gold)",backgroundColor:"rgba(210,162,76,0.06)",duration:200});});l.addEventListener("mouseleave",()=>{anime({targets:l,borderColor:"var(--chalk-dimmer)",backgroundColor:"rgba(230,226,214,0.06)",duration:300});});});
+function openDetail(id){const data=DETAILS[id];if(!data)return;detailContent.innerHTML=`<h2>${data.title}</h2><ul>${data.items.map((i)=>`<li>${i}</li>`).join("")}</ul>`;overlays.classList.add("open");anime({targets:".detail-card",scale:[0.85,1],opacity:[0,1],duration:250,easing:"easeOutCubic"});}
+function closeDetail(){anime({targets:".detail-card",scale:[1,0.85],opacity:[1,0],duration:200,easing:"easeInCubic",complete:()=>{overlays.classList.remove("open");}});}
+document.querySelectorAll(".module[data-detail]").forEach((el)=>{el.addEventListener("click",()=>openDetail(el.dataset.detail));});
+document.querySelectorAll(".side-module[data-detail]").forEach((el)=>{el.addEventListener("click",()=>openDetail(el.dataset.detail));});
+closeBtn.addEventListener("click",closeDetail);
+overlays.addEventListener("click",(e)=>{if(e.target===overlays)closeDetail();});
+const board=document.getElementById("chalkboard");
+for(let i=0;i<20;i++){const dot=document.createElement("div");dot.className="chalk-glow";dot.style.left=Math.random()*100+"%";dot.style.top=Math.random()*100+"%";dot.style.width=dot.style.height=2+Math.random()*4+"px";dot.style.opacity=0.05+Math.random()*0.1;board.appendChild(dot);anime({targets:dot,translateX:[0,-10+Math.random()*20],translateY:[0,-10+Math.random()*20],opacity:[0.05,0.15,0.05],duration:3000+Math.random()*4000,direction:"alternate",loop:true,easing:"easeInOutSine"});}
+});
+</script>
+</body>
+</html>
